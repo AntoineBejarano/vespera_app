@@ -1,0 +1,130 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+type MemoryRow = {
+  id: string;
+  type: string;
+  content: string;
+  createdAt: string;
+};
+
+export function MemoryPanel() {
+  const [memories, setMemories] = useState<MemoryRow[]>([]);
+  const [editing, setEditing] = useState<Record<string, string>>({});
+  const [error, setError] = useState<string | null>(null);
+
+  async function load() {
+    const res = await fetch("/api/memory");
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error ?? "Error");
+      return;
+    }
+    setMemories(data.memories ?? []);
+  }
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  async function save(id: string) {
+    const content = editing[id];
+    if (!content?.trim()) return;
+    const res = await fetch("/api/memory", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, content }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error ?? "No se pudo guardar");
+      return;
+    }
+    setEditing((e) => {
+      const next = { ...e };
+      delete next[id];
+      return next;
+    });
+    await load();
+  }
+
+  async function remove(id: string) {
+    const res = await fetch(`/api/memory?id=${id}`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error ?? "No se pudo borrar");
+      return;
+    }
+    await load();
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-10">
+      <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
+        Lo que recuerda de ti
+      </h1>
+      <p className="mt-2 text-[var(--muted)]">
+        Corrige o borra recuerdos. La transparencia construye confianza.
+      </p>
+      {error ? <p className="mt-4 text-sm text-red-400">{error}</p> : null}
+      <ul className="mt-8 space-y-4">
+        {memories.length === 0 ? (
+          <li className="text-[var(--muted)]">
+            Aún no hay recuerdos largos. Aparecerán conforme avance la relación.
+          </li>
+        ) : (
+          memories.map((m) => (
+            <li
+              key={m.id}
+              className="border border-[var(--line)] bg-[var(--bg-elevated)] p-4"
+            >
+              <div className="mb-2 text-xs uppercase tracking-wider text-[var(--muted)]">
+                {m.type}
+              </div>
+              {editing[m.id] !== undefined ? (
+                <textarea
+                  className="w-full border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+                  value={editing[m.id]}
+                  onChange={(e) =>
+                    setEditing((prev) => ({ ...prev, [m.id]: e.target.value }))
+                  }
+                />
+              ) : (
+                <p className="leading-relaxed text-[var(--ink)]">{m.content}</p>
+              )}
+              <div className="mt-3 flex gap-3 text-sm">
+                {editing[m.id] !== undefined ? (
+                  <button
+                    type="button"
+                    className="text-[var(--accent)]"
+                    onClick={() => save(m.id)}
+                  >
+                    Guardar
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="text-[var(--muted)] hover:text-[var(--ink)]"
+                    onClick={() =>
+                      setEditing((prev) => ({ ...prev, [m.id]: m.content }))
+                    }
+                  >
+                    Editar
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="text-red-400"
+                  onClick={() => remove(m.id)}
+                >
+                  Borrar
+                </button>
+              </div>
+            </li>
+          ))
+        )}
+      </ul>
+    </div>
+  );
+}

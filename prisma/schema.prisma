@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  name               String?
+  email              String?   @unique
+  emailVerified      DateTime?
+  image              String?
+  passwordHash       String?
+  plan               String    @default("free")
+  dailyMessageCount  Int       @default(0)
+  dailyResetAt       DateTime  @default(now())
+  ageVerifiedAt      DateTime?
+  adultConsentAt     DateTime?
+  preferredModel     String?
+  language           String    @default("es")
+  telegramId         String?   @unique
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  characters    Character[]
+  settings      UserSettings?
+  conversations Conversation[]
+  memories      Memory[]
+
+  @@index([email])
+  @@index([telegramId])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model UserSettings {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  preferredModel  String?
+  language        String   @default("es")
+  adultConsent    Boolean  @default(false)
+  dailyLimit      Int      @default(40)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Character {
+  id           String   @id @default(cuid())
+  userId       String
+  name         String
+  identityJson Json
+  intensity    Int      @default(3)
+  limitsJson   Json?
+  active       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+  memories      Memory[]
+  summaries     Summary[]
+
+  @@index([userId])
+  @@index([userId, active])
+}
+
+model Conversation {
+  id          String   @id @default(cuid())
+  userId      String
+  characterId String
+  title       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  messages  Message[]
+  summaries Summary[]
+
+  @@index([userId])
+  @@index([characterId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String
+  content        String   @db.Text
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+model Summary {
+  id             String   @id @default(cuid())
+  conversationId String
+  characterId    String
+  content        String   @db.Text
+  upToMessageId  String?
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  character    Character    @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([characterId])
+}
+
+model Memory {
+  id          String   @id @default(cuid())
+  userId      String
+  characterId String
+  type        String
+  content     String   @db.Text
+  vectorId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([userId, characterId])
+  @@index([characterId, type])
+}
