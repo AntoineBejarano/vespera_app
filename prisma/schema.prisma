@@ -21,10 +21,13 @@ model User {
   adultConsentAt     DateTime?
   preferredModel     String?
   language           String    @default("en")
+  /// Legacy single-bot link (admin). Peers use TelegramPeer.
   telegramId         String?   @unique
   telegramUsername   String?
   telegramFirstName  String?
   telegramLastName   String?
+  /// Shadow account auto-created for a Telegram peer (not admin login)
+  isTelegramPeer     Boolean   @default(false)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
@@ -34,6 +37,8 @@ model User {
   settings      UserSettings?
   conversations Conversation[]
   memories      Memory[]
+  telegramBots  TelegramBot[]
+  telegramPeers TelegramPeer[]
 
   @@index([email])
   @@index([telegramId])
@@ -106,15 +111,17 @@ model Character {
   intensity    Int      @default(3)
   limitsJson   Json?
   active       Boolean  @default(false)
+  /// Same girl can power N bots / N peers when true (or always via TelegramBot.characterId)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  conversations Conversation[]
-  memories      Memory[]
-  summaries     Summary[]
-  relationship  RelationshipState?
-  photos        CharacterPhoto[]
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversations  Conversation[]
+  memories       Memory[]
+  summaries      Summary[]
+  relationships  RelationshipState[]
+  photos         CharacterPhoto[]
+  telegramBots   TelegramBot[]
 
   @@index([userId])
   @@index([userId, active])
@@ -140,7 +147,7 @@ model CharacterPhoto {
 model RelationshipState {
   id          String   @id @default(cuid())
   userId      String
-  characterId String   @unique
+  characterId String
   mood        String   @default("neutral")
   trust       Float    @default(0.35)
   affection   Float    @default(0.3)
@@ -151,7 +158,53 @@ model RelationshipState {
 
   character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
+  /// One relationship per (person, girl) — same girl, N people
+  @@unique([userId, characterId])
   @@index([userId])
+  @@index([characterId])
+}
+
+/// A Telegram bot token bound to one Character (the girl).
+/// N bots can point at the same Character and talk to N peers in parallel.
+model TelegramBot {
+  id             String   @id @default(cuid())
+  ownerUserId    String
+  characterId    String
+  token          String   @unique
+  username       String
+  webhookSecret  String   @unique
+  label          String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  owner     User           @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  character Character      @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  peers     TelegramPeer[]
+
+  @@index([ownerUserId])
+  @@index([characterId])
+  @@index([webhookSecret])
+}
+
+/// One Telegram human talking to one bot → isolated User + memory + relationship.
+model TelegramPeer {
+  id               String   @id @default(cuid())
+  botId            String
+  userId           String
+  telegramUserId   String
+  telegramUsername String?
+  telegramFirstName String?
+  telegramLastName String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  bot  TelegramBot @relation(fields: [botId], references: [id], onDelete: Cascade)
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([botId, telegramUserId])
+  @@index([userId])
+  @@index([telegramUserId])
 }
 
 model Conversation {

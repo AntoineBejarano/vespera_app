@@ -22,7 +22,9 @@ export async function ensureRelationshipState(
   characterId: string,
 ) {
   return prisma.relationshipState.upsert({
-    where: { characterId },
+    where: {
+      userId_characterId: { userId, characterId },
+    },
     create: {
       userId,
       characterId,
@@ -30,14 +32,14 @@ export async function ensureRelationshipState(
       trust: 0.35,
       affection: 0.3,
       energy: 0.7,
-      summary: "Empiezan a conocerse.",
+      summary: "Just starting to know each other.",
     },
     update: {},
   });
 }
 
 /**
- * Ajusta mood/trust/affection/energy tras un turno (capa State de Meuxe).
+ * Adjust mood/trust/affection/energy after a turn (per user×character).
  */
 export async function maybeUpdateRelationship(params: {
   userId: string;
@@ -62,20 +64,25 @@ export async function maybeUpdateRelationship(params: {
     const { output } = await generateText({
       model: openrouter(resolveModel(params.modelId)),
       output: Output.object({ schema: updateSchema }),
-      prompt: `Actualiza el estado relacional de un compañero ficticio adulto tras un turno de chat.
-Estado actual: mood=${current.mood}, trust=${current.trust}, affection=${current.affection}, energy=${current.energy}, summary=${current.summary ?? ""}
+      prompt: `Update relationship state after one adult chat turn.
+Current: mood=${current.mood}, trust=${current.trust}, affection=${current.affection}, energy=${current.energy}, summary=${current.summary ?? ""}
 
-Usuario: ${params.userMessage}
-Personaje: ${params.assistantMessage}
+User: ${params.userMessage}
+Companion: ${params.assistantMessage}
 
-Devuelve mood (palabra), deltas pequeños (-0.08..0.08), y summary corto (máx 280 chars) del vínculo ahora.
-No moralices. Sé sutil.`,
+Return mood (one word), small deltas (-0.08..0.08), and a short summary (max 280 chars).
+No moralizing. Be subtle.`,
     });
 
     if (!output) return;
 
     await prisma.relationshipState.update({
-      where: { characterId: params.characterId },
+      where: {
+        userId_characterId: {
+          userId: params.userId,
+          characterId: params.characterId,
+        },
+      },
       data: {
         mood: output.mood.slice(0, 40),
         trust: clamp01(current.trust + output.trustDelta),

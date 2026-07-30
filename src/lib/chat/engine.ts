@@ -127,9 +127,13 @@ export async function runCharacterReply(params: {
   }
 
   const character = params.characterId
-    ? await prisma.character.findFirst({
-        where: { id: params.characterId, userId: user.id },
-      })
+    ? params.partner?.channel === "telegram"
+      ? await prisma.character.findUnique({
+          where: { id: params.characterId },
+        })
+      : await prisma.character.findFirst({
+          where: { id: params.characterId, userId: user.id },
+        })
     : await getActiveCharacter(user.id);
 
   if (!character) {

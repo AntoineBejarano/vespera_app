@@ -15,6 +15,17 @@ type Photo = {
 
 type CharacterOpt = { id: string; name: string; active: boolean };
 
+type BotRow = {
+  id: string;
+  username: string;
+  label: string | null;
+  active: boolean;
+  characterId: string;
+  characterName: string;
+  peerCount: number;
+  tokenMasked: string;
+};
+
 export default function SettingsClient() {
   const [model, setModel] = useState("");
   const [howToAddress, setHowToAddress] = useState("");
@@ -34,6 +45,11 @@ export default function SettingsClient() {
   const [photoUrl, setPhotoUrl] = useState("");
   const [photoCaption, setPhotoCaption] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>(["selfie"]);
+  const [bots, setBots] = useState<BotRow[]>([]);
+  const [botToken, setBotToken] = useState("");
+  const [botUsername, setBotUsername] = useState("");
+  const [botCharacterId, setBotCharacterId] = useState("");
+  const [botLabel, setBotLabel] = useState("");
 
   useEffect(() => {
     void (async () => {
@@ -62,7 +78,16 @@ export default function SettingsClient() {
         const list = (data.characters ?? []) as CharacterOpt[];
         setCharacters(list);
         const active = list.find((c) => c.active) ?? list[0];
-        if (active) setPhotoCharacterId(active.id);
+        if (active) {
+          setPhotoCharacterId(active.id);
+          setBotCharacterId(active.id);
+        }
+      }
+
+      const botsRes = await fetch("/api/bots");
+      if (botsRes.ok) {
+        const data = await botsRes.json();
+        setBots(data.bots ?? []);
       }
     })();
   }, []);
@@ -182,6 +207,51 @@ export default function SettingsClient() {
     }
   }
 
+  async function addBot() {
+    if (!botToken.trim() || !botUsername.trim() || !botCharacterId) {
+      setMessage("Token, username y personaje requeridos");
+      return;
+    }
+    const res = await fetch("/api/bots", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token: botToken.trim(),
+        username: botUsername.trim(),
+        characterId: botCharacterId,
+        label: botLabel.trim() || undefined,
+        setWebhook: true,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data.error ?? "Error bot");
+      return;
+    }
+    setBotToken("");
+    setBotUsername("");
+    setBotLabel("");
+    setMessage(
+      data.warning
+        ? data.warning
+        : `Bot @${data.bot.username} listo (${data.bot.characterName})`,
+    );
+    const botsRes = await fetch("/api/bots");
+    if (botsRes.ok) {
+      const d = await botsRes.json();
+      setBots(d.bots ?? []);
+    }
+  }
+
+  async function removeBot(botId: string) {
+    if (!confirm("¿Eliminar este bot?")) return;
+    const res = await fetch(`/api/bots?botId=${botId}`, { method: "DELETE" });
+    if (res.ok) {
+      setBots((b) => b.filter((x) => x.id !== botId));
+      setMessage("Bot eliminado");
+    }
+  }
+
   async function exportData() {
     const res = await fetch("/api/user/export");
     const data = await res.json();
@@ -275,6 +345,78 @@ export default function SettingsClient() {
             </p>
           </div>
         ) : null}
+      </section>
+
+      <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
+        <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
+          Bots multi-tenant
+        </h2>
+        <p className="text-sm text-[var(--muted)]">
+          Misma chica → N bots de Telegram → N personas en paralelo (memoria y
+          relación aisladas por persona). Crea el bot en BotFather y pega el
+          token aquí.
+        </p>
+        <select
+          className="w-full border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+          value={botCharacterId}
+          onChange={(e) => setBotCharacterId(e.target.value)}
+        >
+          {characters.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+              {c.active ? " (activo)" : ""}
+            </option>
+          ))}
+        </select>
+        <input
+          className="w-full border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+          value={botToken}
+          onChange={(e) => setBotToken(e.target.value)}
+          placeholder="123456:AAH…"
+        />
+        <input
+          className="w-full border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+          value={botUsername}
+          onChange={(e) => setBotUsername(e.target.value)}
+          placeholder="Tatiana_Kulenko_bot"
+        />
+        <input
+          className="w-full border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+          value={botLabel}
+          onChange={(e) => setBotLabel(e.target.value)}
+          placeholder="Label opcional (campaign A…)"
+        />
+        <button
+          type="button"
+          onClick={addBot}
+          className="bg-[var(--accent)] px-4 py-2 text-[var(--bg)]"
+        >
+          Añadir bot + webhook
+        </button>
+        <ul className="space-y-2 text-sm">
+          {bots.map((b) => (
+            <li
+              key={b.id}
+              className="flex flex-wrap items-center gap-2 border border-[var(--line)] p-2"
+            >
+              <span className="text-[var(--ink)]">
+                @{b.username}
+                {b.label ? ` · ${b.label}` : ""}
+              </span>
+              <span className="text-[var(--muted)]">
+                → {b.characterName} · {b.peerCount} peers
+                {!b.active ? " · OFF" : ""}
+              </span>
+              <button
+                type="button"
+                className="ml-auto text-xs text-red-400"
+                onClick={() => removeBot(b.id)}
+              >
+                Quitar
+              </button>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">

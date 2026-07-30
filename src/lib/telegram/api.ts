@@ -1,13 +1,18 @@
 const TELEGRAM_API = "https://api.telegram.org";
 
+function requireToken(token?: string | null) {
+  const t = token || process.env.TELEGRAM_BOT_TOKEN;
+  if (!t) throw new Error("TELEGRAM_BOT_TOKEN missing");
+  return t;
+}
+
 export async function telegramSendMessage(
   chatId: number | string,
   text: string,
+  botToken?: string | null,
 ) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) throw new Error("TELEGRAM_BOT_TOKEN missing");
+  const token = requireToken(botToken);
 
-  // Telegram max ~4096; split if needed
   const chunks: string[] = [];
   let rest = text;
   while (rest.length > 4000) {
@@ -35,8 +40,9 @@ export async function telegramSendMessage(
 export async function telegramSendChatAction(
   chatId: number | string,
   action: "typing" | "upload_photo" = "typing",
+  botToken?: string | null,
 ) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return;
   await fetch(`${TELEGRAM_API}/bot${token}/sendChatAction`, {
     method: "POST",
@@ -49,9 +55,9 @@ export async function telegramSendPhoto(
   chatId: number | string,
   photoUrl: string,
   caption?: string | null,
+  botToken?: string | null,
 ) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token) throw new Error("TELEGRAM_BOT_TOKEN missing");
+  const token = requireToken(botToken);
 
   const res = await fetch(`${TELEGRAM_API}/bot${token}/sendPhoto`, {
     method: "POST",
