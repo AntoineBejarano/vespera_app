@@ -18,14 +18,21 @@ import {
   maybeUpdateRelationship,
 } from "@/lib/persona/relationship";
 import {
-  looksLikePhotoRequest,
   splitIntoBubbles,
 } from "@/lib/chat/humanize";
+import {
+  parsePhotoIntent,
+  photoHintLabel,
+  rankPhotosForIntent,
+} from "@/lib/chat/photos";
 import { resolvePartnerName } from "@/lib/telegram/profile";
 
 export type ChatPhotoPayload = {
   url: string;
   caption?: string | null;
+  kind?: string;
+  tags?: string[];
+  label?: string;
 };
 
 export type ChatEngineResult =
@@ -47,14 +54,36 @@ export type ChatPartnerOverride = {
   telegramUsername?: string | null;
 };
 
-async function pickCharacterPhoto(characterId: string) {
+async function pickCharacterPhoto(characterId: string, message: string) {
+  const intent = parsePhotoIntent(message);
+  if (!intent.wantsPhoto) return null;
+
   const photos = await prisma.characterPhoto.findMany({
     where: { characterId },
     orderBy: { createdAt: "desc" },
   });
   if (!photos.length) return null;
-  const photo = photos[Math.floor(Math.random() * photos.length)]!;
-  return { url: photo.url, caption: photo.caption };
+
+  const ranked = rankPhotosForIntent(
+    photos.map((p) => ({
+      id: p.id,
+      url: p.url,
+      caption: p.caption,
+      kind: p.kind,
+      tags: p.tags ?? [],
+    })),
+    intent,
+  );
+  const photo = ranked[0];
+  if (!photo) return null;
+
+  return {
+    url: photo.url,
+    caption: photo.caption,
+    kind: photo.kind,
+    tags: photo.tags,
+    label: photoHintLabel(photo),
+  };
 }
 
 /**
@@ -110,8 +139,7 @@ export async function runCharacterReply(params: {
     };
   }
 
-  const wantsPhoto = looksLikePhotoRequest(text);
-  const photo = wantsPhoto ? await pickCharacterPhoto(character.id) : null;
+  const photo = await pickCharacterPhoto(character.id, text);
 
   const modelId = resolveModel(user.preferredModel);
   const memories = await searchMemories({
@@ -167,7 +195,7 @@ export async function runCharacterReply(params: {
       channel,
       telegramUsername: tgUser,
     },
-    photoHint: Boolean(photo),
+    photoHint: photo ? photo.label || true : false,
   });
 
   await prisma.message.create({

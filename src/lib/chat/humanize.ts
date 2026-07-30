@@ -139,8 +139,4 @@ export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function looksLikePhotoRequest(text: string): boolean {
-  return /\b(photo|photos|pic|pics|picture|selfie|nude|nudes|foto|fotos|imagen|im[aá]gen|selfi)\b/i.test(
-    text,
-  );
-}
+export { looksLikePhotoRequest } from "@/lib/chat/photos";

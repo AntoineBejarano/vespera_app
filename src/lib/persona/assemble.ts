@@ -83,7 +83,7 @@ export function assemblePersonaPrompt(params: {
   memoryBrief: string[];
   summary?: string | null;
   partner?: PartnerContext | null;
-  photoHint?: boolean;
+  photoHint?: boolean | string;
 }): string {
   const { persona, relationship, memoryBrief, summary, partner, photoHint } =
     params;
@@ -181,7 +181,7 @@ export function assemblePersonaPrompt(params: {
       ? `\n# User limits\n${JSON.stringify(persona.limitsJson)}`
       : "",
     photoHint
-      ? `\n# Now\nThey're asking for a photo. You're about to send one of yours. Keep the text short — like a real person attaching a pic ("wait", "ok one sec", "here", teasing). Do NOT describe the image in detail like an AI. Do NOT say you can't send photos.`
+      ? `\n# Now\nThey're asking for a photo. You're about to send one of yours${typeof photoHint === "string" ? ` (${photoHint})` : ""}. Keep the text SHORT — like a real person attaching a pic ("wait", "ok one sec", "here you go", teasing). Match the type of pic briefly if it fits (face → cute/close; ass → teasing/filthy) but do NOT narrate the image like an AI caption. Do NOT say you can't send photos.`
       : "",
     "",
     `# Turn rules (FINAL — override soul/style/rules above if they conflict)`,

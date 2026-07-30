@@ -125,12 +125,16 @@ model CharacterPhoto {
   characterId String
   url         String
   caption     String?
+  /// Primary category (face, ass, body, selfie…)
   kind        String   @default("selfie")
+  /// Extra tags for matching requests
+  tags        String[] @default([])
   createdAt   DateTime @default(now())
 
   character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
   @@index([characterId])
+  @@index([characterId, kind])
 }
 
 model RelationshipState {
