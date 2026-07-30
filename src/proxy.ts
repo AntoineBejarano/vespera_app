@@ -45,7 +45,7 @@ export async function proxy(request: NextRequest) {
 
   if (token && (pathname === "/login" || pathname === "/register")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/chat";
+    url.pathname = "/personas";
     return NextResponse.redirect(url);
   }
 

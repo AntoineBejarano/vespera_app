@@ -174,16 +174,16 @@ export function ChatPanel({
           Admin · test
         </p>
         <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
-          Sin personaje
+          No persona
         </h1>
         <p className="mt-3 text-[var(--muted)]">
-          Crea uno aquí; el producto real es Telegram.
+          Create one first — Telegram bots and the chat API attach to personas.
         </p>
         <a
-          href="/chat/new"
+          href="/personas/new"
           className="mt-8 inline-block bg-[var(--accent)] px-6 py-3 text-[var(--bg)] transition hover:opacity-90"
         >
-          Crear personaje
+          Create persona
         </a>
       </div>
     );
@@ -207,7 +207,7 @@ export function ChatPanel({
           ))}
         </select>
         <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
-          Intensidad
+          Intensity
           <input
             type="range"
             min={1}
@@ -229,8 +229,8 @@ export function ChatPanel({
       <div className="flex-1 space-y-3 overflow-y-auto py-6">
         {messages.length === 0 ? (
           <p className="text-center text-sm text-[var(--muted)]">
-            Simula Telegram (multi-mensaje, delay, typos). Producto: bot
-            vinculado.
+            Simulates Telegram (multi-bubble, delay, typos). Product: linked
+            bots.
           </p>
         ) : null}
         {messages.map((message) => (
@@ -264,7 +264,7 @@ export function ChatPanel({
           </div>
         ))}
         {typing ? (
-          <p className="text-sm text-[var(--muted)]">escribiendo…</p>
+          <p className="text-sm text-[var(--muted)]">typing…</p>
         ) : null}
         <div ref={bottomRef} />
       </div>
@@ -282,7 +282,7 @@ export function ChatPanel({
           <input
             className="flex-1 border border-[var(--line)] bg-[var(--bg-elevated)] px-4 py-3 text-[var(--ink)] outline-none focus:border-[var(--accent)]"
             value={input}
-            placeholder="Mensaje de prueba…"
+            placeholder="Test message…"
             onChange={(e) => setInput(e.target.value)}
             disabled={busy}
           />
@@ -291,7 +291,7 @@ export function ChatPanel({
             disabled={busy}
             className="bg-[var(--accent)] px-5 py-3 text-[var(--bg)] disabled:opacity-50"
           >
-            Enviar
+            Send
           </button>
         </div>
       </form>

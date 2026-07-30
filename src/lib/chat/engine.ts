@@ -127,19 +127,23 @@ export async function runCharacterReply(params: {
   }
 
   const character = params.characterId
-    ? params.partner?.channel === "telegram"
-      ? await prisma.character.findUnique({
+    ? await (async () => {
+        const found = await prisma.character.findUnique({
           where: { id: params.characterId },
-        })
-      : await prisma.character.findFirst({
-          where: { id: params.characterId, userId: user.id },
-        })
+        });
+        if (!found) return null;
+        const allowed =
+          found.userId === user.id ||
+          user.isTelegramPeer ||
+          params.partner?.channel === "telegram";
+        return allowed ? found : null;
+      })()
     : await getActiveCharacter(user.id);
 
   if (!character) {
     return {
       ok: false,
-      error: "No active character. Create one in admin (/chat/new).",
+      error: "No active persona. Create one in /personas/new.",
       status: 400,
     };
   }

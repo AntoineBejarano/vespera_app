@@ -111,7 +111,8 @@ model Character {
   intensity    Int      @default(3)
   limitsJson   Json?
   active       Boolean  @default(false)
-  /// Same girl can power N bots / N peers when true (or always via TelegramBot.characterId)
+  /// Public chat API key for this persona (Bearer / X-Api-Key)
+  apiKey       String?  @unique
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -125,6 +126,7 @@ model Character {
 
   @@index([userId])
   @@index([userId, active])
+  @@index([apiKey])
 }
 
 model CharacterPhoto {

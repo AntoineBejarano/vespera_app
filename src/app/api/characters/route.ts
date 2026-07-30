@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generatePersonaLayers } from "@/lib/persona/generator";
@@ -10,7 +11,7 @@ import { Prisma } from "@/generated/prisma/client";
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return Response.json({ error: "No autenticado" }, { status: 401 });
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   const characters = await prisma.character.findMany({
@@ -24,21 +25,59 @@ export async function GET() {
       createdAt: true,
       updatedAt: true,
       metaJson: true,
+      apiKey: true,
+      _count: {
+        select: {
+          telegramBots: true,
+          photos: true,
+          relationships: true,
+        },
+      },
+      telegramBots: {
+        select: {
+          id: true,
+          username: true,
+          active: true,
+          label: true,
+          _count: { select: { peers: true } },
+        },
+      },
     },
   });
 
-  return Response.json({ characters });
+  return Response.json({
+    characters: characters.map((c) => ({
+      id: c.id,
+      name: c.name,
+      intensity: c.intensity,
+      active: c.active,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+      metaJson: c.metaJson,
+      hasApiKey: Boolean(c.apiKey),
+      botCount: c._count.telegramBots,
+      photoCount: c._count.photos,
+      peerCount: c.telegramBots.reduce((n, b) => n + b._count.peers, 0),
+      bots: c.telegramBots.map((b) => ({
+        id: b.id,
+        username: b.username,
+        active: b.active,
+        label: b.label,
+        peerCount: b._count.peers,
+      })),
+    })),
+  });
 }
 
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
-    return Response.json({ error: "No autenticado" }, { status: 401 });
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   const user = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!user?.ageVerifiedAt) {
-    return Response.json({ error: "Debes verificar edad 18+" }, { status: 403 });
+    return Response.json({ error: "Age verification 18+ required" }, { status: 403 });
   }
 
   const count = await countUserCharacters(user.id);
@@ -46,7 +85,7 @@ export async function POST(req: Request) {
   if (count >= max) {
     return Response.json(
       {
-        error: `Límite de personajes (${max}). Free: 2; premium: más.`,
+        error: `Persona limit reached (${max}).`,
       },
       { status: 403 },
     );
@@ -55,7 +94,7 @@ export async function POST(req: Request) {
   const body = await req.json();
   const parsed = onboardingAnswersSchema.safeParse(body);
   if (!parsed.success) {
-    return Response.json({ error: "Respuestas de onboarding inválidas" }, { status: 400 });
+    return Response.json({ error: "Invalid onboarding answers" }, { status: 400 });
   }
 
   try {
@@ -84,10 +123,13 @@ export async function POST(req: Request) {
         excludedThemes: [],
       } as const);
 
+    // New persona becomes the default for admin test chat (others stay usable)
     await prisma.character.updateMany({
       where: { userId: user.id, active: true },
       data: { active: false },
     });
+
+    const apiKey = `vesp_${randomBytes(24).toString("hex")}`;
 
     const character = await prisma.character.create({
       data: {
@@ -105,6 +147,7 @@ export async function POST(req: Request) {
           excludedThemes: identity.excludedThemes ?? [],
         } as Prisma.InputJsonValue,
         active: true,
+        apiKey,
       },
     });
 
@@ -113,7 +156,7 @@ export async function POST(req: Request) {
       data: {
         userId: user.id,
         characterId: character.id,
-        title: `Con ${character.name}`,
+        title: `With ${character.name}`,
       },
     });
 
@@ -124,16 +167,17 @@ export async function POST(req: Request) {
       character: {
         id: character.id,
         name: character.name,
+        apiKey,
         layers: ["soul", "style", "rules", "context", "relationship"],
       },
     });
   } catch (error) {
     console.error("[characters POST]", error);
     const detail =
-      error instanceof Error ? error.message : "Error desconocido";
+      error instanceof Error ? error.message : "Unknown error";
     return Response.json(
       {
-        error: `No se pudo generar el personaje: ${detail}`,
+        error: `Could not generate persona: ${detail}`,
       },
       { status: 502 },
     );

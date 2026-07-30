@@ -10,13 +10,12 @@ export default function AgeGatePage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6">
       <h1 className="font-[family-name:var(--font-display)] text-4xl text-[var(--ink)]">
-        Solo adultos
+        Adults only
       </h1>
       <p className="mt-4 leading-relaxed text-[var(--muted)]">
-        Vespera es una plataforma privada de relaciones ficticias para personas
-        de 18 años o más. El contenido puede ser romántico y erótico entre
-        adultos consentidos. Está estrictamente prohibido cualquier contenido
-        sexual con menores.
+        Vespera is a private platform for adult fictional relationships (18+).
+        Content may be romantic and erotic between consenting adults. Sexual
+        content involving minors is strictly forbidden.
       </p>
       <label className="mt-8 flex items-start gap-3 text-[var(--ink)]">
         <input
@@ -25,7 +24,7 @@ export default function AgeGatePage() {
           checked={checked}
           onChange={(e) => setChecked(e.target.checked)}
         />
-        <span>Confirmo que tengo 18 años o más y acepto continuar.</span>
+        <span>I confirm I am 18 or older and agree to continue.</span>
       </label>
       <button
         type="button"
@@ -36,7 +35,7 @@ export default function AgeGatePage() {
           router.push("/register");
         }}
       >
-        Continuar
+        Continue
       </button>
     </main>
   );

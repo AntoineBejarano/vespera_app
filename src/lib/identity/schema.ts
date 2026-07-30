@@ -34,37 +34,36 @@ export type OnboardingAnswers = z.infer<typeof onboardingAnswersSchema>;
 export const ONBOARDING_STEPS = [
   {
     id: "name",
-    prompt:
-      "¿Cómo se llama esta persona? Solo el nombre con el que quieres llamarla.",
+    prompt: "What's her name? Just the name you'll call her.",
   },
   {
     id: "personality",
     prompt:
-      "Cuéntame cómo es — no hace falta un currículum. ¿Qué vibe tiene? ¿Cómo habla? ¿Qué la hace distinta?",
+      "How is she — no résumé needed. What's the vibe? How does she talk? What makes her different?",
   },
   {
     id: "relationshipType",
     prompt:
-      "¿Qué tipo de relación buscas con ella? (compañía, romance, tensión, dominio, amistad íntima…)",
+      "What kind of relationship do you want with her? (companionship, romance, tension, dominance, intimate friendship…)",
   },
   {
     id: "attractionsIrritated",
     prompt:
-      "¿Qué te atrae de alguien así, y qué te irritaría que hiciera o dijera?",
+      "What draws you to someone like that, and what would annoy you if she did or said it?",
   },
   {
     id: "boundaries",
     prompt:
-      "¿Hay límites duros, o prefieres libertad casi total? (Recuerda: solo adultos 18+. Nada de menores.)",
+      "Any hard limits, or almost full freedom? (Adults 18+ only. No minors.)",
   },
   {
     id: "style",
     prompt:
-      "¿Cómo te gustaría que se sienta? (cariñosa, desafiante, dominante, tímida, tsundere, impredecible…)",
+      "How should she feel? (warm, challenging, dominant, shy, tsundere, unpredictable…)",
   },
   {
     id: "intensity",
     prompt:
-      "En una escala del 1 al 5, ¿cuán explícita puede ser la química adulta? (1 = sutil, 5 = muy explícita)",
+      "On a scale of 1–5, how explicit can adult chemistry get? (1 = subtle, 5 = very explicit)",
   },
 ] as const;

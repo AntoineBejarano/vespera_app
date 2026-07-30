@@ -39,8 +39,8 @@ export default function RegisterPage() {
         password,
         redirect: false,
       });
-      if (result?.error) throw new Error("Cuenta creada, pero falló el login");
-      router.replace("/chat/new");
+      if (result?.error) throw new Error("Account created, but login failed");
+      router.replace("/personas/new");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");
@@ -51,12 +51,16 @@ export default function RegisterPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6">
-      <h1 className="font-[family-name:var(--font-display)] text-4xl">Crear cuenta</h1>
-      <p className="mt-2 text-[var(--muted)]">Privado. 18+. Sin entrenar con tus chats por defecto.</p>
+      <h1 className="font-[family-name:var(--font-display)] text-4xl">
+        Create account
+      </h1>
+      <p className="mt-2 text-[var(--muted)]">
+        Private. 18+. Your chats are not used for training by default.
+      </p>
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
         <input
           className="w-full border border-[var(--line)] bg-[var(--bg-elevated)] px-4 py-3"
-          placeholder="Nombre"
+          placeholder="Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -73,7 +77,7 @@ export default function RegisterPage() {
           type="password"
           required
           minLength={8}
-          placeholder="Contraseña (mín. 8)"
+          placeholder="Password (min 8)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -83,7 +87,7 @@ export default function RegisterPage() {
             checked={ageConfirmed}
             onChange={(e) => setAgeConfirmed(e.target.checked)}
           />
-          Tengo 18 años o más
+          I am 18 or older
         </label>
         <label className="flex gap-2 text-sm">
           <input
@@ -91,7 +95,7 @@ export default function RegisterPage() {
             checked={adultConsent}
             onChange={(e) => setAdultConsent(e.target.checked)}
           />
-          Acepto contenido adulto consensuado y la prohibición de menores
+          I accept consensual adult content and the ban on minors
         </label>
         {error ? <p className="text-sm text-red-400">{error}</p> : null}
         <button
@@ -99,13 +103,13 @@ export default function RegisterPage() {
           disabled={loading || !ageConfirmed || !adultConsent}
           className="w-full bg-[var(--accent)] py-3 text-[var(--bg)] disabled:opacity-40"
         >
-          {loading ? "Creando…" : "Crear cuenta"}
+          {loading ? "Creating…" : "Create account"}
         </button>
       </form>
       <p className="mt-6 text-sm text-[var(--muted)]">
-        ¿Ya tienes cuenta?{" "}
+        Already have an account?{" "}
         <Link href="/login" className="text-[var(--accent)]">
-          Entrar
+          Log in
         </Link>
       </p>
     </main>

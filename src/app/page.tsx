@@ -12,27 +12,27 @@ export default function HomePage() {
       />
       <div className="relative mx-auto flex min-h-screen max-w-4xl flex-col justify-center px-6 py-16">
         <p className="text-sm uppercase tracking-[0.35em] text-[var(--accent)]">
-          Admin · test · 18+
+          Admin · 18+
         </p>
         <h1 className="mt-4 font-[family-name:var(--font-display)] text-6xl leading-none text-[var(--ink)] sm:text-7xl">
           Vespera
         </h1>
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-[var(--muted)]">
-          Panel interno: personajes, memoria, fotos y vínculo a Telegram. El bot
-          es el producto — habla inglés por defecto, multi-mensaje, humano.
+          Build N personas. Link each to Telegram bots or a chat API. The product
+          is the bot — English by default, human multi-message texts.
         </p>
         <div className="mt-10 flex flex-wrap gap-4">
           <Link
             href="/age-gate"
             className="bg-[var(--accent)] px-6 py-3 text-[var(--bg)] transition hover:opacity-90"
           >
-            Entrar al admin
+            Enter admin
           </Link>
           <Link
             href="/login"
             className="border border-[var(--line)] px-6 py-3 text-[var(--ink)]"
           >
-            Login
+            Log in
           </Link>
         </div>
       </div>

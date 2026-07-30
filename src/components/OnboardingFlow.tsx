@@ -51,10 +51,10 @@ export function OnboardingFlow() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error");
-      router.push("/chat");
+      router.push(`/personas/${data.character.id}`);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error creando personaje");
+      setError(err instanceof Error ? err.message : "Failed to create persona");
       setLoading(false);
     }
   }
@@ -77,11 +77,13 @@ export function OnboardingFlow() {
       case "attractionsIrritated": {
         const [attr, irr] = draft.split(/\n+|\/+|—+/).map((s) => s.trim());
         nextAnswers.attractions = attr || draft.trim();
-        nextAnswers.irritations = irr || "Que sea genérica o demasiado complaciente";
+        nextAnswers.irritations =
+          irr || "Being generic or too people-pleasing";
         break;
       }
       case "boundaries":
-        nextAnswers.boundaries = draft.trim() || "Sin límites especiales (salvo 18+)";
+        nextAnswers.boundaries =
+          draft.trim() || "No special limits (except 18+)";
         break;
       case "style":
         nextAnswers.style = draft.trim();
@@ -114,7 +116,7 @@ export function OnboardingFlow() {
         />
       </div>
       <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">
-        Conocer a alguien
+        New persona
       </p>
       <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
         {current.prompt}
@@ -127,8 +129,8 @@ export function OnboardingFlow() {
           current.id === "intensity"
             ? "3"
             : current.id === "attractionsIrritated"
-              ? "Me atrae… / Me irrita…"
-              : "Responde con naturalidad…"
+              ? "I like… / I hate…"
+              : "Answer naturally…"
         }
         disabled={loading}
       />
@@ -141,7 +143,7 @@ export function OnboardingFlow() {
             onClick={() => setStep((s) => s - 1)}
             disabled={loading}
           >
-            Atrás
+            Back
           </button>
         ) : null}
         <button
@@ -151,10 +153,10 @@ export function OnboardingFlow() {
           disabled={loading}
         >
           {loading
-            ? "Creando mente…"
+            ? "Building mind…"
             : step >= ONBOARDING_STEPS.length - 1
-              ? "Generar personaje"
-              : "Continuar"}
+              ? "Generate persona"
+              : "Continue"}
         </button>
       </div>
     </div>
