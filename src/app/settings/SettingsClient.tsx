@@ -174,8 +174,12 @@ export default function SettingsClient() {
 
       <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
         <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
-          Cómo te llama
+          Nickname (solo admin/web)
         </h2>
+        <p className="text-sm text-[var(--muted)]">
+          En Telegram usa el nombre real del perfil de Telegram. Este campo solo
+          afecta el chat de prueba en la web.
+        </p>
         <input
           className="w-full border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
           value={howToAddress}

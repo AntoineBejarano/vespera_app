@@ -16,20 +16,38 @@ import {
 
 export const maxDuration = 60;
 
+type TelegramFrom = {
+  id: number;
+  first_name?: string;
+  last_name?: string;
+  username?: string;
+};
+
 type TelegramUpdate = {
   update_id: number;
   message?: {
     message_id: number;
     text?: string;
     chat: { id: number; type: string };
-    from?: { id: number; first_name?: string; username?: string };
+    from?: TelegramFrom;
   };
 };
+
+async function syncTelegramProfile(userId: string, from: TelegramFrom) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      telegramFirstName: from.first_name?.trim() || null,
+      telegramLastName: from.last_name?.trim() || null,
+      telegramUsername: from.username?.trim() || null,
+    },
+  });
+}
 
 /**
  * Telegram webhook — product surface.
  * Replies as a real person: delays, multi-bubbles, optional photos.
- * Never reveal AI / fiction in character messages.
+ * Uses the Telegram user's real name, not the admin nickname.
  */
 export async function POST(req: Request) {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
@@ -49,7 +67,8 @@ export async function POST(req: Request) {
     return Response.json({ ok: true });
   }
 
-  const telegramId = String(message.from.id);
+  const from = message.from;
+  const telegramId = String(from.id);
   const chatId = message.chat.id;
   const text = message.text?.trim() ?? "";
 
@@ -74,28 +93,35 @@ export async function POST(req: Request) {
           where: { id: userId },
           data: {
             telegramId,
+            telegramFirstName: from.first_name?.trim() || null,
+            telegramLastName: from.last_name?.trim() || null,
+            telegramUsername: from.username?.trim() || null,
+            // Keep account name if set; otherwise seed from Telegram
             name:
-              (
-                await prisma.user.findUnique({ where: { id: userId } })
-              )?.name ||
-              message.from.first_name ||
+              (await prisma.user.findUnique({ where: { id: userId } }))?.name ||
+              from.first_name ||
               undefined,
           },
         });
 
         const active = await getActiveCharacter(userId);
+        const hi = from.first_name ? `hey ${from.first_name}` : "hey";
         await telegramSendMessage(
           chatId,
           active
-            ? `hey — it's ${active.name}. text me whenever`
-            : `hey. talk soon`,
+            ? `${hi} — it's ${active.name}. text me whenever`
+            : `${hi}. talk soon`,
         );
         return Response.json({ ok: true });
       }
 
       const existing = await prisma.user.findUnique({ where: { telegramId } });
       if (existing) {
-        await telegramSendMessage(chatId, "hey again");
+        await syncTelegramProfile(existing.id, from);
+        await telegramSendMessage(
+          chatId,
+          from.first_name ? `hey ${from.first_name}` : "hey again",
+        );
       } else {
         await telegramSendMessage(
           chatId,
@@ -118,8 +144,10 @@ export async function POST(req: Request) {
       return Response.json({ ok: true });
     }
 
+    // Always refresh Telegram identity so the character knows who they're texting
+    await syncTelegramProfile(user.id, from);
+
     if (text === "/who" || text === "/status") {
-      // Admin debug only — keep terse
       const character = await prisma.character.findFirst({
         where: { userId: user.id, active: true },
       });
@@ -128,15 +156,14 @@ export async function POST(req: Request) {
             where: { characterId: character.id },
           })
         : null;
-      const call =
-        user.settings?.howToAddress || user.name || message.from.first_name;
       const phase = rel
         ? relationshipPhase(rel.trust, rel.affection)
         : "—";
       await telegramSendMessage(
         chatId,
         [
-          `you: ${call}`,
+          `telegram: ${from.first_name ?? "—"}${from.username ? ` @${from.username}` : ""}`,
+          `admin nick: ${user.settings?.howToAddress ?? "—"}`,
           `active: ${character?.name ?? "none"}`,
           rel
             ? `${phase} · t ${rel.trust.toFixed(2)} · a ${rel.affection.toFixed(2)} · ${rel.mood}`
@@ -157,9 +184,14 @@ export async function POST(req: Request) {
     const result = await runCharacterReply({
       userId: user.id,
       message: text,
+      partner: {
+        channel: "telegram",
+        telegramFirstName: from.first_name ?? null,
+        telegramLastName: from.last_name ?? null,
+        telegramUsername: from.username ?? null,
+      },
     });
     if (!result.ok) {
-      // Soft fail — don't sound like a system
       await telegramSendMessage(
         chatId,
         result.status === 429
@@ -169,7 +201,6 @@ export async function POST(req: Request) {
       return Response.json({ ok: true });
     }
 
-    // Photo first or mid-stream feel: short bubble, then photo, then rest
     const bubbles = result.bubbles;
     let photoSent = false;
 

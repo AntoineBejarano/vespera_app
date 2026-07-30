@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       userId: session.user.id,
       message,
       characterId,
+      partner: { channel: "web" },
     });
 
     if (!result.ok) {

@@ -9,13 +9,13 @@ function pick<T>(arr: T[]): T {
 }
 
 /** Light, believable typos — not gibberish */
-export function applyHumanTypos(text: string, chance = 0.35): string {
+export function applyHumanTypos(text: string, chance = 0.22): string {
   if (Math.random() > chance) return text;
 
   let out = text;
 
-  // Drop some accents (Spanish feel) or soft English slips
-  if (Math.random() < 0.5) {
+  // Soft English slips / occasional accent drops if Spanish slipped in
+  if (Math.random() < 0.35) {
     out = out
       .replace(/á/g, () => (Math.random() < 0.4 ? "a" : "á"))
       .replace(/é/g, () => (Math.random() < 0.4 ? "e" : "é"))
@@ -26,7 +26,7 @@ export function applyHumanTypos(text: string, chance = 0.35): string {
   }
 
   // Occasional double letter / missing letter in a mid word
-  if (Math.random() < 0.45) {
+  if (Math.random() < 0.35) {
     const words = out.split(/(\s+)/);
     const idx = words.findIndex(
       (w) => w.length > 4 && /^[A-Za-zÀ-ÿ]+$/.test(w),
@@ -44,19 +44,19 @@ export function applyHumanTypos(text: string, chance = 0.35): string {
   }
 
   // lowercase start sometimes
-  if (Math.random() < 0.4 && out[0] && /[A-ZÁÉÍÓÚ]/.test(out[0])) {
+  if (Math.random() < 0.35 && out[0] && /[A-ZÁÉÍÓÚ]/.test(out[0])) {
     out = out[0].toLowerCase() + out.slice(1);
   }
 
   // missing terminal punctuation sometimes
-  if (Math.random() < 0.35) {
+  if (Math.random() < 0.3) {
     out = out.replace(/[.!?]+$/u, "");
   }
 
   return out;
 }
 
-export function maybeAddEmoji(text: string, chance = 0.28): string {
+export function maybeAddEmoji(text: string, chance = 0.22): string {
   if (Math.random() > chance) return text;
   if (/[\u{1F300}-\u{1FAFF}]/u.test(text)) return text;
   return `${text.trim()} ${pick(EMOJIS)}`;
@@ -64,6 +64,7 @@ export function maybeAddEmoji(text: string, chance = 0.28): string {
 
 /**
  * Split a model reply into several short Telegram-like bubbles.
+ * Don't force multiple bubbles for a single short line.
  */
 export function splitIntoBubbles(raw: string): string[] {
   let text = raw
@@ -71,10 +72,12 @@ export function splitIntoBubbles(raw: string): string[] {
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
-  // Strip markdown-ish structure
-  text = text.replace(/^#{1,6}\s+/gm, "").replace(/\*\*/g, "");
+  // Strip markdown-ish / therapist scaffolding
+  text = text
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/\*\*/g, "")
+    .replace(/^[-•]\s+/gm, "");
 
-  // Prefer sentence boundaries
   const sentences = text
     .split(/(?<=[.!?…])\s+|\n+/)
     .map((s) => s.trim())
@@ -82,10 +85,15 @@ export function splitIntoBubbles(raw: string): string[] {
 
   if (sentences.length === 0) return [text];
 
-  const target =
-    sentences.length === 1
-      ? 1
-      : Math.min(4, Math.max(2, Math.ceil(sentences.length * rand(0.5, 0.9))));
+  // One short reply → one bubble
+  if (sentences.length === 1 && sentences[0]!.length < 160) {
+    return [maybeAddEmoji(applyHumanTypos(sentences[0]!))].filter(Boolean);
+  }
+
+  const target = Math.min(
+    3,
+    Math.max(1, Math.ceil(sentences.length * rand(0.45, 0.85))),
+  );
 
   const bubbles: string[] = [];
   let bucket: string[] = [];
@@ -100,15 +108,14 @@ export function splitIntoBubbles(raw: string): string[] {
   }
   if (bucket.length) bubbles.push(bucket.join(" "));
 
-  // If still one long blob, hard-split by commas / length
-  if (bubbles.length === 1 && bubbles[0]!.length > 140) {
+  if (bubbles.length === 1 && bubbles[0]!.length > 160) {
     const long = bubbles[0]!;
     const mid = Math.floor(long.length / 2);
     const cut = long.lastIndexOf(" ", mid);
     if (cut > 40) {
-      return [long.slice(0, cut).trim(), long.slice(cut).trim()].filter(
-        Boolean,
-      );
+      return [long.slice(0, cut).trim(), long.slice(cut).trim()]
+        .filter(Boolean)
+        .map((b) => maybeAddEmoji(applyHumanTypos(b)));
     }
   }
 
@@ -116,7 +123,7 @@ export function splitIntoBubbles(raw: string): string[] {
     .map((b) => maybeAddEmoji(applyHumanTypos(b)))
     .map((b) => b.trim())
     .filter((b) => b.length > 0)
-    .slice(0, 5);
+    .slice(0, 4);
 }
 
 export function randomReplyDelayMs(): number {

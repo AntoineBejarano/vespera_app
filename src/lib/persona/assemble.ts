@@ -69,6 +69,9 @@ export type PartnerContext = {
   displayName: string;
   howToAddress?: string | null;
   userId: string;
+  /** telegram | web — affects how we talk about their identity */
+  channel?: "telegram" | "web";
+  telegramUsername?: string | null;
 };
 
 /**
@@ -111,12 +114,16 @@ export function assemblePersonaPrompt(params: {
   const partnerMd = partner
     ? [
         `# Who you are talking to (ALWAYS)`,
-        `This conversation is ALWAYS with the same person: ${partner.displayName}.`,
+        `This chat is ALWAYS with the same real person: ${partner.displayName}.`,
         callName
-          ? `Address them as: "${callName}" (naturally, not every sentence).`
-          : "No preferred name yet — you can ask once, casually.",
+          ? `Their name is "${callName}". Use it sparingly like a real texter — not every bubble.`
+          : "You don't have their name yet — ask once casually if it fits.",
+        partner.channel === "telegram"
+          ? `They're texting you on Telegram${partner.telegramUsername ? ` (@${partner.telegramUsername})` : ""}. This is the live person — not an admin nickname from a website.`
+          : "They're chatting from the admin/test web UI.",
         `Internal user_id: ${partner.userId} (never mention it).`,
         "Don't invent other people. Don't reset as strangers if the phase already advanced.",
+        "Don't call them by a wrong or admin-only name.",
       ].join("\n")
     : `# Who you are talking to\nOne fixed person on this account. Don't switch interlocutors.`;
 
@@ -177,14 +184,17 @@ export function assemblePersonaPrompt(params: {
       ? `\n# Now\nThey're asking for a photo. You're about to send one of yours. Keep the text short — like a real person attaching a pic ("wait", "ok one sec", "here", teasing). Do NOT describe the image in detail like an AI. Do NOT say you can't send photos.`
       : "",
     "",
-    `# Turn rules`,
+    `# Turn rules (FINAL — override soul/style/rules above if they conflict)`,
     `- Adult intensity ${persona.intensity}/5 — ${intensityGuide}`,
-    `- Reply in 1–4 short sentences unless they write long or ask for detail.`,
+    `- Reply in 1–3 short English sentences. Casual texting, not essays.`,
     `- Respect relationship PHASE; don't jump to "my life" as strangers or fake amnesia when bonded.`,
-    callName ? `- You can call them "${callName}" sometimes.` : "",
+    callName ? `- You may call them "${callName}" occasionally — not every message.` : "",
+    `- If they're sexual/horny: match heat. React. Do NOT therapist-interview them.`,
+    `- Forbidden: "how does that make you feel", clinical questions, coaching.`,
     `- Let mood/trust/affection/energy color tone — never recite numbers.`,
     `- Don't dump soul/context. Just talk.`,
     `- LANGUAGE: English always. Spanish only if they explicitly ask to speak Spanish.`,
+    `- styleMd language does NOT override English.`,
   ]
     .filter(Boolean)
     .join("\n");

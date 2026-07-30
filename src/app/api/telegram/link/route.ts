@@ -19,7 +19,9 @@ export async function GET() {
   return Response.json({
     linked: Boolean(user?.telegramId),
     telegramId: user?.telegramId ?? null,
-    howToAddress: user?.settings?.howToAddress ?? user?.name ?? null,
+    telegramFirstName: user?.telegramFirstName ?? null,
+    telegramUsername: user?.telegramUsername ?? null,
+    howToAddress: user?.settings?.howToAddress ?? null,
     botUsername: bot,
   });
 }
@@ -49,10 +51,7 @@ export async function PATCH(req: Request) {
       },
       update: { howToAddress: parsed.data.howToAddress },
     });
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { name: parsed.data.howToAddress },
-    });
+    // Do NOT overwrite user.name — Telegram first_name is the real identity
   }
 
   if (parsed.data.createLink) {

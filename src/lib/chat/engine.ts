@@ -21,6 +21,7 @@ import {
   looksLikePhotoRequest,
   splitIntoBubbles,
 } from "@/lib/chat/humanize";
+import { resolvePartnerName } from "@/lib/telegram/profile";
 
 export type ChatPhotoPayload = {
   url: string;
@@ -38,6 +39,13 @@ export type ChatEngineResult =
       modelId: string;
     }
   | { ok: false; error: string; status: number };
+
+export type ChatPartnerOverride = {
+  channel: "telegram" | "web";
+  telegramFirstName?: string | null;
+  telegramLastName?: string | null;
+  telegramUsername?: string | null;
+};
 
 async function pickCharacterPhoto(characterId: string) {
   const photos = await prisma.characterPhoto.findMany({
@@ -57,6 +65,7 @@ export async function runCharacterReply(params: {
   userId: string;
   message: string;
   characterId?: string;
+  partner?: ChatPartnerOverride;
 }): Promise<ChatEngineResult> {
   const text = params.message.trim();
   if (!text) return { ok: false, error: "Empty message", status: 400 };
@@ -115,8 +124,21 @@ export async function runCharacterReply(params: {
   const recent = await getRecentHistory(user.id, character.id, 25);
   const relationship = await ensureRelationshipState(user.id, character.id);
 
-  const howToAddress =
-    user.settings?.howToAddress || user.name || null;
+  const channel = params.partner?.channel ?? "web";
+  const tgFirst =
+    params.partner?.telegramFirstName ?? user.telegramFirstName;
+  const tgLast =
+    params.partner?.telegramLastName ?? user.telegramLastName;
+  const tgUser =
+    params.partner?.telegramUsername ?? user.telegramUsername;
+
+  const partnerName = resolvePartnerName({
+    channel,
+    telegramFirstName: tgFirst,
+    telegramLastName: tgLast,
+    howToAddress: user.settings?.howToAddress,
+    accountName: user.name,
+  });
 
   const system = assemblePersonaPrompt({
     persona: {
@@ -139,9 +161,11 @@ export async function runCharacterReply(params: {
     memoryBrief: memories,
     summary: summary?.content,
     partner: {
-      displayName: user.name || "you",
-      howToAddress,
+      displayName: partnerName.displayName,
+      howToAddress: partnerName.howToAddress,
       userId: user.id,
+      channel,
+      telegramUsername: tgUser,
     },
     photoHint: Boolean(photo),
   });
