@@ -10,6 +10,9 @@ export type MemoryType =
   | "narrative"
   | "character";
 
+/** Cached: null=unknown, true=supports text embeddings, false=use Postgres only */
+let vectorEmbeddingsOk: boolean | null = null;
+
 function hasVector() {
   return Boolean(
     process.env.UPSTASH_VECTOR_REST_URL &&
@@ -18,11 +21,48 @@ function hasVector() {
 }
 
 function getIndex() {
-  if (!hasVector()) return null;
+  if (!hasVector() || vectorEmbeddingsOk === false) return null;
   return new Index({
     url: process.env.UPSTASH_VECTOR_REST_URL!,
     token: process.env.UPSTASH_VECTOR_REST_TOKEN!,
   });
+}
+
+function isEmbeddingUnsupportedError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("Embedding data for this index is not allowed") ||
+    message.includes("must be created with an embedding model")
+  );
+}
+
+async function searchFromPostgres(params: {
+  userId: string;
+  characterId: string;
+  query: string;
+  topK: number;
+}): Promise<string[]> {
+  const rows = await prisma.memory.findMany({
+    where: {
+      userId: params.userId,
+      characterId: params.characterId,
+      content: {
+        contains: params.query.slice(0, 40),
+        mode: "insensitive",
+      },
+    },
+    orderBy: { updatedAt: "desc" },
+    take: params.topK,
+  });
+
+  if (rows.length) return rows.map((r) => `[${r.type}] ${r.content}`);
+
+  const recent = await prisma.memory.findMany({
+    where: { userId: params.userId, characterId: params.characterId },
+    orderBy: { updatedAt: "desc" },
+    take: params.topK,
+  });
+  return recent.map((r) => `[${r.type}] ${r.content}`);
 }
 
 export async function upsertMemory(params: {
@@ -34,18 +74,32 @@ export async function upsertMemory(params: {
 }) {
   const vectorId = nanoid();
   const index = getIndex();
+  let savedVectorId: string | null = null;
 
   if (index) {
-    await index.upsert({
-      id: vectorId,
-      data: params.content,
-      metadata: {
-        userId: params.userId,
-        characterId: params.characterId,
-        type: params.type,
-        createdAt: new Date().toISOString(),
-      },
-    });
+    try {
+      await index.upsert({
+        id: vectorId,
+        data: params.content,
+        metadata: {
+          userId: params.userId,
+          characterId: params.characterId,
+          type: params.type,
+          createdAt: new Date().toISOString(),
+        },
+      });
+      savedVectorId = vectorId;
+      vectorEmbeddingsOk = true;
+    } catch (error) {
+      if (isEmbeddingUnsupportedError(error)) {
+        vectorEmbeddingsOk = false;
+        console.warn(
+          "[memory/vector] Index sin embedding model. Usando Postgres. Recrea el índice en Upstash con un modelo (p.ej. BGE-M3).",
+        );
+      } else {
+        console.error("[memory/vector] upsert failed, falling back to Postgres", error);
+      }
+    }
   }
 
   return prisma.memory.create({
@@ -54,7 +108,7 @@ export async function upsertMemory(params: {
       characterId: params.characterId,
       type: params.type,
       content: params.content,
-      vectorId: index ? vectorId : null,
+      vectorId: savedVectorId,
       metadata: (params.metadata ?? {}) as Prisma.InputJsonValue,
     },
   });
@@ -70,36 +124,37 @@ export async function searchMemories(params: {
   const index = getIndex();
 
   if (index) {
-    const result = await index.query({
-      data: params.query,
-      topK,
-      includeMetadata: true,
-      includeData: true,
-      filter: `userId = '${params.userId}' AND characterId = '${params.characterId}'`,
-    });
-    return result
-      .map((r) => (typeof r.data === "string" ? r.data : null))
-      .filter(Boolean) as string[];
+    try {
+      const result = await index.query({
+        data: params.query,
+        topK,
+        includeMetadata: true,
+        includeData: true,
+        filter: `userId = '${params.userId}' AND characterId = '${params.characterId}'`,
+      });
+      vectorEmbeddingsOk = true;
+      const hits = result
+        .map((r) => (typeof r.data === "string" ? r.data : null))
+        .filter(Boolean) as string[];
+      if (hits.length) return hits;
+    } catch (error) {
+      if (isEmbeddingUnsupportedError(error)) {
+        vectorEmbeddingsOk = false;
+        console.warn(
+          "[memory/vector] Index sin embedding model. Query vía Postgres.",
+        );
+      } else {
+        console.error("[memory/vector] query failed, falling back to Postgres", error);
+      }
+    }
   }
 
-  const rows = await prisma.memory.findMany({
-    where: {
-      userId: params.userId,
-      characterId: params.characterId,
-      content: { contains: params.query.slice(0, 40), mode: "insensitive" },
-    },
-    orderBy: { updatedAt: "desc" },
-    take: topK,
+  return searchFromPostgres({
+    userId: params.userId,
+    characterId: params.characterId,
+    query: params.query,
+    topK,
   });
-
-  if (rows.length) return rows.map((r) => `[${r.type}] ${r.content}`);
-
-  const recent = await prisma.memory.findMany({
-    where: { userId: params.userId, characterId: params.characterId },
-    orderBy: { updatedAt: "desc" },
-    take: topK,
-  });
-  return recent.map((r) => `[${r.type}] ${r.content}`);
 }
 
 export async function listMemories(userId: string, characterId: string) {
@@ -119,16 +174,24 @@ export async function updateMemory(
 
   const index = getIndex();
   if (index && memory.vectorId) {
-    await index.upsert({
-      id: memory.vectorId,
-      data: content,
-      metadata: {
-        userId: memory.userId,
-        characterId: memory.characterId,
-        type: memory.type,
-        createdAt: memory.createdAt.toISOString(),
-      },
-    });
+    try {
+      await index.upsert({
+        id: memory.vectorId,
+        data: content,
+        metadata: {
+          userId: memory.userId,
+          characterId: memory.characterId,
+          type: memory.type,
+          createdAt: memory.createdAt.toISOString(),
+        },
+      });
+    } catch (error) {
+      if (isEmbeddingUnsupportedError(error)) {
+        vectorEmbeddingsOk = false;
+      } else {
+        console.error("[memory/vector] update upsert failed", error);
+      }
+    }
   }
 
   return prisma.memory.update({
@@ -143,7 +206,11 @@ export async function deleteMemory(id: string, userId: string) {
 
   const index = getIndex();
   if (index && memory.vectorId) {
-    await index.delete(memory.vectorId);
+    try {
+      await index.delete(memory.vectorId);
+    } catch (error) {
+      console.error("[memory/vector] delete failed", error);
+    }
   }
 
   await prisma.memory.delete({ where: { id } });
