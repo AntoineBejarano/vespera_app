@@ -14,7 +14,7 @@ if [ -z "${AUTH_SECRET:-}" ]; then
 fi
 
 echo "[start] Applying Prisma schema..."
-npx prisma db push --skip-generate || {
+npx prisma db push || {
   echo "[start] WARNING: prisma db push failed; continuing so logs are visible"
 }
 
