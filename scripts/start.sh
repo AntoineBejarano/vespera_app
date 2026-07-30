@@ -14,8 +14,11 @@ if [ -z "${AUTH_SECRET:-}" ]; then
 fi
 
 echo "[start] Applying Prisma schema..."
-npx prisma db push || {
-  echo "[start] WARNING: prisma db push failed; continuing so logs are visible"
+# Production may need index/constraint renames; accept-data-loss only covers
+# non-destructive unique-constraint warnings Prisma still flags as data-loss.
+npx prisma db push --accept-data-loss || {
+  echo "[start] ERROR: prisma db push failed"
+  exit 1
 }
 
 echo "[start] Starting Next.js server..."
