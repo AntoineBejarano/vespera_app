@@ -1,14 +1,13 @@
 export const DEFAULT_MODEL =
-  process.env.DEFAULT_MODEL ?? "undi95/toppy-m-7b";
+  process.env.DEFAULT_MODEL ?? "gryphe/mythomax-l2-13b";
 
 export const ALLOWED_MODELS = (
   process.env.ALLOWED_MODELS ??
   [
-    "undi95/toppy-m-7b",
-    "neversleep/noromaid-20b",
-    "cognitivecomputations/dolphin-mixtral-8x7b",
     "gryphe/mythomax-l2-13b",
+    "cognitivecomputations/dolphin-mistral-24b-venice-edition",
     "nousresearch/hermes-3-llama-3.1-70b",
+    "nousresearch/hermes-4-70b",
   ].join(",")
 )
   .split(",")
@@ -26,9 +25,9 @@ export function resolveModel(preferred?: string | null): string {
 }
 
 export const MODEL_LABELS: Record<string, string> = {
-  "undi95/toppy-m-7b": "Toppy M 7B (rápido)",
-  "neversleep/noromaid-20b": "Noromaid 20B (roleplay)",
-  "cognitivecomputations/dolphin-mixtral-8x7b": "Dolphin Mixtral (uncensored)",
-  "gryphe/mythomax-l2-13b": "MythoMax 13B (nicho RP)",
+  "gryphe/mythomax-l2-13b": "MythoMax 13B (roleplay)",
+  "cognitivecomputations/dolphin-mistral-24b-venice-edition":
+    "Dolphin Mistral 24B (uncensored)",
   "nousresearch/hermes-3-llama-3.1-70b": "Hermes 3 70B (calidad)",
+  "nousresearch/hermes-4-70b": "Hermes 4 70B (calidad)",
 };

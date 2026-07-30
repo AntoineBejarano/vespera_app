@@ -94,8 +94,12 @@ export async function POST(req: Request) {
     return Response.json({ character: { id: character.id, name: character.name } });
   } catch (error) {
     console.error("[characters POST]", error);
+    const detail =
+      error instanceof Error ? error.message : "Error desconocido";
     return Response.json(
-      { error: "No se pudo generar el personaje. Revisa OPENROUTER_API_KEY." },
+      {
+        error: `No se pudo generar el personaje: ${detail}`,
+      },
       { status: 502 },
     );
   }
