@@ -1,22 +1,42 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { hexclaveServerApp } from "@/hexclave/server";
 
 /**
  * Resolve Hexclave auth → local Prisma tenant User (multi-tenant).
+ *
+ * Never use Hexclave's `{ or: "redirect" }` on the server with hosted auth —
+ * it needs a browser URL for the OAuth callback and throws HexclaveAssertionError.
+ * Instead redirect to `/?auth=signin` so the client can call redirectToSignIn().
  */
 export async function getAppUser(opts?: {
   or?: "redirect" | "throw" | "return-null";
 }) {
   const mode = opts?.or ?? "return-null";
 
-  const hx =
-    mode === "redirect"
-      ? await hexclaveServerApp.getUser({ or: "redirect" })
-      : mode === "throw"
+  let hx;
+  try {
+    hx =
+      mode === "throw"
         ? await hexclaveServerApp.getUser({ or: "throw" })
         : await hexclaveServerApp.getUser();
+  } catch (err) {
+    if (mode === "throw") throw err;
+    if (mode === "redirect") {
+      redirect("/?auth=signin");
+    }
+    return null;
+  }
 
-  if (!hx) return null;
+  if (!hx) {
+    if (mode === "redirect") {
+      redirect("/?auth=signin");
+    }
+    if (mode === "throw") {
+      throw new Error("UNAUTHORIZED");
+    }
+    return null;
+  }
 
   const email = hx.primaryEmail?.toLowerCase() ?? null;
   const hexclaveId = hx.id;
