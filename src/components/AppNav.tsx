@@ -29,15 +29,6 @@ export function AppNav({
               <Link href="/personas" className="hover:text-[var(--ink)]">
                 Personas
               </Link>
-              <Link href="/personas/new" className="hover:text-[var(--ink)]">
-                New
-              </Link>
-              <Link href="/chat" className="hover:text-[var(--ink)]">
-                Test chat
-              </Link>
-              <Link href="/memory" className="hover:text-[var(--ink)]">
-                Memory
-              </Link>
               <Link href="/settings" className="hover:text-[var(--ink)]">
                 Settings
               </Link>

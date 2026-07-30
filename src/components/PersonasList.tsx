@@ -35,8 +35,8 @@ export function PersonasList({ initial }: { initial: Persona[] }) {
             Personas
           </h1>
           <p className="mt-2 max-w-lg text-[var(--muted)]">
-            Create N personalities. Each one can power Telegram bots and a chat
-            API — isolated conversations per peer.
+            Create N personalities. Chat, memory, bots and API all live on each
+            persona — not as global tabs.
           </p>
         </div>
         <Link
@@ -61,9 +61,9 @@ export function PersonasList({ initial }: { initial: Persona[] }) {
         <ul className="mt-10 grid gap-4 sm:grid-cols-2">
           {initial.map((p) => (
             <li key={p.id}>
-              <Link href={`/personas/${p.id}`} className="block h-full">
-                <MagicCard className="h-full">
-                  <div className="p-5">
+              <MagicCard className="h-full">
+                <div className="flex h-full flex-col p-5">
+                  <Link href={`/personas/${p.id}`} className="block flex-1">
                     <div className="flex items-baseline justify-between gap-2">
                       <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--ink)]">
                         {p.name}
@@ -92,9 +92,29 @@ export function PersonasList({ initial }: { initial: Persona[] }) {
                         </span>
                       ) : null}
                     </div>
+                  </Link>
+                  <div className="mt-4 flex gap-4 border-t border-[var(--line)] pt-3 text-sm">
+                    <Link
+                      href={`/chat?characterId=${p.id}`}
+                      className="text-[var(--accent)] hover:underline"
+                    >
+                      Test chat
+                    </Link>
+                    <Link
+                      href={`/personas/${p.id}/memory`}
+                      className="text-[var(--accent)] hover:underline"
+                    >
+                      Memory
+                    </Link>
+                    <Link
+                      href={`/personas/${p.id}`}
+                      className="ml-auto text-[var(--muted)] hover:text-[var(--ink)]"
+                    >
+                      Open →
+                    </Link>
                   </div>
-                </MagicCard>
-              </Link>
+                </div>
+              </MagicCard>
             </li>
           ))}
         </ul>

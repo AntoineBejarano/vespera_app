@@ -1,17 +1,10 @@
 import { getAppUser } from "@/lib/session";
-import { AppNav } from "@/components/AppNav";
-import { MemoryPanel } from "@/components/MemoryPanel";
 import { redirect } from "next/navigation";
 
+/** Memory is per-persona — send people to the roster. */
 export default async function MemoryPage() {
   const user = await getAppUser({ or: "redirect" });
-  if (!user) redirect("/");
+  if (!user) redirect("/handler/sign-in");
   if (!user.ageVerifiedAt) redirect("/age-gate");
-
-  return (
-    <>
-      <AppNav email={user.email} />
-      <MemoryPanel />
-    </>
-  );
+  redirect("/personas");
 }

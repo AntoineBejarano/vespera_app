@@ -49,6 +49,8 @@ export function ChatPanel({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
 
+  const active = characters.find((c) => c.id === characterId);
+
   async function switchCharacter(id: string) {
     setCharacterId(id);
     setMessages([]);
@@ -194,20 +196,32 @@ export function ChatPanel({
   return (
     <div className="mx-auto flex h-[calc(100vh-57px)] max-w-3xl flex-col px-4 pb-4">
       <div className="flex flex-wrap items-center gap-3 border-b border-[var(--line)] py-3">
-        <span className="rounded-full border border-[var(--line)] px-2.5 py-1 text-[10px] uppercase tracking-wider text-[var(--muted)]">
-          Agent test
-        </span>
-        <select
-          className="border border-[var(--line)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
-          value={characterId}
-          onChange={(e) => switchCharacter(e.target.value)}
+        <a
+          href={`/personas/${characterId}`}
+          className="text-sm text-[var(--muted)] hover:text-[var(--ink)]"
         >
-          {characters.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+          ← {active?.name ?? "Persona"}
+        </a>
+        <span className="rounded-full border border-[var(--line)] px-2.5 py-1 text-[10px] uppercase tracking-wider text-[var(--muted)]">
+          Test chat
+        </span>
+        {characters.length > 1 ? (
+          <select
+            className="border border-[var(--line)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+            value={characterId}
+            onChange={(e) => switchCharacter(e.target.value)}
+          >
+            {characters.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span className="font-[family-name:var(--font-display)] text-sm font-semibold text-[var(--ink)]">
+            {active?.name}
+          </span>
+        )}
         <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
           Intensity
           <input
@@ -219,6 +233,12 @@ export function ChatPanel({
           />
           <span className="w-4 text-[var(--ink)]">{intensity}</span>
         </label>
+        <a
+          href={`/personas/${characterId}/memory`}
+          className="text-sm text-[var(--muted)] hover:text-[var(--ink)]"
+        >
+          Memory
+        </a>
         <button
           type="button"
           onClick={resetChat}

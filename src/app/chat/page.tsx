@@ -10,28 +10,26 @@ export default async function ChatPage({
   searchParams: Promise<{ characterId?: string }>;
 }) {
   const user = await getAppUser({ or: "redirect" });
-  if (!user) redirect("/");
+  if (!user) redirect("/handler/sign-in");
   if (!user.ageVerifiedAt) redirect("/age-gate");
 
   const { characterId } = await searchParams;
+  if (!characterId) redirect("/personas");
 
-  const characters = await prisma.character.findMany({
-    where: { userId: user.id },
-    orderBy: { updatedAt: "desc" },
+  const character = await prisma.character.findFirst({
+    where: { id: characterId, userId: user.id },
     select: { id: true, name: true, intensity: true, active: true },
   });
+  if (!character) redirect("/personas");
 
-  if (!characters.length) redirect("/personas/new");
-
-  const initial =
-    characters.find((c) => c.id === characterId)?.id ??
-    characters.find((c) => c.active)?.id ??
-    characters[0]?.id;
-
+  // Only this persona in the test chat — no global roster switcher feel.
   return (
     <>
       <AppNav email={user.email} />
-      <ChatPanel characters={characters} initialCharacterId={initial} />
+      <ChatPanel
+        characters={[character]}
+        initialCharacterId={character.id}
+      />
     </>
   );
 }

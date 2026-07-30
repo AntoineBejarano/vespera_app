@@ -234,12 +234,20 @@ export function PersonaDetail({
             {bots.reduce((n, b) => n + b.peerCount, 0)} Telegram peers
           </p>
         </div>
-        <Link
-          href={`/chat?characterId=${persona.id}`}
-          className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm hover:border-[var(--accent)]"
-        >
-          Test chat
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/chat?characterId=${persona.id}`}
+            className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm hover:border-[var(--accent)]"
+          >
+            Test chat
+          </Link>
+          <Link
+            href={`/personas/${persona.id}/memory`}
+            className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm hover:border-[var(--accent)]"
+          >
+            Memory
+          </Link>
+        </div>
       </div>
 
       {message ? (

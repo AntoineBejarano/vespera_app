@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MagicCard } from "@/components/magicui/magic-card";
 
@@ -8,15 +9,22 @@ type MemoryRow = {
   type: string;
   content: string;
   createdAt: string;
+  peerLabel?: string | null;
 };
 
-export function MemoryPanel() {
+export function MemoryPanel({
+  characterId,
+  characterName,
+}: {
+  characterId: string;
+  characterName: string;
+}) {
   const [memories, setMemories] = useState<MemoryRow[]>([]);
   const [editing, setEditing] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
-    const res = await fetch("/api/memory");
+    const res = await fetch(`/api/memory?characterId=${characterId}`);
     const data = await res.json();
     if (!res.ok) {
       setError(data.error ?? "Error");
@@ -27,7 +35,7 @@ export function MemoryPanel() {
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [characterId]);
 
   async function save(id: string) {
     const content = editing[id];
@@ -62,25 +70,36 @@ export function MemoryPanel() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--ink)]">
-        What she remembers
+      <Link
+        href={`/personas/${characterId}`}
+        className="text-sm text-[var(--muted)] hover:text-[var(--ink)]"
+      >
+        ← {characterName}
+      </Link>
+      <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--ink)]">
+        Memory · {characterName}
       </h1>
       <p className="mt-2 text-[var(--muted)]">
-        Edit or delete memories. Transparency builds trust.
+        What this persona remembers across test chat and Telegram peers.
       </p>
       {error ? <p className="mt-4 text-sm text-[var(--danger)]">{error}</p> : null}
       <ul className="mt-8 space-y-3">
         {memories.length === 0 ? (
           <li className="text-[var(--muted)]">
-            No long memories yet. They appear as the relationship grows.
+            No memories yet for this persona.
           </li>
         ) : (
           memories.map((m) => (
             <li key={m.id}>
               <MagicCard>
                 <div className="p-4">
-                  <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
-                    {m.type}
+                  <div className="mb-2 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+                    <span>{m.type}</span>
+                    {m.peerLabel ? (
+                      <span className="rounded-full border border-[var(--line)] px-2 py-0.5 normal-case tracking-normal">
+                        {m.peerLabel}
+                      </span>
+                    ) : null}
                   </div>
                   {editing[m.id] !== undefined ? (
                     <textarea
