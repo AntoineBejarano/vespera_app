@@ -1,11 +1,12 @@
 export const DEFAULT_MODEL =
-  process.env.DEFAULT_MODEL ?? "gryphe/mythomax-l2-13b";
+  process.env.DEFAULT_MODEL ??
+  "cognitivecomputations/dolphin-mistral-24b-venice-edition";
 
 export const ALLOWED_MODELS = (
   process.env.ALLOWED_MODELS ??
   [
-    "gryphe/mythomax-l2-13b",
     "cognitivecomputations/dolphin-mistral-24b-venice-edition",
+    "gryphe/mythomax-l2-13b",
     "nousresearch/hermes-3-llama-3.1-70b",
     "nousresearch/hermes-4-70b",
   ].join(",")
@@ -25,9 +26,9 @@ export function resolveModel(preferred?: string | null): string {
 }
 
 export const MODEL_LABELS: Record<string, string> = {
-  "gryphe/mythomax-l2-13b": "MythoMax 13B (roleplay)",
   "cognitivecomputations/dolphin-mistral-24b-venice-edition":
-    "Dolphin Mistral 24B (uncensored)",
+    "Dolphin Venice 24B (natural + uncensored)",
+  "gryphe/mythomax-l2-13b": "MythoMax 13B (roleplay clásico, más literario)",
   "nousresearch/hermes-3-llama-3.1-70b": "Hermes 3 70B (calidad)",
   "nousresearch/hermes-4-70b": "Hermes 4 70B (calidad)",
 };

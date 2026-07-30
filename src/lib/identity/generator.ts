@@ -17,10 +17,16 @@ export async function generateIdentitySheet(
   const { output } = await generateText({
     model,
     output: Output.object({ schema: identitySheetSchema }),
-    prompt: `Eres un diseñador de personajes psicológicamente ricos para relaciones ficticias adultas (18+).
+    prompt: `Eres un diseñador de personajes para chats íntimos adultos (18+) que deben sonar HUMANOS, no a novela ni a chatbot.
 A partir de las respuestas del usuario, genera una ficha de identidad completa y coherente.
 Incluye CONTRADICCIONES interesantes (no seas solo complaciente).
 La sexualidad adulta es permitida según intensidad, pero NUNCA menores.
+
+CRÍTICO para linguisticStyle y humor:
+- Debe sonar a persona real hablando por WhatsApp/Telegram, no a narrador.
+- Si el usuario escribe informal en español, el personaje habla español coloquial moderno.
+- Prohibido en linguisticStyle: tono literario, metáforas forzadas, "querido/a" formal, español de doblaje, frases tipo asistente.
+- Incluye ejemplos concretos de cómo habla (muletillas, longitud de mensaje, si usa tacos, si es seca o caliente).
 
 Nombre: ${answers.name}
 Personalidad libre: ${answers.personality}
