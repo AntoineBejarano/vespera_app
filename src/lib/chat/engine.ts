@@ -17,13 +17,41 @@ import {
   ensureRelationshipState,
   maybeUpdateRelationship,
 } from "@/lib/persona/relationship";
+import {
+  looksLikePhotoRequest,
+  splitIntoBubbles,
+} from "@/lib/chat/humanize";
+
+export type ChatPhotoPayload = {
+  url: string;
+  caption?: string | null;
+};
 
 export type ChatEngineResult =
-  | { ok: true; text: string; characterName: string; modelId: string }
+  | {
+      ok: true;
+      text: string;
+      bubbles: string[];
+      photo: ChatPhotoPayload | null;
+      characterId: string;
+      characterName: string;
+      modelId: string;
+    }
   | { ok: false; error: string; status: number };
 
+async function pickCharacterPhoto(characterId: string) {
+  const photos = await prisma.characterPhoto.findMany({
+    where: { characterId },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!photos.length) return null;
+  const photo = photos[Math.floor(Math.random() * photos.length)]!;
+  return { url: photo.url, caption: photo.caption };
+}
+
 /**
- * Motor de chat compartido (web + Telegram): misma persona, memoria y relación por userId.
+ * Shared chat engine (web admin + Telegram): same persona, memory, relationship.
+ * Returns humanized bubbles + optional photo.
  */
 export async function runCharacterReply(params: {
   userId: string;
@@ -31,13 +59,13 @@ export async function runCharacterReply(params: {
   characterId?: string;
 }): Promise<ChatEngineResult> {
   const text = params.message.trim();
-  if (!text) return { ok: false, error: "Mensaje vacío", status: 400 };
+  if (!text) return { ok: false, error: "Empty message", status: 400 };
 
   if (containsProhibitedMinorContent(text)) {
     return {
       ok: false,
       error:
-        "Contenido no permitido (solo adultos 18+, sin menores ni age-play).",
+        "Content not allowed (adults 18+ only, no minors / age-play).",
       status: 400,
     };
   }
@@ -47,7 +75,7 @@ export async function runCharacterReply(params: {
     include: { settings: true },
   });
   if (!user?.ageVerifiedAt) {
-    return { ok: false, error: "Usuario no verificado 18+", status: 403 };
+    return { ok: false, error: "User not age-verified 18+", status: 403 };
   }
 
   const character = params.characterId
@@ -59,7 +87,7 @@ export async function runCharacterReply(params: {
   if (!character) {
     return {
       ok: false,
-      error: "No hay personaje activo. Créalo en la web (/chat/new).",
+      error: "No active character. Create one in admin (/chat/new).",
       status: 400,
     };
   }
@@ -68,10 +96,13 @@ export async function runCharacterReply(params: {
   if (!limit.allowed) {
     return {
       ok: false,
-      error: `Límite diario (${limit.limit}). Vuelve mañana.`,
+      error: `Daily limit (${limit.limit}). Try again tomorrow.`,
       status: 429,
     };
   }
+
+  const wantsPhoto = looksLikePhotoRequest(text);
+  const photo = wantsPhoto ? await pickCharacterPhoto(character.id) : null;
 
   const modelId = resolveModel(user.preferredModel);
   const memories = await searchMemories({
@@ -108,10 +139,11 @@ export async function runCharacterReply(params: {
     memoryBrief: memories,
     summary: summary?.content,
     partner: {
-      displayName: user.name || "tú",
+      displayName: user.name || "you",
       howToAddress,
       userId: user.id,
     },
+    photoHint: Boolean(photo),
   });
 
   await prisma.message.create({
@@ -135,17 +167,19 @@ export async function runCharacterReply(params: {
   });
 
   const reply = await result.text;
+  const bubbles = splitIntoBubbles(reply);
+  const stored = bubbles.join("\n\n");
 
   await prisma.message.create({
     data: {
       conversationId: conversation.id,
       role: "assistant",
-      content: reply,
+      content: stored,
     },
   });
   await appendHistory(user.id, character.id, {
     role: "assistant",
-    content: reply,
+    content: stored,
   });
   await prisma.conversation.update({
     where: { id: conversation.id },
@@ -161,20 +195,23 @@ export async function runCharacterReply(params: {
     userId: user.id,
     characterId: character.id,
     userMessage: text,
-    assistantMessage: reply,
+    assistantMessage: stored,
     modelId,
   });
   await maybeUpdateRelationship({
     userId: user.id,
     characterId: character.id,
     userMessage: text,
-    assistantMessage: reply,
+    assistantMessage: stored,
     modelId,
   });
 
   return {
     ok: true,
-    text: reply,
+    text: stored,
+    bubbles,
+    photo,
+    characterId: character.id,
     characterName: character.name,
     modelId,
   };

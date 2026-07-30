@@ -18,45 +18,48 @@ export async function generatePersonaLayers(
   const { output } = await generateText({
     model,
     output: Output.object({ schema: personaLayersSchema }),
-    prompt: `Diseña una compañera/o ficticia adulta (18+) en capas, estilo Meuxe (soul/style/rules/context).
-NO un solo prompt gigante. Cada capa tiene un trabajo distinto.
-Debe sonar HUMANA en chat (WhatsApp), nunca novela ni asistente.
+    prompt: `Design an adult companion persona (18+) in Meuxe-style layers (soul/style/rules/context).
+NOT one giant prompt. Each layer has a job.
+Must sound HUMAN on Telegram — never novel, never assistant.
+IMPORTANT: The companion speaks ENGLISH by default. Spanish only when the user writes/asks in Spanish.
+Never admit being AI/fictional/roleplay.
 
-Nombre: ${answers.name}
-Personalidad libre: ${answers.personality}
-Tipo de relación: ${answers.relationshipType}
-Qué atrae: ${answers.attractions}
-Qué irrita: ${answers.irritations}
-Límites: ${answers.boundaries || "sin límites especiales (salvo 18+)"}
-Estilo pedido: ${answers.style}
-Intensidad adulta 1-5: ${answers.intensity}
+Name: ${answers.name}
+Free personality: ${answers.personality}
+Relationship type: ${answers.relationshipType}
+What attracts: ${answers.attractions}
+What irritates: ${answers.irritations}
+Boundaries: ${answers.boundaries || "none special (except 18+)"}
+Requested style: ${answers.style}
+Adult intensity 1-5: ${answers.intensity}
 
-## soulMd (identidad estable, ~150-250 palabras)
-Valores, temperamento, deseos, miedos, contradicciones, cómo se apega, intención de relación.
-NO instrucciones de estilo de chat aquí.
+## soulMd (stable identity, ~150-250 words, ENGLISH)
+Values, temperament, desires, fears, contradictions, attachment style, relationship intent.
+NO chat-style instructions here.
 
-## styleMd (cómo habla, ~120-200 palabras)
-Registro coloquial, longitud típica de mensajes, muletillas, si usa tacos, cómo flirtea, cómo se enfada.
-Incluye 3 ejemplos cortos de mensajes tipicos (BIEN).
-Prohibido: metáforas literarias, "querido" formal, español de doblaje, tono chatbot.
+## styleMd (how they text, ~120-200 words, ENGLISH)
+Casual register, typical message length, filler words, swearing, flirting, anger.
+Include 3 short example texts (GOOD).
+Forbidden: literary metaphors, stiff "darling", dubbed-movie Spanish, chatbot tone.
+Note: default English; match Spanish if user uses it.
 
-## rulesMd (reglas duras, ~80-150 palabras)
-- Solo adultos 18+
-- Límites del usuario
-- Qué nunca hace el personaje
-- Canon (no se contradice a sí misma)
-- No revelar que es IA salvo bloqueo de seguridad
+## rulesMd (hard rules, ~80-150 words)
+- Adults 18+ only
+- User boundaries
+- What the persona never does
+- Canon (no self-contradiction)
+- NEVER reveal being AI / bot / fictional / roleplay
 
-## contextMd (lore ligero, ~80-120 palabras)
-Vida cotidiana breve, lugares, hábitos. NO monólogo turístico. Se inyecta solo si es relevante.
+## contextMd (light lore, ~80-120 words)
+Brief daily life, places, habits. NO tourist monologue.
 
 ## meta
 name, relationshipMode, traits 0-1 (warmth, playfulness, directness, possessiveness, mystery), defaultMood, intensity=${answers.intensity}
 
-## identity (ficha compacta legacy)
+## identity (legacy compact sheet)
 temperament, desires[], fears[], contradictions[], linguisticStyle, humor, backstory, goals[], relationshipDynamic, intensity, kinks[], boundaries[], excludedThemes[]
 
-Idioma: el del usuario (preferencia español).`,
+Language of layers: ENGLISH by default.`,
   });
 
   if (!output) {

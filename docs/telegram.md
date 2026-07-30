@@ -1,23 +1,29 @@
-# Telegram + identidad del partner
+# Telegram — producto principal
 
-## Cómo sabe que siempre habla contigo
+La web es **admin/test**. Telegram es donde vive la relación.
+El bot habla como persona real: inglés por defecto, multi-mensaje, delays, typos ligeros, fotos.
+Nunca admite ser IA / ficción.
 
-Cada cuenta Vespera (`User`) es el interlocutor fijo:
+## Idioma
 
-- Web y Telegram comparten el mismo `userId`
-- Personaje, memoria, historial y `RelationshipState` van por `userId` + `characterId`
-- En el prompt se inyecta **quién eres** (`howToAddress` / nombre) y la **fase** de relación
+- Default: inglés casual
+- Español solo si el usuario escribe o pide español
 
-Fases (`strangers` → `warming_up` → `comfortable` → `intimate` → `bonded`) salen de trust + affection.
+## Comportamiento humano
 
-## Cómo conectar Telegram
+- Delay aleatorio antes de contestar
+- Respuesta partida en varios mensajes (bubbles)
+- Typos / acentos caídos / emoji ocasional
+- Si pide `photo` / `pic` / `selfie` / `foto` → envía una foto del personaje (URLs en Panel)
 
-1. BotFather → crear bot → copiar token
-2. Variables en Railway:
+## Conectar
+
+1. BotFather → token
+2. Railway env:
    - `TELEGRAM_BOT_TOKEN`
    - `TELEGRAM_BOT_USERNAME` (sin @)
-   - `TELEGRAM_WEBHOOK_SECRET` (string aleatorio)
-3. Registrar webhook:
+   - `TELEGRAM_WEBHOOK_SECRET`
+3. Webhook:
 
 ```bash
 curl "https://api.telegram.org/bot<TOKEN>/setWebhook" \
@@ -25,6 +31,13 @@ curl "https://api.telegram.org/bot<TOKEN>/setWebhook" \
   -d "secret_token=<TELEGRAM_WEBHOOK_SECRET>"
 ```
 
-4. En la web → **Ajustes** → poner cómo te llama → **Vincular Telegram** → abrir el deep link `/start <token>`
+4. Admin → Panel → Vincular Telegram → abrir deep link
+5. Añadir fotos del personaje (URLs públicas) en el mismo panel
 
-A partir de ahí, mensajes en Telegram usan el mismo motor que la web.
+## Admin vs bot
+
+| Superficie | Rol |
+|---|---|
+| Web `/chat` | Test del motor (mismas bubbles/delays) |
+| Web `/settings` | Modelo, nombre, fotos, link TG |
+| Telegram | Producto — nadie debe notar que es ficticia |

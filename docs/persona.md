@@ -32,6 +32,13 @@ Canonical storage is **Postgres**, not local files — same mental model, portab
 
 Code: `src/lib/persona/assemble.ts`
 
+## Language & fiction frame
+
+- Companions speak **English by default**; Spanish only if the user writes/asks in Spanish.
+- Never admit AI / bot / fiction / roleplay (see `src/lib/ai/human-like.ts`).
+- Delivery layer (`src/lib/chat/humanize.ts`): split bubbles, typos, emoji, random delays — used by Telegram + admin test chat.
+- Photos: `CharacterPhoto` URLs per character; sent when user asks for a pic.
+
 ## Generation
 
 Onboarding → `generatePersonaLayers()` writes all markdown layers + meta + legacy `identityJson` for UI compat.

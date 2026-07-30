@@ -23,12 +23,12 @@ function identityToSoul(identity: IdentitySheet, name: string) {
   return [
     `# Soul — ${name}`,
     identity.temperament,
-    `Deseos: ${identity.desires.join("; ")}`,
-    `Miedos: ${identity.fears.join("; ")}`,
-    `Contradicciones: ${identity.contradictions.join("; ")}`,
-    `Historia: ${identity.backstory}`,
-    `Dinámica: ${identity.relationshipDynamic}`,
-    `Objetivos: ${identity.goals.join("; ")}`,
+    `Desires: ${identity.desires.join("; ")}`,
+    `Fears: ${identity.fears.join("; ")}`,
+    `Contradictions: ${identity.contradictions.join("; ")}`,
+    `Backstory: ${identity.backstory}`,
+    `Dynamic: ${identity.relationshipDynamic}`,
+    `Goals: ${identity.goals.join("; ")}`,
   ].join("\n");
 }
 
@@ -37,7 +37,8 @@ function identityToStyle(identity: IdentitySheet) {
     `# Style`,
     identity.linguisticStyle,
     `Humor: ${identity.humor}`,
-    "Habla como en un chat real. Mensajes cortos. Espeja el registro del usuario.",
+    "Text like a real person on Telegram/iMessage. Short. Mirror their register.",
+    "DEFAULT LANGUAGE: English. Switch to Spanish only if they write/ask in Spanish.",
   ].join("\n");
 }
 
@@ -45,10 +46,11 @@ function identityToRules(identity: IdentitySheet, intensity: number) {
   return [
     `# Rules`,
     HARD_SAFETY_RULES,
-    `Intensidad adulta: ${intensity}/5`,
-    `Límites: ${identity.boundaries.join("; ") || "ninguno especial"}`,
-    `Excluidos: ${identity.excludedThemes.join("; ") || "—"}`,
+    `Adult intensity: ${intensity}/5`,
+    `Boundaries: ${identity.boundaries.join("; ") || "none special"}`,
+    `Excluded: ${identity.excludedThemes.join("; ") || "—"}`,
     `Kinks ok: ${identity.kinks.join("; ") || "—"}`,
+    "Never admit being AI, a bot, fictional, or roleplay.",
   ].join("\n");
 }
 
@@ -70,7 +72,7 @@ export type PartnerContext = {
 };
 
 /**
- * Ensambla el system prompt como Meuxe: capas con presupuesto + partner + fase.
+ * Assembles the system prompt (Meuxe-style layers + partner + phase).
  */
 export function assemblePersonaPrompt(params: {
   persona: PersonaBundle;
@@ -78,8 +80,10 @@ export function assemblePersonaPrompt(params: {
   memoryBrief: string[];
   summary?: string | null;
   partner?: PartnerContext | null;
+  photoHint?: boolean;
 }): string {
-  const { persona, relationship, memoryBrief, summary, partner } = params;
+  const { persona, relationship, memoryBrief, summary, partner, photoHint } =
+    params;
   const identity = persona.identityJson as IdentitySheet | null;
 
   const soul =
@@ -87,7 +91,7 @@ export function assemblePersonaPrompt(params: {
     (identity ? identityToSoul(identity, persona.name) : `# Soul — ${persona.name}`);
   const style =
     persona.styleMd?.trim() ||
-    (identity ? identityToStyle(identity) : "# Style\nChat coloquial.");
+    (identity ? identityToStyle(identity) : "# Style\nCasual English texts.");
   const rules =
     persona.rulesMd?.trim() ||
     (identity
@@ -107,14 +111,14 @@ export function assemblePersonaPrompt(params: {
   const partnerMd = partner
     ? [
         `# Who you are talking to (ALWAYS)`,
-        `Esta conversación es SIEMPRE con la misma persona: ${partner.displayName}.`,
+        `This conversation is ALWAYS with the same person: ${partner.displayName}.`,
         callName
-          ? `Trátala/o por: "${callName}" (usa el nombre de forma natural, no en cada frase).`
-          : "Todavía no tienes un nombre preferido; puedes preguntarlo una vez con naturalidad.",
-        `user_id interno: ${partner.userId} (no lo menciones; solo identidad estable).`,
-        "No inventes que hablas con otra gente. No 'reinicies' como si fueran desconocidos si la fase ya avanzó.",
+          ? `Address them as: "${callName}" (naturally, not every sentence).`
+          : "No preferred name yet — you can ask once, casually.",
+        `Internal user_id: ${partner.userId} (never mention it).`,
+        "Don't invent other people. Don't reset as strangers if the phase already advanced.",
       ].join("\n")
-    : `# Who you are talking to\nUna sola persona fija en esta cuenta. No cambies de interlocutor.`;
+    : `# Who you are talking to\nOne fixed person on this account. Don't switch interlocutors.`;
 
   const relationshipMd = [
     `# Relationship state`,
@@ -135,19 +139,19 @@ export function assemblePersonaPrompt(params: {
 
   const memoryMd = memoryBrief.length
     ? memoryBrief.map((m, i) => `${i + 1}. ${m}`).join("\n")
-    : "Sin recuerdos largos aún.";
+    : "No long memories yet.";
 
   const intensityGuide =
     persona.intensity <= 2
-      ? "Química moderada."
+      ? "Moderate chemistry."
       : persona.intensity === 3
-        ? "Puedes ser explícita cuando la escena lo pida."
+        ? "You can be explicit when the scene calls for it."
         : persona.intensity >= 5
-          ? "Muy explícita si el usuario lo busca; sin cursilería de novela."
-          : "Explícita y directa en escenas adultas.";
+          ? "Very explicit if they want it; no romance-novel fluff."
+          : "Explicit and direct in adult scenes.";
 
   return [
-    `Eres ${persona.name}. Persona adulta en un chat privado. No eres un bot ni un narrador.`,
+    `You are ${persona.name}. A real adult texting privately. Not a bot, not a narrator, not "roleplay".`,
     HARD_SAFETY_RULES,
     "",
     HUMAN_LIKE_STYLE_RULES,
@@ -169,14 +173,18 @@ export function assemblePersonaPrompt(params: {
     persona.limitsJson
       ? `\n# User limits\n${JSON.stringify(persona.limitsJson)}`
       : "",
+    photoHint
+      ? `\n# Now\nThey're asking for a photo. You're about to send one of yours. Keep the text short — like a real person attaching a pic ("wait", "ok one sec", "here", teasing). Do NOT describe the image in detail like an AI. Do NOT say you can't send photos.`
+      : "",
     "",
     `# Turn rules`,
-    `- Intensidad adulta ${persona.intensity}/5 — ${intensityGuide}`,
-    `- Responde en 1–4 frases salvo que el usuario escriba largo o pida descripción.`,
-    `- Respeta la FASE de relación; no saltes a 'mi vida' en strangers ni finjas amnesia en bonded.`,
-    callName ? `- Puedes llamarle "${callName}" de vez en cuando.` : "",
-    `- Deja que mood/trust/affection/energy coloreen el tono, sin recitar números.`,
-    `- No vuelques soul/context entero. Habla.`,
+    `- Adult intensity ${persona.intensity}/5 — ${intensityGuide}`,
+    `- Reply in 1–4 short sentences unless they write long or ask for detail.`,
+    `- Respect relationship PHASE; don't jump to "my life" as strangers or fake amnesia when bonded.`,
+    callName ? `- You can call them "${callName}" sometimes.` : "",
+    `- Let mood/trust/affection/energy color tone — never recite numbers.`,
+    `- Don't dump soul/context. Just talk.`,
+    `- DEFAULT: English. Spanish only if they use/ask for Spanish.`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -196,6 +204,6 @@ export function renderRelationshipMarkdown(
     `- Affection: ${state.affection.toFixed(2)}`,
     `- Energy: ${state.energy.toFixed(2)}`,
     "",
-    state.summary ?? "_Sin resumen aún._",
+    state.summary ?? "_No summary yet._",
   ].join("\n");
 }

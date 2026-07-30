@@ -9,11 +9,11 @@ export function AppNav({
     <header className="border-b border-[var(--line)] bg-[var(--bg-elevated)]/80 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
         <Link href="/chat" className="font-[family-name:var(--font-display)] text-xl tracking-wide text-[var(--ink)]">
-          Vespera
+          Vespera <span className="text-xs font-sans tracking-wider text-[var(--muted)]">admin</span>
         </Link>
         <nav className="flex items-center gap-4 text-sm text-[var(--muted)]">
           <Link href="/chat" className="hover:text-[var(--ink)]">
-            Chat
+            Test chat
           </Link>
           <Link href="/chat/new" className="hover:text-[var(--ink)]">
             Nuevo
@@ -22,7 +22,7 @@ export function AppNav({
             Memoria
           </Link>
           <Link href="/settings" className="hover:text-[var(--ink)]">
-            Ajustes
+            Panel
           </Link>
           {email ? (
             <span className="hidden text-xs sm:inline">{email}</span>

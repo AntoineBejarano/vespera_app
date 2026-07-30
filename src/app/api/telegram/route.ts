@@ -1,9 +1,20 @@
 import { prisma } from "@/lib/db";
 import { consumeTelegramLinkToken } from "@/lib/telegram/link";
-import { telegramSendChatAction, telegramSendMessage } from "@/lib/telegram/api";
+import {
+  telegramSendChatAction,
+  telegramSendMessage,
+  telegramSendPhoto,
+} from "@/lib/telegram/api";
 import { runCharacterReply } from "@/lib/chat/engine";
 import { getActiveCharacter } from "@/lib/users";
 import { relationshipPhase } from "@/lib/persona/phases";
+import {
+  randomBetweenBubblesMs,
+  randomReplyDelayMs,
+  sleep,
+} from "@/lib/chat/humanize";
+
+export const maxDuration = 60;
 
 type TelegramUpdate = {
   update_id: number;
@@ -16,18 +27,15 @@ type TelegramUpdate = {
 };
 
 /**
- * Webhook de Telegram.
- * Env: TELEGRAM_BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET, TELEGRAM_BOT_USERNAME
- *
- * Flujo:
- * 1) En la web (Ajustes) genera enlace → /start <token> vincula telegramId al User
- * 2) Mensajes de texto → mismo motor que la web (persona + memoria + fases)
+ * Telegram webhook — product surface.
+ * Replies as a real person: delays, multi-bubbles, optional photos.
+ * Never reveal AI / fiction in character messages.
  */
 export async function POST(req: Request) {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   if (!secret || !botToken) {
-    return Response.json({ error: "Telegram no configurado" }, { status: 503 });
+    return Response.json({ error: "Telegram not configured" }, { status: 503 });
   }
 
   const header = req.headers.get("x-telegram-bot-api-secret-token");
@@ -53,12 +61,11 @@ export async function POST(req: Request) {
         if (!userId) {
           await telegramSendMessage(
             chatId,
-            "Ese enlace expiró o no es válido. Genera uno nuevo en Ajustes de la web.",
+            "that link expired — grab a new one from the admin panel",
           );
           return Response.json({ ok: true });
         }
 
-        // Un telegramId solo puede pertenecer a un user
         await prisma.user.updateMany({
           where: { telegramId },
           data: { telegramId: null },
@@ -80,22 +87,19 @@ export async function POST(req: Request) {
         await telegramSendMessage(
           chatId,
           active
-            ? `Listo. Telegram vinculado.\nHablas con ${active.name} — misma memoria que en la web.\n\n/who · /status`
-            : `Listo. Telegram vinculado.\nCrea un personaje en la web (/chat/new) y luego escríbeme aquí.`,
+            ? `hey — it's ${active.name}. text me whenever`
+            : `hey. talk soon`,
         );
         return Response.json({ ok: true });
       }
 
       const existing = await prisma.user.findUnique({ where: { telegramId } });
       if (existing) {
-        await telegramSendMessage(
-          chatId,
-          "Ya estás vinculado. Escríbeme lo que quieras — soy tu personaje activo.",
-        );
+        await telegramSendMessage(chatId, "hey again");
       } else {
         await telegramSendMessage(
           chatId,
-          "Hola. Para vincular: entra en la web → Ajustes → Vincular Telegram, y abre el enlace.",
+          "hey — open the link from the admin panel first",
         );
       }
       return Response.json({ ok: true });
@@ -109,12 +113,13 @@ export async function POST(req: Request) {
     if (!user) {
       await telegramSendMessage(
         chatId,
-        "Aún no estás vinculado. Genera el enlace en la web (Ajustes → Vincular Telegram).",
+        "hey — need the link from the admin panel first",
       );
       return Response.json({ ok: true });
     }
 
     if (text === "/who" || text === "/status") {
+      // Admin debug only — keep terse
       const character = await prisma.character.findFirst({
         where: { userId: user.id, active: true },
       });
@@ -131,43 +136,89 @@ export async function POST(req: Request) {
       await telegramSendMessage(
         chatId,
         [
-          `Tú: ${call}`,
-          `Personaje activo: ${character?.name ?? "ninguno — créalo en la web"}`,
+          `you: ${call}`,
+          `active: ${character?.name ?? "none"}`,
           rel
-            ? `Fase: ${phase} · trust ${rel.trust.toFixed(2)} · affection ${rel.affection.toFixed(2)} · mood ${rel.mood}`
-            : "Sin estado de relación aún.",
+            ? `${phase} · t ${rel.trust.toFixed(2)} · a ${rel.affection.toFixed(2)} · ${rel.mood}`
+            : "no relationship state yet",
         ].join("\n"),
       );
       return Response.json({ ok: true });
     }
 
     if (!text || text.startsWith("/")) {
-      await telegramSendMessage(
-        chatId,
-        "Mándame un mensaje normal, o /who /status.",
-      );
+      await telegramSendMessage(chatId, "just text me");
       return Response.json({ ok: true });
     }
 
     await telegramSendChatAction(chatId, "typing");
+    await sleep(randomReplyDelayMs());
+
     const result = await runCharacterReply({
       userId: user.id,
       message: text,
     });
     if (!result.ok) {
-      await telegramSendMessage(chatId, result.error);
+      // Soft fail — don't sound like a system
+      await telegramSendMessage(
+        chatId,
+        result.status === 429
+          ? "gonna sleep a bit, talk tomorrow?"
+          : "one sec, brain blank — say that again?",
+      );
       return Response.json({ ok: true });
     }
 
-    await telegramSendMessage(chatId, result.text);
+    // Photo first or mid-stream feel: short bubble, then photo, then rest
+    const bubbles = result.bubbles;
+    let photoSent = false;
+
+    for (let i = 0; i < bubbles.length; i++) {
+      await telegramSendChatAction(chatId, "typing");
+      if (i > 0) await sleep(randomBetweenBubblesMs());
+
+      await telegramSendMessage(chatId, bubbles[i]!);
+
+      if (
+        !photoSent &&
+        result.photo &&
+        (i === 0 || i === Math.min(1, bubbles.length - 1))
+      ) {
+        await sleep(randomBetweenBubblesMs());
+        await telegramSendChatAction(chatId, "upload_photo");
+        await sleep(400 + Math.random() * 900);
+        try {
+          await telegramSendPhoto(
+            chatId,
+            result.photo.url,
+            result.photo.caption,
+          );
+          photoSent = true;
+        } catch (err) {
+          console.error("[telegram photo]", err);
+        }
+      }
+    }
+
+    if (result.photo && !photoSent) {
+      await sleep(randomBetweenBubblesMs());
+      await telegramSendChatAction(chatId, "upload_photo");
+      try {
+        await telegramSendPhoto(
+          chatId,
+          result.photo.url,
+          result.photo.caption,
+        );
+      } catch (err) {
+        console.error("[telegram photo]", err);
+      }
+    }
+
     return Response.json({ ok: true });
   } catch (error) {
     console.error("[telegram webhook]", error);
     try {
-      await telegramSendMessage(
-        chatId,
-        "Algo falló un momento. Intenta de nuevo.",
-      );
+      await telegramSendMessage(chatId, "ugh something glitched — try again?");
     } catch {
       /* ignore */
     }

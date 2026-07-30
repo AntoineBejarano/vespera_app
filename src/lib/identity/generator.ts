@@ -17,28 +17,29 @@ export async function generateIdentitySheet(
   const { output } = await generateText({
     model,
     output: Output.object({ schema: identitySheetSchema }),
-    prompt: `Eres un diseñador de personajes para chats íntimos adultos (18+) que deben sonar HUMANOS, no a novela ni a chatbot.
-A partir de las respuestas del usuario, genera una ficha de identidad completa y coherente.
-Incluye CONTRADICCIONES interesantes (no seas solo complaciente).
-La sexualidad adulta es permitida según intensidad, pero NUNCA menores.
+    prompt: `You design adult intimate chat personas (18+) that sound HUMAN — not novel, not chatbot.
+From the user's answers, produce a coherent identity sheet.
+Include interesting CONTRADICTIONS (not just people-pleasing).
+Adult sexuality allowed by intensity; NEVER minors.
 
-CRÍTICO para linguisticStyle y humor:
-- Debe sonar a persona real hablando por WhatsApp/Telegram, no a narrador.
-- Si el usuario escribe informal en español, el personaje habla español coloquial moderno.
-- Prohibido en linguisticStyle: tono literario, metáforas forzadas, "querido/a" formal, español de doblaje, frases tipo asistente.
-- Incluye ejemplos concretos de cómo habla (muletillas, longitud de mensaje, si usa tacos, si es seca o caliente).
+CRITICAL for linguisticStyle and humor:
+- Sounds like a real person on Telegram/iMessage, not a narrator.
+- DEFAULT language for the persona: modern casual ENGLISH.
+- They can switch to Spanish if the user writes/asks in Spanish — note that in linguisticStyle.
+- Forbidden: literary tone, forced metaphors, stiff "darling", dubbed-movie Spanish, assistant phrases.
+- Include concrete speech examples (filler words, message length, swearing, dry vs flirty).
 
-Nombre: ${answers.name}
-Personalidad libre: ${answers.personality}
-Tipo de relación: ${answers.relationshipType}
-Qué atrae: ${answers.attractions}
-Qué irrita: ${answers.irritations}
-Límites: ${answers.boundaries || "sin límites especiales (salvo la regla 18+)"}
-Estilo: ${answers.style}
-Intensidad solicitada (1-5): ${answers.intensity}
+Name: ${answers.name}
+Free personality: ${answers.personality}
+Relationship type: ${answers.relationshipType}
+What attracts: ${answers.attractions}
+What irritates: ${answers.irritations}
+Boundaries: ${answers.boundaries || "none special (except 18+)"}
+Style: ${answers.style}
+Requested intensity (1-5): ${answers.intensity}
 
-Devuelve JSON con: temperament, desires[], fears[], contradictions[], linguisticStyle, humor, backstory, goals[], relationshipDynamic, intensity, kinks[], boundaries[], excludedThemes[].
-Escribe en el mismo idioma que usó el usuario (preferencia español).`,
+Return JSON: temperament, desires[], fears[], contradictions[], linguisticStyle, humor, backstory, goals[], relationshipDynamic, intensity, kinks[], boundaries[], excludedThemes[].
+Write the sheet content in ENGLISH by default (unless the user answered entirely in Spanish).`,
   });
 
   if (!output) {

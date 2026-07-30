@@ -111,9 +111,23 @@ model Character {
   memories      Memory[]
   summaries     Summary[]
   relationship  RelationshipState?
+  photos        CharacterPhoto[]
 
   @@index([userId])
   @@index([userId, active])
+}
+
+model CharacterPhoto {
+  id          String   @id @default(cuid())
+  characterId String
+  url         String
+  caption     String?
+  kind        String   @default("selfie")
+  createdAt   DateTime @default(now())
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([characterId])
 }
 
 model RelationshipState {

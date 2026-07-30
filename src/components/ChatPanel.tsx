@@ -1,13 +1,24 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
 import { useEffect, useRef, useState } from "react";
+import {
+  randomBetweenBubblesMs,
+  randomReplyDelayMs,
+  sleep,
+} from "@/lib/chat/humanize";
 
 type Character = {
   id: string;
   name: string;
   intensity: number;
   active: boolean;
+};
+
+type BubbleMsg = {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  imageUrl?: string;
 };
 
 export function ChatPanel({
@@ -22,18 +33,17 @@ export function ChatPanel({
   );
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [typing, setTyping] = useState(false);
+  const [messages, setMessages] = useState<BubbleMsg[]>([]);
   const [intensity, setIntensity] = useState(
     characters.find((c) => c.id === characterId)?.intensity ?? 3,
   );
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage, status, setMessages } = useChat({
-    onError: (err) => setError(err.message),
-  });
-
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, status]);
+  }, [messages, typing]);
 
   const active = characters.find((c) => c.id === characterId);
 
@@ -70,15 +80,104 @@ export function ChatPanel({
     setMessages([]);
   }
 
+  async function send() {
+    if (!input.trim() || !characterId || busy) return;
+    const userText = input.trim();
+    setInput("");
+    setError(null);
+    setBusy(true);
+    setMessages((m) => [
+      ...m,
+      { id: `u-${Date.now()}`, role: "user", text: userText },
+    ]);
+
+    setTyping(true);
+    await sleep(randomReplyDelayMs());
+
+    try {
+      const res = await fetch("/api/chat/reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userText, characterId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Error");
+        setTyping(false);
+        setBusy(false);
+        return;
+      }
+
+      const bubbles: string[] = data.bubbles?.length
+        ? data.bubbles
+        : [data.text];
+      let photoDone = false;
+
+      for (let i = 0; i < bubbles.length; i++) {
+        if (i > 0) {
+          setTyping(true);
+          await sleep(randomBetweenBubblesMs());
+        }
+        setTyping(false);
+        setMessages((m) => [
+          ...m,
+          {
+            id: `a-${Date.now()}-${i}`,
+            role: "assistant",
+            text: bubbles[i]!,
+          },
+        ]);
+
+        if (
+          !photoDone &&
+          data.photo?.url &&
+          (i === 0 || i === Math.min(1, bubbles.length - 1))
+        ) {
+          await sleep(randomBetweenBubblesMs());
+          setMessages((m) => [
+            ...m,
+            {
+              id: `p-${Date.now()}`,
+              role: "assistant",
+              text: data.photo.caption || "",
+              imageUrl: data.photo.url,
+            },
+          ]);
+          photoDone = true;
+        }
+      }
+
+      if (data.photo?.url && !photoDone) {
+        await sleep(randomBetweenBubblesMs());
+        setMessages((m) => [
+          ...m,
+          {
+            id: `p-${Date.now()}`,
+            role: "assistant",
+            text: data.photo.caption || "",
+            imageUrl: data.photo.url,
+          },
+        ]);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error");
+    } finally {
+      setTyping(false);
+      setBusy(false);
+    }
+  }
+
   if (!characters.length) {
     return (
       <div className="mx-auto max-w-xl px-4 py-16 text-center">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
-          Empieza una relación
+        <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">
+          Admin · test
+        </p>
+        <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
+          Sin personaje
         </h1>
         <p className="mt-3 text-[var(--muted)]">
-          Crea un personaje con personalidad real — no un formulario de 1500
-          palabras.
+          Crea uno aquí; el producto real es Telegram.
         </p>
         <a
           href="/chat/new"
@@ -93,6 +192,9 @@ export function ChatPanel({
   return (
     <div className="mx-auto flex h-[calc(100vh-57px)] max-w-3xl flex-col px-4">
       <div className="flex flex-wrap items-center gap-3 border-b border-[var(--line)] py-3">
+        <span className="rounded border border-[var(--line)] px-2 py-1 text-[10px] uppercase tracking-wider text-[var(--muted)]">
+          Admin test
+        </span>
         <select
           className="border border-[var(--line)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
           value={characterId}
@@ -120,81 +222,73 @@ export function ChatPanel({
           onClick={resetChat}
           className="ml-auto text-sm text-[var(--muted)] underline-offset-2 hover:text-[var(--ink)] hover:underline"
         >
-          Reset chat
+          Reset
         </button>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto py-6">
+      <div className="flex-1 space-y-3 overflow-y-auto py-6">
         {messages.length === 0 ? (
-          <p className="text-center text-[var(--muted)]">
-            {active?.name
-              ? `${active.name} está aquí. Habla con naturalidad.`
-              : "Escribe el primer mensaje."}
+          <p className="text-center text-sm text-[var(--muted)]">
+            Simula Telegram (multi-mensaje, delay, typos). Producto: bot
+            vinculado.
           </p>
         ) : null}
         {messages.map((message) => (
           <div
             key={message.id}
             className={
-              message.role === "user"
-                ? "ml-8 text-right"
-                : "mr-8 text-left"
+              message.role === "user" ? "ml-8 text-right" : "mr-8 text-left"
             }
           >
             <div
               className={
                 message.role === "user"
-                  ? "inline-block bg-[var(--accent-soft)] px-4 py-3 text-[var(--ink)]"
-                  : "inline-block bg-[var(--bg-elevated)] px-4 py-3 text-[var(--ink)]"
+                  ? "inline-block max-w-[85%] bg-[var(--accent-soft)] px-4 py-2.5 text-left text-[var(--ink)]"
+                  : "inline-block max-w-[85%] bg-[var(--bg-elevated)] px-4 py-2.5 text-[var(--ink)]"
               }
             >
-              <div className="mb-1 text-xs uppercase tracking-wider text-[var(--muted)]">
-                {message.role === "user" ? "Tú" : active?.name ?? "Personaje"}
-              </div>
-              <div className="whitespace-pre-wrap leading-relaxed">
-                {message.parts.map((part, i) =>
-                  part.type === "text" ? (
-                    <span key={`${message.id}-${i}`}>{part.text}</span>
-                  ) : null,
-                )}
-              </div>
+              {message.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={message.imageUrl}
+                  alt=""
+                  className="mb-2 max-h-64 max-w-full rounded-sm object-cover"
+                />
+              ) : null}
+              {message.text ? (
+                <div className="whitespace-pre-wrap leading-relaxed">
+                  {message.text}
+                </div>
+              ) : null}
             </div>
           </div>
         ))}
-        {status === "streaming" || status === "submitted" ? (
-          <p className="text-sm text-[var(--muted)]">Escribiendo…</p>
+        {typing ? (
+          <p className="text-sm text-[var(--muted)]">escribiendo…</p>
         ) : null}
         <div ref={bottomRef} />
       </div>
 
-      {error ? (
-        <p className="mb-2 text-sm text-red-400">{error}</p>
-      ) : null}
+      {error ? <p className="mb-2 text-sm text-red-400">{error}</p> : null}
 
       <form
         className="border-t border-[var(--line)] py-4"
         onSubmit={(e) => {
           e.preventDefault();
-          if (!input.trim() || !characterId) return;
-          setError(null);
-          sendMessage(
-            { text: input },
-            { body: { characterId } },
-          );
-          setInput("");
+          void send();
         }}
       >
         <div className="flex gap-2">
           <input
             className="flex-1 border border-[var(--line)] bg-[var(--bg-elevated)] px-4 py-3 text-[var(--ink)] outline-none focus:border-[var(--accent)]"
             value={input}
-            placeholder="Escribe un mensaje…"
+            placeholder="Mensaje de prueba…"
             onChange={(e) => setInput(e.target.value)}
-            disabled={status === "streaming" || status === "submitted"}
+            disabled={busy}
           />
           <button
             type="submit"
-            disabled={status === "streaming" || status === "submitted"}
+            disabled={busy}
             className="bg-[var(--accent)] px-5 py-3 text-[var(--bg)] disabled:opacity-50"
           >
             Enviar
