@@ -124,6 +124,16 @@ export async function POST(req: Request) {
       },
       memoryBrief: memories,
       summary: summary?.content,
+      partner: {
+        displayName: user.name || user.email || "usuario",
+        howToAddress:
+          (
+            await prisma.userSettings.findUnique({
+              where: { userId: user.id },
+            })
+          )?.howToAddress || user.name,
+        userId: user.id,
+      },
     });
 
     await prisma.message.create({

@@ -2,13 +2,15 @@ import { HARD_SAFETY_RULES } from "@/lib/ai/safety";
 import { HUMAN_LIKE_STYLE_RULES } from "@/lib/ai/human-like";
 import type { RelationshipSnapshot } from "@/lib/persona/schema";
 import type { IdentitySheet } from "@/lib/identity/schema";
+import { PHASE_GUIDE, relationshipPhase } from "@/lib/persona/phases";
 
 const BUDGET = {
   soul: 900,
   style: 700,
   rules: 500,
   context: 400,
-  relationship: 250,
+  relationship: 320,
+  partner: 220,
   memory: 800,
 } as const;
 
@@ -61,16 +63,23 @@ export type PersonaBundle = {
   limitsJson?: unknown;
 };
 
+export type PartnerContext = {
+  displayName: string;
+  howToAddress?: string | null;
+  userId: string;
+};
+
 /**
- * Ensambla el system prompt como Meuxe: capas con presupuesto, no un blob monolítico.
+ * Ensambla el system prompt como Meuxe: capas con presupuesto + partner + fase.
  */
 export function assemblePersonaPrompt(params: {
   persona: PersonaBundle;
   relationship?: RelationshipSnapshot | null;
   memoryBrief: string[];
   summary?: string | null;
+  partner?: PartnerContext | null;
 }): string {
-  const { persona, relationship, memoryBrief, summary } = params;
+  const { persona, relationship, memoryBrief, summary, partner } = params;
   const identity = persona.identityJson as IdentitySheet | null;
 
   const soul =
@@ -86,18 +95,43 @@ export function assemblePersonaPrompt(params: {
       : `# Rules\n${HARD_SAFETY_RULES}`);
   const context = persona.contextMd?.trim() || "";
 
-  const relationshipMd = relationship
+  const trust = relationship?.trust ?? 0.35;
+  const affection = relationship?.affection ?? 0.3;
+  const phase = relationshipPhase(trust, affection);
+
+  const callName =
+    partner?.howToAddress?.trim() ||
+    partner?.displayName?.trim() ||
+    null;
+
+  const partnerMd = partner
     ? [
-        `# Relationship state`,
-        `Mood: ${relationship.mood}`,
-        `Trust: ${relationship.trust.toFixed(2)}`,
-        `Affection: ${relationship.affection.toFixed(2)}`,
-        `Energy: ${relationship.energy.toFixed(2)}`,
-        relationship.summary ? `Summary: ${relationship.summary}` : "",
-      ]
-        .filter(Boolean)
-        .join("\n")
-    : `# Relationship state\nMood: neutral · Trust: 0.35 · Affection: 0.30 · Energy: 0.70`;
+        `# Who you are talking to (ALWAYS)`,
+        `Esta conversación es SIEMPRE con la misma persona: ${partner.displayName}.`,
+        callName
+          ? `Trátala/o por: "${callName}" (usa el nombre de forma natural, no en cada frase).`
+          : "Todavía no tienes un nombre preferido; puedes preguntarlo una vez con naturalidad.",
+        `user_id interno: ${partner.userId} (no lo menciones; solo identidad estable).`,
+        "No inventes que hablas con otra gente. No 'reinicies' como si fueran desconocidos si la fase ya avanzó.",
+      ].join("\n")
+    : `# Who you are talking to\nUna sola persona fija en esta cuenta. No cambies de interlocutor.`;
+
+  const relationshipMd = [
+    `# Relationship state`,
+    `Phase: ${phase}`,
+    PHASE_GUIDE[phase],
+    relationship
+      ? [
+          `Mood: ${relationship.mood}`,
+          `Trust: ${relationship.trust.toFixed(2)}`,
+          `Affection: ${relationship.affection.toFixed(2)}`,
+          `Energy: ${relationship.energy.toFixed(2)}`,
+          relationship.summary ? `Summary: ${relationship.summary}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : "Mood: neutral · Trust: 0.35 · Affection: 0.30 · Energy: 0.70",
+  ].join("\n");
 
   const memoryMd = memoryBrief.length
     ? memoryBrief.map((m, i) => `${i + 1}. ${m}`).join("\n")
@@ -118,6 +152,8 @@ export function assemblePersonaPrompt(params: {
     "",
     HUMAN_LIKE_STYLE_RULES,
     "",
+    clip(partnerMd, BUDGET.partner),
+    "",
     clip(soul, BUDGET.soul),
     "",
     clip(style, BUDGET.style),
@@ -137,6 +173,8 @@ export function assemblePersonaPrompt(params: {
     `# Turn rules`,
     `- Intensidad adulta ${persona.intensity}/5 — ${intensityGuide}`,
     `- Responde en 1–4 frases salvo que el usuario escriba largo o pida descripción.`,
+    `- Respeta la FASE de relación; no saltes a 'mi vida' en strangers ni finjas amnesia en bonded.`,
+    callName ? `- Puedes llamarle "${callName}" de vez en cuando.` : "",
     `- Deja que mood/trust/affection/energy coloreen el tono, sin recitar números.`,
     `- No vuelques soul/context entero. Habla.`,
   ]
@@ -148,9 +186,11 @@ export function renderRelationshipMarkdown(
   name: string,
   state: RelationshipSnapshot,
 ) {
+  const phase = relationshipPhase(state.trust, state.affection);
   return [
     `# Relationship — ${name}`,
     "",
+    `- Phase: ${phase}`,
     `- Mood: ${state.mood}`,
     `- Trust: ${state.trust.toFixed(2)}`,
     `- Affection: ${state.affection.toFixed(2)}`,

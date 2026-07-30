@@ -6,9 +6,16 @@ import { ALLOWED_MODELS, MODEL_LABELS } from "@/lib/ai/models";
 
 export default function SettingsClient() {
   const [model, setModel] = useState("");
-  const [usage, setUsage] = useState<{ used: number; remaining: number; limit: number } | null>(null);
+  const [howToAddress, setHowToAddress] = useState("");
+  const [usage, setUsage] = useState<{
+    used: number;
+    remaining: number;
+    limit: number;
+  } | null>(null);
   const [plan, setPlan] = useState("free");
   const [message, setMessage] = useState<string | null>(null);
+  const [tgLinked, setTgLinked] = useState(false);
+  const [tgLinkInfo, setTgLinkInfo] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -18,7 +25,11 @@ export default function SettingsClient() {
         setModel(data.preferredModel);
         setUsage(data.usage);
         setPlan(data.plan);
+        setHowToAddress(data.howToAddress ?? "");
       }
+      const tg = await fetch("/api/telegram/link");
+      const tgData = await tg.json();
+      if (tg.ok) setTgLinked(Boolean(tgData.linked));
     })();
   }, []);
 
@@ -30,6 +41,30 @@ export default function SettingsClient() {
     });
     const data = await res.json();
     setMessage(res.ok ? "Modelo guardado" : data.error);
+  }
+
+  async function saveName() {
+    const res = await fetch("/api/telegram/link", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ howToAddress }),
+    });
+    setMessage(res.ok ? "Nombre guardado — el personaje te llamará así" : "Error");
+  }
+
+  async function linkTelegram() {
+    const res = await fetch("/api/telegram/link", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ createLink: true }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data.error ?? "Error");
+      return;
+    }
+    setTgLinkInfo(data.deepLink || data.instruction);
+    setMessage("Enlace generado (válido 15 min)");
   }
 
   async function exportData() {
@@ -57,7 +92,9 @@ export default function SettingsClient() {
   return (
     <div className="mx-auto max-w-xl space-y-8 px-4 py-10">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl">Ajustes</h1>
+        <h1 className="font-[family-name:var(--font-display)] text-3xl">
+          Ajustes
+        </h1>
         <p className="mt-2 text-[var(--muted)]">
           Plan: {plan}.{" "}
           {usage
@@ -68,6 +105,46 @@ export default function SettingsClient() {
 
       <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
         <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
+          Cómo te llama el personaje
+        </h2>
+        <input
+          className="w-full border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+          value={howToAddress}
+          onChange={(e) => setHowToAddress(e.target.value)}
+          placeholder="Antoine, mi vida…"
+        />
+        <button
+          type="button"
+          onClick={saveName}
+          className="bg-[var(--accent)] px-4 py-2 text-[var(--bg)]"
+        >
+          Guardar nombre
+        </button>
+      </section>
+
+      <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
+        <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
+          Telegram
+        </h2>
+        <p className="text-sm text-[var(--muted)]">
+          {tgLinked
+            ? "Cuenta vinculada. Misma memoria y personaje que en la web."
+            : "Vincula Telegram para chatear con el mismo personaje fuera de la web."}
+        </p>
+        <button
+          type="button"
+          onClick={linkTelegram}
+          className="border border-[var(--line)] px-4 py-2"
+        >
+          {tgLinked ? "Generar nuevo enlace" : "Vincular Telegram"}
+        </button>
+        {tgLinkInfo ? (
+          <p className="break-all text-sm text-[var(--accent)]">{tgLinkInfo}</p>
+        ) : null}
+      </section>
+
+      <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
+        <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
           Modelo OpenRouter
         </h2>
         <select
@@ -75,13 +152,14 @@ export default function SettingsClient() {
           value={model}
           onChange={(e) => setModel(e.target.value)}
         >
-          {(ALLOWED_MODELS.length ? ALLOWED_MODELS : Object.keys(MODEL_LABELS)).map(
-            (id) => (
-              <option key={id} value={id}>
-                {MODEL_LABELS[id] ?? id}
-              </option>
-            ),
-          )}
+          {(ALLOWED_MODELS.length
+            ? ALLOWED_MODELS
+            : Object.keys(MODEL_LABELS)
+          ).map((id) => (
+            <option key={id} value={id}>
+              {MODEL_LABELS[id] ?? id}
+            </option>
+          ))}
         </select>
         <button
           type="button"
@@ -110,17 +188,6 @@ export default function SettingsClient() {
         >
           Borrar cuenta
         </button>
-      </section>
-
-      <section className="space-y-2 border border-[var(--line)] bg-[var(--bg-elevated)] p-4 text-sm text-[var(--muted)]">
-        <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
-          Premium (próximamente)
-        </h2>
-        <p>
-          Stripe no es viable para contenido adulto. La monetización irá por
-          Telegram Stars o un procesador adult-friendly. Mientras tanto: free con
-          límite diario.
-        </p>
       </section>
 
       {message ? <p className="text-sm text-[var(--accent)]">{message}</p> : null}

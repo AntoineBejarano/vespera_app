@@ -27,6 +27,8 @@ export async function GET() {
     plan: user.plan,
     usage,
     adultConsentAt: user.adultConsentAt,
+    howToAddress: user.settings?.howToAddress ?? user.name ?? null,
+    name: user.name,
   });
 }
 

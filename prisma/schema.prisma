@@ -79,6 +79,8 @@ model UserSettings {
   userId          String   @unique
   preferredModel  String?
   language        String   @default("es")
+  /** Cómo quiere que le llame el personaje (ej. "Antoine", "mi amor") */
+  howToAddress    String?
   adultConsent    Boolean  @default(false)
   dailyLimit      Int      @default(40)
   createdAt       DateTime @default(now())
