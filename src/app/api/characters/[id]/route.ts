@@ -1,8 +1,8 @@
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { clearHistory } from "@/lib/memory/history";
 import { Prisma } from "@/generated/prisma/client";
 import { z } from "zod";
+import { requireAppUser, getAppUser } from "@/lib/session";
 
 const patchSchema = z.object({
   active: z.boolean().optional(),
@@ -14,13 +14,13 @@ const patchSchema = z.object({
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, { params }: Params) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "No autenticado" }, { status: 401 });
+  const user = await getAppUser();
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
   const { id } = await params;
   const character = await prisma.character.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user.id },
   });
   if (!character) {
     return Response.json({ error: "No encontrado" }, { status: 404 });
@@ -29,13 +29,13 @@ export async function GET(_req: Request, { params }: Params) {
 }
 
 export async function PATCH(req: Request, { params }: Params) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "No autenticado" }, { status: 401 });
+  const user = await getAppUser();
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
   const { id } = await params;
   const character = await prisma.character.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user.id },
   });
   if (!character) {
     return Response.json({ error: "No encontrado" }, { status: 404 });
@@ -48,15 +48,15 @@ export async function PATCH(req: Request, { params }: Params) {
 
   if (parsed.data.active) {
     await prisma.character.updateMany({
-      where: { userId: session.user.id, active: true },
+      where: { userId: user.id, active: true },
       data: { active: false },
     });
   }
 
   if (parsed.data.resetChat) {
-    await clearHistory(session.user.id, id);
+    await clearHistory(user.id, id);
     const conversation = await prisma.conversation.findFirst({
-      where: { userId: session.user.id, characterId: id },
+      where: { userId: user.id, characterId: id },
       orderBy: { updatedAt: "desc" },
     });
     if (conversation) {
@@ -79,13 +79,13 @@ export async function PATCH(req: Request, { params }: Params) {
 }
 
 export async function DELETE(_req: Request, { params }: Params) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "No autenticado" }, { status: 401 });
+  const user = await getAppUser();
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
   const { id } = await params;
   const character = await prisma.character.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user.id },
   });
   if (!character) {
     return Response.json({ error: "No encontrado" }, { status: 404 });

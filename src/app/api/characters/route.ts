@@ -1,5 +1,4 @@
 import { randomBytes } from "crypto";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { generatePersonaLayers } from "@/lib/persona/generator";
 import { onboardingAnswersSchema } from "@/lib/identity/schema";
@@ -7,15 +6,16 @@ import { maxCharactersForPlan } from "@/lib/monetization";
 import { countUserCharacters } from "@/lib/users";
 import { ensureRelationshipState } from "@/lib/persona/relationship";
 import { Prisma } from "@/generated/prisma/client";
+import { requireAppUser, getAppUser } from "@/lib/session";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getAppUser();
+  if (!user) {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   const characters = await prisma.character.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     orderBy: { updatedAt: "desc" },
     select: {
       id: true,
@@ -70,13 +70,12 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getAppUser();
+  if (!user) {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!user?.ageVerifiedAt) {
+  if (!user.ageVerifiedAt) {
     return Response.json({ error: "Age verification 18+ required" }, { status: 403 });
   }
 

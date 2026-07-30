@@ -14,6 +14,8 @@ model User {
   emailVerified      DateTime?
   image              String?
   passwordHash       String?
+  /// Hexclave (Stack Auth) user id — multi-tenant identity
+  hexclaveId         String?   @unique
   plan               String    @default("free")
   dailyMessageCount  Int       @default(0)
   dailyResetAt       DateTime  @default(now())
@@ -42,6 +44,7 @@ model User {
 
   @@index([email])
   @@index([telegramId])
+  @@index([hexclaveId])
 }
 
 model Account {

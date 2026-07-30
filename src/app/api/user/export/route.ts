@@ -1,14 +1,14 @@
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { requireAppUser, getAppUser } from "@/lib/session";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "No autenticado" }, { status: 401 });
+  const user = await getAppUser();
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+  const profile = await prisma.user.findUnique({
+    where: { id: user.id },
     include: {
       characters: true,
       conversations: { include: { messages: true } },
@@ -17,11 +17,11 @@ export async function GET() {
     },
   });
 
-  if (!user) {
-    return Response.json({ error: "No encontrado" }, { status: 404 });
+  if (!profile) {
+    return Response.json({ error: "Not found" }, { status: 404 });
   }
 
-  const { passwordHash: _, ...safe } = user;
+  const { passwordHash: _, ...safe } = profile;
   return Response.json({
     exportedAt: new Date().toISOString(),
     user: safe,

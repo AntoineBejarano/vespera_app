@@ -1,34 +1,34 @@
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { ALLOWED_MODELS, resolveModel } from "@/lib/ai/models";
 import { getDailyUsage } from "@/lib/memory/limits";
 import { z } from "zod";
+import { requireAppUser, getAppUser } from "@/lib/session";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "No autenticado" }, { status: 401 });
+  const user = await getAppUser();
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+  const profile = await prisma.user.findUnique({
+    where: { id: user.id },
     include: { settings: true },
   });
-  if (!user) {
-    return Response.json({ error: "Usuario no encontrado" }, { status: 404 });
+  if (!profile) {
+    return Response.json({ error: "User not found" }, { status: 404 });
   }
 
-  const usage = await getDailyUsage(user.id);
+  const usage = await getDailyUsage(profile.id);
 
   return Response.json({
-    preferredModel: resolveModel(user.preferredModel),
+    preferredModel: resolveModel(profile.preferredModel),
     allowedModels: ALLOWED_MODELS,
-    language: user.language,
-    plan: user.plan,
+    language: profile.language,
+    plan: profile.plan,
     usage,
-    adultConsentAt: user.adultConsentAt,
-    howToAddress: user.settings?.howToAddress ?? user.name ?? null,
-    name: user.name,
+    adultConsentAt: profile.adultConsentAt,
+    howToAddress: profile.settings?.howToAddress ?? profile.name ?? null,
+    name: profile.name,
   });
 }
 
@@ -39,9 +39,9 @@ const schema = z.object({
 });
 
 export async function PATCH(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "No autenticado" }, { status: 401 });
+  const user = await getAppUser();
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   const parsed = schema.safeParse(await req.json());
@@ -56,8 +56,8 @@ export async function PATCH(req: Request) {
     return Response.json({ error: "Modelo no permitido" }, { status: 400 });
   }
 
-  const user = await prisma.user.update({
-    where: { id: session.user.id },
+  const updated = await prisma.user.update({
+    where: { id: user.id },
     data: {
       preferredModel: parsed.data.preferredModel,
       language: parsed.data.language,
@@ -66,9 +66,9 @@ export async function PATCH(req: Request) {
 
   if (parsed.data.preferredModel) {
     await prisma.userSettings.upsert({
-      where: { userId: session.user.id },
+      where: { userId: user.id },
       create: {
-        userId: session.user.id,
+        userId: user.id,
         preferredModel: parsed.data.preferredModel,
       },
       update: { preferredModel: parsed.data.preferredModel },
@@ -76,6 +76,6 @@ export async function PATCH(req: Request) {
   }
 
   return Response.json({
-    preferredModel: resolveModel(user.preferredModel),
+    preferredModel: resolveModel(updated.preferredModel),
   });
 }

@@ -1,54 +1,39 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 
-const publicPaths = ["/", "/login", "/register", "/age-gate"];
+const publicPaths = new Set([
+  "/",
+  "/login",
+  "/register",
+  "/age-gate",
+  "/pricing",
+]);
 
-function sessionCookieName(request: NextRequest) {
-  // Auth.js v5 cookie names (not legacy next-auth.*)
-  const proto =
-    request.headers.get("x-forwarded-proto") ??
-    request.nextUrl.protocol.replace(":", "");
-  const secure = proto === "https";
-  return secure
-    ? "__Secure-authjs.session-token"
-    : "authjs.session-token";
-}
-
+/**
+ * Soft gate — Hexclave hosted auth handles sign-in.
+ * Page/API layers call getAppUser for real protection.
+ */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (
-    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon")
+    pathname.startsWith("/favicon") ||
+    pathname.startsWith("/handler")
   ) {
     return NextResponse.next();
   }
 
-  const isPublic = publicPaths.includes(pathname);
-  const cookieName = sessionCookieName(request);
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-    secureCookie: cookieName.startsWith("__Secure-"),
-    cookieName,
-    salt: cookieName,
-  });
-
-  if (!isPublic && !pathname.startsWith("/api") && !token) {
+  // Legacy auth routes → landing CTAs use Hexclave redirects
+  if (pathname === "/login" || pathname === "/register") {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("callbackUrl", pathname);
+    url.pathname = "/";
+    url.searchParams.set("auth", pathname === "/register" ? "signup" : "signin");
     return NextResponse.redirect(url);
   }
 
-  if (token && (pathname === "/login" || pathname === "/register")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/personas";
-    return NextResponse.redirect(url);
-  }
-
+  void publicPaths;
   return NextResponse.next();
 }
 

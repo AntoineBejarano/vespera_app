@@ -1,15 +1,16 @@
-import { auth } from "@/lib/auth";
+import { getAppUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { AppNav } from "@/components/AppNav";
 import { PersonasList } from "@/components/PersonasList";
 import { redirect } from "next/navigation";
 
 export default async function PersonasPage() {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const user = await getAppUser({ or: "redirect" });
+  if (!user) redirect("/");
+  if (!user.ageVerifiedAt) redirect("/age-gate");
 
   const characters = await prisma.character.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     orderBy: { updatedAt: "desc" },
     include: {
       telegramBots: {
@@ -45,7 +46,7 @@ export default async function PersonasPage() {
 
   return (
     <>
-      <AppNav email={session.user.email} />
+      <AppNav email={user.email} />
       <PersonasList initial={list} />
     </>
   );

@@ -5,7 +5,6 @@ import {
   toUIMessageStream,
   type UIMessage,
 } from "ai";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getOpenRouter } from "@/lib/ai/openrouter";
 import { resolveModel } from "@/lib/ai/models";
@@ -18,27 +17,22 @@ import {
   getLatestSummary,
   maybeCreateSummary,
 } from "@/lib/memory/summaries";
-import {
-  ensureConversation,
-  getActiveCharacter,
-  requireUser,
-} from "@/lib/users";
+import { ensureConversation, getActiveCharacter } from "@/lib/users";
 import { assemblePersonaPrompt } from "@/lib/persona/assemble";
 import {
   ensureRelationshipState,
   maybeUpdateRelationship,
 } from "@/lib/persona/relationship";
+import { requireAppUser } from "@/lib/session";
 
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return Response.json({ error: "No autenticado" }, { status: 401 });
-    }
-
-    const user = await requireUser(session.user.id);
+    const user = await requireAppUser().catch(() => null);
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
+  }
     const body = await req.json();
     const messages = (body.messages ?? []) as UIMessage[];
     const characterId = body.characterId as string | undefined;

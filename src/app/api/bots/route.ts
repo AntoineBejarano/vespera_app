@@ -1,4 +1,3 @@
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/users";
 import {
@@ -7,16 +6,16 @@ import {
   setTelegramWebhook,
 } from "@/lib/telegram/bots";
 import { z } from "zod";
+import { requireAppUser, getAppUser } from "@/lib/session";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await requireAppUser().catch(() => null);
+  if (!user) {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
-  await requireUser(session.user.id);
 
   const bots = await prisma.telegramBot.findMany({
-    where: { ownerUserId: session.user.id },
+    where: { ownerUserId: user.id },
     include: {
       character: { select: { id: true, name: true } },
       _count: { select: { peers: true } },
@@ -49,11 +48,10 @@ const createSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await requireAppUser().catch(() => null);
+  if (!user) {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
-  const user = await requireUser(session.user.id);
   const parsed = createSchema.safeParse(await req.json());
   if (!parsed.success) {
     return Response.json({ error: "Invalid data" }, { status: 400 });
@@ -137,18 +135,17 @@ const patchSchema = z.object({
 });
 
 export async function PATCH(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await requireAppUser().catch(() => null);
+  if (!user) {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
-  await requireUser(session.user.id);
   const parsed = patchSchema.safeParse(await req.json());
   if (!parsed.success) {
     return Response.json({ error: "Invalid data" }, { status: 400 });
   }
 
   const bot = await prisma.telegramBot.findFirst({
-    where: { id: parsed.data.botId, ownerUserId: session.user.id },
+    where: { id: parsed.data.botId, ownerUserId: user.id },
   });
   if (!bot) {
     return Response.json({ error: "Not found" }, { status: 404 });
@@ -156,7 +153,7 @@ export async function PATCH(req: Request) {
 
   if (parsed.data.characterId) {
     const character = await prisma.character.findFirst({
-      where: { id: parsed.data.characterId, userId: session.user.id },
+      where: { id: parsed.data.characterId, userId: user.id },
     });
     if (!character) {
       return Response.json({ error: "Character not found" }, { status: 404 });
@@ -187,11 +184,10 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await requireAppUser().catch(() => null);
+  if (!user) {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
-  await requireUser(session.user.id);
   const { searchParams } = new URL(req.url);
   const botId = searchParams.get("botId");
   if (!botId) {
@@ -199,7 +195,7 @@ export async function DELETE(req: Request) {
   }
 
   await prisma.telegramBot.deleteMany({
-    where: { id: botId, ownerUserId: session.user.id },
+    where: { id: botId, ownerUserId: user.id },
   });
   return Response.json({ ok: true });
 }

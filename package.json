@@ -16,6 +16,7 @@
   "dependencies": {
     "@ai-sdk/react": "^4.0.45",
     "@auth/prisma-adapter": "^2.11.3",
+    "@hexclave/next": "^1.0.70",
     "@openrouter/ai-sdk-provider": "^3.0.0",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
@@ -23,13 +24,17 @@
     "@upstash/vector": "^1.2.3",
     "ai": "^7.0.42",
     "bcryptjs": "^3.0.3",
+    "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
+    "motion": "^12.43.0",
     "nanoid": "^5.1.16",
     "next": "16.2.12",
     "next-auth": "^5.0.0-beta.32",
     "pg": "^8.22.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "server-only": "^0.0.1",
+    "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

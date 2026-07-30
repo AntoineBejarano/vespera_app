@@ -1,21 +1,20 @@
 import { randomBytes } from "crypto";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/users";
+import { requireAppUser, getAppUser } from "@/lib/session";
 
 type Params = { params: Promise<{ id: string }> };
 
 /** Reveal or rotate API key for a persona */
 export async function GET(_req: Request, { params }: Params) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await requireAppUser().catch(() => null);
+  if (!user) {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
-  await requireUser(session.user.id);
   const { id } = await params;
 
   const character = await prisma.character.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user.id },
     select: { id: true, name: true, apiKey: true },
   });
   if (!character) {
@@ -35,15 +34,14 @@ export async function GET(_req: Request, { params }: Params) {
 }
 
 export async function POST(_req: Request, { params }: Params) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await requireAppUser().catch(() => null);
+  if (!user) {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
-  await requireUser(session.user.id);
   const { id } = await params;
 
   const character = await prisma.character.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user.id },
   });
   if (!character) {
     return Response.json({ error: "Not found" }, { status: 404 });

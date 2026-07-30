@@ -1,22 +1,21 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/users";
 import { normalizeTags, PHOTO_TAG_OPTIONS } from "@/lib/chat/photos";
+import { requireAppUser, getAppUser } from "@/lib/session";
 
 export async function GET(
   _req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  const user = await requireAppUser().catch(() => null);
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
-  await requireUser(session.user.id);
   const { id } = await ctx.params;
 
   const character = await prisma.character.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user.id },
   });
   if (!character) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -33,15 +32,14 @@ export async function POST(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  const user = await requireAppUser().catch(() => null);
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
-  await requireUser(session.user.id);
   const { id } = await ctx.params;
 
   const character = await prisma.character.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user.id },
   });
   if (!character) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -80,15 +78,14 @@ export async function PATCH(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  const user = await requireAppUser().catch(() => null);
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
-  await requireUser(session.user.id);
   const { id } = await ctx.params;
 
   const character = await prisma.character.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user.id },
   });
   if (!character) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -134,15 +131,14 @@ export async function DELETE(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  const user = await requireAppUser().catch(() => null);
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
-  await requireUser(session.user.id);
   const { id } = await ctx.params;
 
   const character = await prisma.character.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user.id },
   });
   if (!character) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

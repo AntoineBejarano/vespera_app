@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getAppUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { AppNav } from "@/components/AppNav";
 import { ChatPanel } from "@/components/ChatPanel";
@@ -9,13 +9,14 @@ export default async function ChatPage({
 }: {
   searchParams: Promise<{ characterId?: string }>;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const user = await getAppUser({ or: "redirect" });
+  if (!user) redirect("/");
+  if (!user.ageVerifiedAt) redirect("/age-gate");
 
   const { characterId } = await searchParams;
 
   const characters = await prisma.character.findMany({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
     orderBy: { updatedAt: "desc" },
     select: { id: true, name: true, intensity: true, active: true },
   });
@@ -29,7 +30,7 @@ export default async function ChatPage({
 
   return (
     <>
-      <AppNav email={session.user.email} />
+      <AppNav email={user.email} />
       <ChatPanel characters={characters} initialCharacterId={initial} />
     </>
   );

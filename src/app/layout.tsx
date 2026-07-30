@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Source_Sans_3 } from "next/font/google";
-import { Providers } from "@/components/Providers";
+import { HexclaveProvider, HexclaveTheme } from "@hexclave/next";
+import { hexclaveServerApp } from "@/hexclave/server";
 import "./globals.css";
 
 const display = Cormorant_Garamond({
@@ -16,9 +17,9 @@ const body = Source_Sans_3({
 });
 
 export const metadata: Metadata = {
-  title: "Vespera — Relaciones ficticias privadas",
+  title: "Vespera — Uncensored AI companions for creators",
   description:
-    "Personajes que recuerdan, evolucionan y se sienten coherentes. Solo adultos 18+.",
+    "Connect OnlyFans, Fansly, Fanvue & Telegram to a persistent character engine with memory, LLM, and human handoff.",
 };
 
 export default function RootLayout({
@@ -28,11 +29,14 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="es"
+      lang="en"
+      suppressHydrationWarning
       className={`${display.variable} ${body.variable} h-full antialiased`}
     >
       <body className="min-h-full font-[family-name:var(--font-body)]">
-        <Providers>{children}</Providers>
+        <HexclaveProvider app={hexclaveServerApp}>
+          <HexclaveTheme>{children}</HexclaveTheme>
+        </HexclaveProvider>
       </body>
     </html>
   );

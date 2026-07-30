@@ -1,12 +1,12 @@
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { requireAppUser, getAppUser } from "@/lib/session";
 
 export async function DELETE() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "No autenticado" }, { status: 401 });
+  const user = await getAppUser();
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  await prisma.user.delete({ where: { id: session.user.id } });
+  await prisma.user.delete({ where: { id: user.id } });
   return Response.json({ ok: true });
 }

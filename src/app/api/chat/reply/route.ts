@@ -1,6 +1,6 @@
-import { auth } from "@/lib/auth";
 import { runCharacterReply } from "@/lib/chat/engine";
 import { requireUser } from "@/lib/users";
+import { requireAppUser, getAppUser } from "@/lib/session";
 
 export const maxDuration = 60;
 
@@ -9,18 +9,16 @@ export const maxDuration = 60;
  */
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return Response.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
-    await requireUser(session.user.id);
+    const user = await requireAppUser().catch(() => null);
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
+  }
     const body = await req.json();
     const message = String(body.message ?? "").trim();
     const characterId = body.characterId as string | undefined;
 
     const result = await runCharacterReply({
-      userId: session.user.id,
+      userId: user.id,
       message,
       characterId,
       partner: { channel: "web" },

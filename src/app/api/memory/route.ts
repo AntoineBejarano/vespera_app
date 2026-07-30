@@ -1,4 +1,3 @@
-import { auth } from "@/lib/auth";
 import { getActiveCharacter } from "@/lib/users";
 import {
   deleteMemory,
@@ -6,23 +5,24 @@ import {
   updateMemory,
 } from "@/lib/memory/vector";
 import { z } from "zod";
+import { requireAppUser, getAppUser } from "@/lib/session";
 
 export async function GET(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "No autenticado" }, { status: 401 });
+  const user = await getAppUser();
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   const { searchParams } = new URL(req.url);
   const characterId =
     searchParams.get("characterId") ??
-    (await getActiveCharacter(session.user.id))?.id;
+    (await getActiveCharacter(user.id))?.id;
 
   if (!characterId) {
     return Response.json({ memories: [] });
   }
 
-  const memories = await listMemories(session.user.id, characterId);
+  const memories = await listMemories(user.id, characterId);
   return Response.json({ memories, characterId });
 }
 
@@ -32,9 +32,9 @@ const patchSchema = z.object({
 });
 
 export async function PATCH(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "No autenticado" }, { status: 401 });
+  const user = await getAppUser();
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
   const parsed = patchSchema.safeParse(await req.json());
   if (!parsed.success) {
@@ -42,7 +42,7 @@ export async function PATCH(req: Request) {
   }
   const updated = await updateMemory(
     parsed.data.id,
-    session.user.id,
+    user.id,
     parsed.data.content,
   );
   if (!updated) {
@@ -54,16 +54,16 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return Response.json({ error: "No autenticado" }, { status: 401 });
+  const user = await getAppUser();
+  if (!user) {
+    return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
   if (!id) {
     return Response.json({ error: "Falta id" }, { status: 400 });
   }
-  const ok = await deleteMemory(id, session.user.id);
+  const ok = await deleteMemory(id, user.id);
   if (!ok) {
     return Response.json({ error: "No encontrado" }, { status: 404 });
   }

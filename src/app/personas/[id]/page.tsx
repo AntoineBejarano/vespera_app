@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { getAppUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { AppNav } from "@/components/AppNav";
 import { PersonaDetail } from "@/components/PersonaDetail";
@@ -7,12 +7,13 @@ import { redirect, notFound } from "next/navigation";
 type Params = { params: Promise<{ id: string }> };
 
 export default async function PersonaPage({ params }: Params) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  const user = await getAppUser({ or: "redirect" });
+  if (!user) redirect("/");
+  if (!user.ageVerifiedAt) redirect("/age-gate");
   const { id } = await params;
 
   const character = await prisma.character.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, userId: user.id },
     include: {
       telegramBots: {
         include: { _count: { select: { peers: true } } },
@@ -32,7 +33,7 @@ export default async function PersonaPage({ params }: Params) {
 
   return (
     <>
-      <AppNav email={session.user.email} />
+      <AppNav email={user.email} />
       <PersonaDetail
         persona={{
           id: character.id,

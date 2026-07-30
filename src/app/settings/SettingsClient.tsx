@@ -1,11 +1,12 @@
 "use client";
 
-import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useHexclaveApp } from "@hexclave/next";
 import { ALLOWED_MODELS, MODEL_LABELS } from "@/lib/ai/models";
 
 export default function SettingsClient() {
+  const app = useHexclaveApp();
   const [model, setModel] = useState("");
   const [usage, setUsage] = useState<{
     used: number;
@@ -55,7 +56,7 @@ export default function SettingsClient() {
     if (!confirm("Permanently delete your account and all data?")) return;
     const res = await fetch("/api/user/delete", { method: "DELETE" });
     if (res.ok) {
-      await signOut({ callbackUrl: "/" });
+      app.redirectToSignOut();
     }
   }
 
@@ -132,7 +133,7 @@ export default function SettingsClient() {
       <button
         type="button"
         className="text-sm text-[var(--muted)] underline"
-        onClick={() => signOut({ callbackUrl: "/" })}
+        onClick={() => app.redirectToSignOut()}
       >
         Sign out
       </button>

@@ -122,7 +122,7 @@ export function MemoryPanel() {
                 </button>
               </div>
             </li>
-          ))}
+          ))
         )}
       </ul>
     </div>

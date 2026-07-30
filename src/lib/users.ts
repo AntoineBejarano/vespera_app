@@ -1,10 +1,14 @@
 import { prisma } from "@/lib/db";
+import { getAppUser, requireAppUser } from "@/lib/session";
 
-export async function requireUser(userId: string) {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) throw new Error("USER_NOT_FOUND");
-  if (!user.ageVerifiedAt) throw new Error("AGE_NOT_VERIFIED");
-  return user;
+export async function requireUser(userId?: string) {
+  if (userId) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new Error("USER_NOT_FOUND");
+    if (!user.ageVerifiedAt) throw new Error("AGE_NOT_VERIFIED");
+    return user;
+  }
+  return requireAppUser();
 }
 
 export async function getActiveCharacter(userId: string) {
@@ -24,10 +28,12 @@ export async function ensureConversation(
   });
   if (existing) return existing;
   return prisma.conversation.create({
-    data: { userId, characterId, title: "Conversación" },
+    data: { userId, characterId, title: "Conversation" },
   });
 }
 
 export async function countUserCharacters(userId: string) {
   return prisma.character.count({ where: { userId } });
 }
+
+export { getAppUser, requireAppUser };
