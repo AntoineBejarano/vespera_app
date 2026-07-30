@@ -38,7 +38,7 @@ export function MemoryPanel() {
     });
     if (!res.ok) {
       const data = await res.json();
-      setError(data.error ?? "No se pudo guardar");
+      setError(data.error ?? "Could not save");
       return;
     }
     setEditing((e) => {
@@ -53,7 +53,7 @@ export function MemoryPanel() {
     const res = await fetch(`/api/memory?id=${id}`, { method: "DELETE" });
     if (!res.ok) {
       const data = await res.json();
-      setError(data.error ?? "No se pudo borrar");
+      setError(data.error ?? "Could not delete");
       return;
     }
     await load();
@@ -62,16 +62,16 @@ export function MemoryPanel() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
       <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
-        Lo que recuerda de ti
+        What she remembers
       </h1>
       <p className="mt-2 text-[var(--muted)]">
-        Corrige o borra recuerdos. La transparencia construye confianza.
+        Edit or delete memories. Transparency builds trust.
       </p>
       {error ? <p className="mt-4 text-sm text-red-400">{error}</p> : null}
       <ul className="mt-8 space-y-4">
         {memories.length === 0 ? (
           <li className="text-[var(--muted)]">
-            Aún no hay recuerdos largos. Aparecerán conforme avance la relación.
+            No long memories yet. They appear as the relationship grows.
           </li>
         ) : (
           memories.map((m) => (
@@ -100,17 +100,17 @@ export function MemoryPanel() {
                     className="text-[var(--accent)]"
                     onClick={() => save(m.id)}
                   >
-                    Guardar
+                    Save
                   </button>
                 ) : (
                   <button
                     type="button"
-                    className="text-[var(--muted)] hover:text-[var(--ink)]"
+                    className="text-[var(--muted)]"
                     onClick={() =>
                       setEditing((prev) => ({ ...prev, [m.id]: m.content }))
                     }
                   >
-                    Editar
+                    Edit
                   </button>
                 )}
                 <button
@@ -118,11 +118,11 @@ export function MemoryPanel() {
                   className="text-red-400"
                   onClick={() => remove(m.id)}
                 >
-                  Borrar
+                  Delete
                 </button>
               </div>
             </li>
-          ))
+          ))}
         )}
       </ul>
     </div>
