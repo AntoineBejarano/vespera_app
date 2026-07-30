@@ -27,7 +27,9 @@ function LoginForm() {
       setError("Credenciales inválidas o edad no verificada");
       return;
     }
-    router.push(search.get("callbackUrl") || "/chat");
+    const next = search.get("callbackUrl") || "/chat";
+    router.replace(next);
+    router.refresh();
   }
 
   return (

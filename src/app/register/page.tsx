@@ -40,7 +40,8 @@ export default function RegisterPage() {
         redirect: false,
       });
       if (result?.error) throw new Error("Cuenta creada, pero falló el login");
-      router.push("/chat/new");
+      router.replace("/chat/new");
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");
     } finally {

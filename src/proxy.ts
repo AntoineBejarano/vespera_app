@@ -4,6 +4,17 @@ import { getToken } from "next-auth/jwt";
 
 const publicPaths = ["/", "/login", "/register", "/age-gate"];
 
+function sessionCookieName(request: NextRequest) {
+  // Auth.js v5 cookie names (not legacy next-auth.*)
+  const proto =
+    request.headers.get("x-forwarded-proto") ??
+    request.nextUrl.protocol.replace(":", "");
+  const secure = proto === "https";
+  return secure
+    ? "__Secure-authjs.session-token"
+    : "authjs.session-token";
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -16,9 +27,13 @@ export async function proxy(request: NextRequest) {
   }
 
   const isPublic = publicPaths.includes(pathname);
+  const cookieName = sessionCookieName(request);
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
+    secureCookie: cookieName.startsWith("__Secure-"),
+    cookieName,
+    salt: cookieName,
   });
 
   if (!isPublic && !pathname.startsWith("/api") && !token) {
