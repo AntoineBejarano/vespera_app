@@ -18,6 +18,8 @@ import {
   maybeUpdateRelationship,
 } from "@/lib/persona/relationship";
 import {
+  scrubBubbles,
+  safePhotoCaption,
   splitIntoBubbles,
 } from "@/lib/chat/humanize";
 import {
@@ -25,6 +27,7 @@ import {
   photoHintLabel,
   rankPhotosForIntent,
 } from "@/lib/chat/photos";
+import { shouldStaySilent } from "@/lib/chat/closing";
 import { resolvePartnerName } from "@/lib/telegram/profile";
 
 export type ChatPhotoPayload = {
@@ -79,11 +82,18 @@ async function pickCharacterPhoto(characterId: string, message: string) {
 
   return {
     url: photo.url,
-    caption: photo.caption,
+    caption: safePhotoCaption(photo.caption) ?? null,
     kind: photo.kind,
     tags: photo.tags,
     label: photoHintLabel(photo),
   };
+}
+
+function photoVibeHint(label?: string): true | "cute" | "spicy" {
+  if (!label) return true;
+  if (/\b(ass|tits|nude|spicy|lingerie)\b/i.test(label)) return "spicy";
+  if (/\b(face|selfie)\b/i.test(label)) return "cute";
+  return true;
 }
 
 /**
@@ -139,6 +149,32 @@ export async function runCharacterReply(params: {
     };
   }
 
+  const conversation = await ensureConversation(user.id, character.id);
+  const recent = await getRecentHistory(user.id, character.id, 25);
+  const lastAssistant = [...recent]
+    .reverse()
+    .find((m) => m.role === "assistant")?.content;
+
+  // User acknowledged goodbye / sleep → stay silent (no loop)
+  if (shouldStaySilent(text, lastAssistant)) {
+    await prisma.message.create({
+      data: { conversationId: conversation.id, role: "user", content: text },
+    });
+    await appendHistory(user.id, character.id, {
+      role: "user",
+      content: text,
+    });
+    return {
+      ok: true,
+      text: "",
+      bubbles: [],
+      photo: null,
+      characterId: character.id,
+      characterName: character.name,
+      modelId: resolveModel(user.preferredModel),
+    };
+  }
+
   const photo = await pickCharacterPhoto(character.id, text);
 
   const modelId = resolveModel(user.preferredModel);
@@ -147,9 +183,7 @@ export async function runCharacterReply(params: {
     characterId: character.id,
     query: text,
   });
-  const conversation = await ensureConversation(user.id, character.id);
   const summary = await getLatestSummary(conversation.id);
-  const recent = await getRecentHistory(user.id, character.id, 25);
   const relationship = await ensureRelationshipState(user.id, character.id);
 
   const channel = params.partner?.channel ?? "web";
@@ -195,7 +229,7 @@ export async function runCharacterReply(params: {
       channel,
       telegramUsername: tgUser,
     },
-    photoHint: photo ? photo.label || true : false,
+    photoHint: photo ? photoVibeHint(photo.label) : false,
   });
 
   await prisma.message.create({
@@ -219,50 +253,61 @@ export async function runCharacterReply(params: {
   });
 
   const reply = await result.text;
-  const bubbles = splitIntoBubbles(reply);
+  const bubbles = scrubBubbles(splitIntoBubbles(reply));
   const stored = bubbles.join("\n\n");
 
-  await prisma.message.create({
-    data: {
-      conversationId: conversation.id,
+  // Still persist something for memory even if scrubbed empty (photo-only turn)
+  const persistContent =
+    stored ||
+    (photo ? "(sent a photo)" : "");
+
+  if (persistContent) {
+    await prisma.message.create({
+      data: {
+        conversationId: conversation.id,
+        role: "assistant",
+        content: persistContent,
+      },
+    });
+    await appendHistory(user.id, character.id, {
       role: "assistant",
-      content: stored,
-    },
-  });
-  await appendHistory(user.id, character.id, {
-    role: "assistant",
-    content: stored,
-  });
+      content: persistContent,
+    });
+  }
   await prisma.conversation.update({
     where: { id: conversation.id },
     data: { updatedAt: new Date() },
   });
 
-  await maybeCreateSummary({
-    conversationId: conversation.id,
-    characterId: character.id,
-    modelId,
-  });
-  await maybeExtractMemories({
-    userId: user.id,
-    characterId: character.id,
-    userMessage: text,
-    assistantMessage: stored,
-    modelId,
-  });
-  await maybeUpdateRelationship({
-    userId: user.id,
-    characterId: character.id,
-    userMessage: text,
-    assistantMessage: stored,
-    modelId,
-  });
+  if (persistContent && persistContent !== "(sent a photo)") {
+    await maybeCreateSummary({
+      conversationId: conversation.id,
+      characterId: character.id,
+      modelId,
+    });
+    await maybeExtractMemories({
+      userId: user.id,
+      characterId: character.id,
+      userMessage: text,
+      assistantMessage: persistContent,
+      modelId,
+    });
+    await maybeUpdateRelationship({
+      userId: user.id,
+      characterId: character.id,
+      userMessage: text,
+      assistantMessage: persistContent,
+      modelId,
+    });
+  }
 
   return {
     ok: true,
     text: stored,
     bubbles,
-    photo,
+    photo: photo
+      ? { ...photo, caption: safePhotoCaption(photo.caption) ?? null }
+      : null,
     characterId: character.id,
     characterName: character.name,
     modelId,

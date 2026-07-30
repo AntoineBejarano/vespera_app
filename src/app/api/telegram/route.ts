@@ -201,6 +201,11 @@ export async function POST(req: Request) {
       return Response.json({ ok: true });
     }
 
+    // Closing ack → stay silent (no loop)
+    if (!result.bubbles.length && !result.photo) {
+      return Response.json({ ok: true });
+    }
+
     const bubbles = result.bubbles;
     let photoSent = false;
 
@@ -222,7 +227,7 @@ export async function POST(req: Request) {
           await telegramSendPhoto(
             chatId,
             result.photo.url,
-            result.photo.caption,
+            result.photo.caption ?? undefined,
           );
           photoSent = true;
         } catch (err) {
@@ -232,13 +237,13 @@ export async function POST(req: Request) {
     }
 
     if (result.photo && !photoSent) {
-      await sleep(randomBetweenBubblesMs());
+      await sleep(bubbles.length ? randomBetweenBubblesMs() : 400);
       await telegramSendChatAction(chatId, "upload_photo");
       try {
         await telegramSendPhoto(
           chatId,
           result.photo.url,
-          result.photo.caption,
+          result.photo.caption ?? undefined,
         );
       } catch (err) {
         console.error("[telegram photo]", err);

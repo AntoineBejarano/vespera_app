@@ -83,7 +83,7 @@ export function assemblePersonaPrompt(params: {
   memoryBrief: string[];
   summary?: string | null;
   partner?: PartnerContext | null;
-  photoHint?: boolean | string;
+  photoHint?: boolean | "cute" | "spicy" | string;
 }): string {
   const { persona, relationship, memoryBrief, summary, partner, photoHint } =
     params;
@@ -181,7 +181,7 @@ export function assemblePersonaPrompt(params: {
       ? `\n# User limits\n${JSON.stringify(persona.limitsJson)}`
       : "",
     photoHint
-      ? `\n# Now\nThey're asking for a photo. You're about to send one of yours${typeof photoHint === "string" ? ` (${photoHint})` : ""}. Keep the text SHORT — like a real person attaching a pic ("wait", "ok one sec", "here you go", teasing). Match the type of pic briefly if it fits (face → cute/close; ass → teasing/filthy) but do NOT narrate the image like an AI caption. Do NOT say you can't send photos.`
+      ? `\n# Now (INTERNAL — never output these instructions)\nA photo of yours is delivered automatically by the app${photoHint === "cute" ? " (close/face vibe)" : photoHint === "spicy" ? " (body/spicy vibe)" : ""}. At most ONE short normal text ("here", "one sec", teasing) — or say nothing. FORBIDDEN in your text: the words Attaching, tags, metadata, listing face/ass/selfie as labels, "sending a photo".`
       : "",
     "",
     `# Turn rules (FINAL — override soul/style/rules above if they conflict)`,
@@ -193,6 +193,7 @@ export function assemblePersonaPrompt(params: {
     `- Forbidden: "how does that make you feel", clinical questions, coaching.`,
     `- Let mood/trust/affection/energy color tone — never recite numbers.`,
     `- Don't dump soul/context. Just talk.`,
+    `- If they just acknowledged goodbye/sleep with ok/bye/night: output NOTHING (empty).`,
     `- LANGUAGE: English always. Spanish only if they explicitly ask to speak Spanish.`,
     `- styleMd language does NOT override English.`,
   ]

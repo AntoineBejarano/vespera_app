@@ -139,4 +139,47 @@ export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Strip model meta that must never reach Telegram
+ * (e.g. "Attaching (face, selfie)", tag dumps).
+ */
+export function scrubMetaText(text: string): string {
+  let out = text
+    .replace(/\battach(ing|ed)?\b[^.!?\n]*/gi, "")
+    .replace(/\b(sending|sent)\s+(you\s+)?(a\s+)?(photo|pic|selfie|image)\b[^.!?\n]*/gi, "")
+    .replace(/\btags?\s*[:：]\s*[^\n]+/gi, "")
+    .replace(/\((?:face|selfie|ass|tits|body|nude|lingerie|spicy|casual|mirror|bed|outfit|gym|legs|fullbody)(?:\s*,\s*(?:face|selfie|ass|tits|body|nude|lingerie|spicy|casual|mirror|bed|outfit|gym|legs|fullbody))*\)/gi, "")
+    .replace(/\b(?:face|selfie|ass|tits|body|nude)\s*(?:\/|,)\s*(?:face|selfie|ass|tits|body|nude)\b/gi, "")
+    .replace(/\[photo[^\]]*\]/gi, "")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+
+  // If almost nothing left but punctuation, drop it
+  if (!out || /^[.!?,…\s💕❤️🔥😊]+$/u.test(out)) return "";
+  return out;
+}
+
+export function scrubBubbles(bubbles: string[]): string[] {
+  return bubbles
+    .map(scrubMetaText)
+    .map((b) => b.trim())
+    .filter((b) => b.length > 0);
+}
+
+/** Human caption only — never send tag lists as Telegram photo captions */
+export function safePhotoCaption(caption?: string | null): string | undefined {
+  if (!caption?.trim()) return undefined;
+  const scrubbed = scrubMetaText(caption);
+  if (!scrubbed) return undefined;
+  // Looks like only tags
+  if (
+    /^(face|selfie|ass|tits|body|nude|lingerie|spicy|casual|mirror|bed|outfit|gym|legs|fullbody)(\s*,\s*(face|selfie|ass|tits|body|nude|lingerie|spicy|casual|mirror|bed|outfit|gym|legs|fullbody))*$/i.test(
+      scrubbed,
+    )
+  ) {
+    return undefined;
+  }
+  return scrubbed.slice(0, 200);
+}
+
 export { looksLikePhotoRequest } from "@/lib/chat/photos";

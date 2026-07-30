@@ -139,7 +139,7 @@ export function ChatPanel({
             {
               id: `p-${Date.now()}`,
               role: "assistant",
-              text: data.photo.caption || "",
+              text: "",
               imageUrl: data.photo.url,
             },
           ]);
@@ -154,7 +154,7 @@ export function ChatPanel({
           {
             id: `p-${Date.now()}`,
             role: "assistant",
-            text: data.photo.caption || "",
+            text: "",
             imageUrl: data.photo.url,
           },
         ]);
