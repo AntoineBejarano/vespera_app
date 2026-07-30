@@ -41,8 +41,10 @@ export default async function PersonaPage({ params }: Params) {
           intensity: character.intensity,
           active: character.active,
           hasApiKey: Boolean(character.apiKey),
-          soulPreview: character.soulMd?.slice(0, 280) ?? null,
-          stylePreview: character.styleMd?.slice(0, 200) ?? null,
+          soulMd: character.soulMd ?? "",
+          styleMd: character.styleMd ?? "",
+          rulesMd: character.rulesMd ?? "",
+          contextMd: character.contextMd ?? "",
           bots: character.telegramBots.map((b) => ({
             id: b.id,
             username: b.username,

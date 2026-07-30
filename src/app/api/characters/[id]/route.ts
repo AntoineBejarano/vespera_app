@@ -7,6 +7,11 @@ import { requireAppUser, getAppUser } from "@/lib/session";
 const patchSchema = z.object({
   active: z.boolean().optional(),
   intensity: z.number().int().min(1).max(5).optional(),
+  name: z.string().min(1).max(80).optional(),
+  soulMd: z.string().max(20000).optional(),
+  styleMd: z.string().max(20000).optional(),
+  rulesMd: z.string().max(20000).optional(),
+  contextMd: z.string().max(20000).optional(),
   limitsJson: z.record(z.string(), z.unknown()).optional(),
   resetChat: z.boolean().optional(),
 });
@@ -69,6 +74,23 @@ export async function PATCH(req: Request, { params }: Params) {
     data: {
       active: parsed.data.active ?? character.active,
       intensity: parsed.data.intensity ?? character.intensity,
+      name: parsed.data.name ?? character.name,
+      soulMd:
+        parsed.data.soulMd !== undefined
+          ? parsed.data.soulMd
+          : character.soulMd,
+      styleMd:
+        parsed.data.styleMd !== undefined
+          ? parsed.data.styleMd
+          : character.styleMd,
+      rulesMd:
+        parsed.data.rulesMd !== undefined
+          ? parsed.data.rulesMd
+          : character.rulesMd,
+      contextMd:
+        parsed.data.contextMd !== undefined
+          ? parsed.data.contextMd
+          : character.contextMd,
       limitsJson: (parsed.data.limitsJson ??
         character.limitsJson ??
         undefined) as Prisma.InputJsonValue | undefined,

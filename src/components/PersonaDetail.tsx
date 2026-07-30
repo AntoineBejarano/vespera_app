@@ -29,12 +29,37 @@ type Persona = {
   intensity: number;
   active: boolean;
   hasApiKey: boolean;
-  soulPreview: string | null;
-  stylePreview: string | null;
+  soulMd: string;
+  styleMd: string;
+  rulesMd: string;
+  contextMd: string;
   bots: Bot[];
   photos: Photo[];
   relationshipCount: number;
 };
+
+const DOC_FIELDS = [
+  {
+    key: "soulMd" as const,
+    label: "Soul",
+    hint: "Who she is — stable identity, temperament, desires.",
+  },
+  {
+    key: "styleMd" as const,
+    label: "Style",
+    hint: "How she texts — cadence, slang, emoji, horniness level.",
+  },
+  {
+    key: "rulesMd" as const,
+    label: "Rules",
+    hint: "Hard boundaries and behavioral constraints.",
+  },
+  {
+    key: "contextMd" as const,
+    label: "Context",
+    hint: "Light lore / backstory that can evolve.",
+  },
+];
 
 export function PersonaDetail({
   persona,
@@ -47,6 +72,18 @@ export function PersonaDetail({
   const [message, setMessage] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [intensity, setIntensity] = useState(persona.intensity);
+  const [name, setName] = useState(persona.name);
+  const [docs, setDocs] = useState({
+    soulMd: persona.soulMd,
+    styleMd: persona.styleMd,
+    rulesMd: persona.rulesMd,
+    contextMd: persona.contextMd,
+  });
+  const [editingDocs, setEditingDocs] = useState(false);
+  const [savingDocs, setSavingDocs] = useState(false);
+  const [openDoc, setOpenDoc] = useState<
+    "soulMd" | "styleMd" | "rulesMd" | "contextMd" | null
+  >("soulMd");
 
   const [botToken, setBotToken] = useState("");
   const [botUsername, setBotUsername] = useState("");
@@ -106,6 +143,42 @@ export function PersonaDetail({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ intensity: value }),
     });
+  }
+
+  async function saveDefinition() {
+    setSavingDocs(true);
+    setMessage(null);
+    const res = await fetch(`/api/characters/${persona.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim() || persona.name,
+        soulMd: docs.soulMd,
+        styleMd: docs.styleMd,
+        rulesMd: docs.rulesMd,
+        contextMd: docs.contextMd,
+      }),
+    });
+    const data = await res.json();
+    setSavingDocs(false);
+    if (!res.ok) {
+      setMessage(data.error ?? "Could not save definition");
+      return;
+    }
+    setEditingDocs(false);
+    setMessage("Persona definition saved");
+    router.refresh();
+  }
+
+  function cancelEditDocs() {
+    setName(persona.name);
+    setDocs({
+      soulMd: persona.soulMd,
+      styleMd: persona.styleMd,
+      rulesMd: persona.rulesMd,
+      contextMd: persona.contextMd,
+    });
+    setEditingDocs(false);
   }
 
   async function addBot() {
@@ -255,28 +328,124 @@ export function PersonaDetail({
       ) : null}
 
       <MagicCard>
-      <section className="space-y-3 p-5">
-        <h2 className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
-          Personality
-        </h2>
-        <label className="flex items-center gap-3 text-sm text-[var(--muted)]">
-          Intensity
-          <input
-            type="range"
-            min={1}
-            max={5}
-            value={intensity}
-            onChange={(e) => saveIntensity(Number(e.target.value))}
-          />
-          <span className="text-[var(--ink)]">{intensity}</span>
-        </label>
-        {persona.soulPreview ? (
-          <p className="text-sm leading-relaxed text-[var(--muted)]">
-            {persona.soulPreview}
-            {persona.soulPreview.length >= 280 ? "…" : ""}
-          </p>
-        ) : null}
-      </section>
+        <section className="space-y-4 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+                Definition
+              </h2>
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                Full Meuxe layers used by the character engine.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {editingDocs ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={cancelEditDocs}
+                    disabled={savingDocs}
+                    className="rounded-xl border border-[var(--line)] px-3 py-1.5 text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void saveDefinition()}
+                    disabled={savingDocs}
+                    className="rounded-xl bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+                  >
+                    {savingDocs ? "Saving…" : "Save definition"}
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setEditingDocs(true)}
+                  className="rounded-xl border border-[var(--line)] px-3 py-1.5 text-sm hover:border-[var(--accent)]"
+                >
+                  Edit manually
+                </button>
+              )}
+            </div>
+          </div>
+
+          <label className="flex items-center gap-3 text-sm text-[var(--muted)]">
+            Intensity
+            <input
+              type="range"
+              min={1}
+              max={5}
+              value={intensity}
+              onChange={(e) => saveIntensity(Number(e.target.value))}
+            />
+            <span className="text-[var(--ink)]">{intensity}</span>
+          </label>
+
+          {editingDocs ? (
+            <label className="block space-y-1 text-sm">
+              <span className="text-[var(--muted)]">Display name</span>
+              <input
+                className="w-full border border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-[var(--ink)]"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </label>
+          ) : null}
+
+          <div className="space-y-2">
+            {DOC_FIELDS.map((field) => {
+              const open = openDoc === field.key;
+              const value = docs[field.key];
+              return (
+                <div
+                  key={field.key}
+                  className="rounded-xl border border-[var(--line)] bg-[var(--bg)]/50"
+                >
+                  <button
+                    type="button"
+                    className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                    onClick={() => setOpenDoc(open ? null : field.key)}
+                  >
+                    <span>
+                      <span className="font-medium text-[var(--ink)]">
+                        {field.label}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-[var(--muted)]">
+                        {field.hint}
+                      </span>
+                    </span>
+                    <span className="text-xs text-[var(--muted)]">
+                      {open ? "Hide" : "Show"} · {value.length} chars
+                    </span>
+                  </button>
+                  {open ? (
+                    <div className="border-t border-[var(--line)] px-4 py-3">
+                      {editingDocs ? (
+                        <textarea
+                          className="min-h-48 w-full resize-y border border-[var(--line)] bg-[var(--bg)] px-3 py-2 font-mono text-sm leading-relaxed text-[var(--ink)] outline-none focus:border-[var(--accent)]"
+                          value={value}
+                          onChange={(e) =>
+                            setDocs((prev) => ({
+                              ...prev,
+                              [field.key]: e.target.value,
+                            }))
+                          }
+                        />
+                      ) : (
+                        <pre className="max-h-[28rem] overflow-auto whitespace-pre-wrap font-sans text-sm leading-relaxed text-[var(--ink)]">
+                          {value.trim() || (
+                            <span className="text-[var(--muted)]">Empty</span>
+                          )}
+                        </pre>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </section>
       </MagicCard>
 
       <MagicCard>
