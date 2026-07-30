@@ -9,7 +9,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getOpenRouter } from "@/lib/ai/openrouter";
 import { resolveModel } from "@/lib/ai/models";
-import { buildSystemPrompt } from "@/lib/ai/prompts";
 import { containsProhibitedMinorContent } from "@/lib/ai/safety";
 import { checkAndIncrementDailyLimit } from "@/lib/memory/limits";
 import { appendHistory, getRecentHistory } from "@/lib/memory/history";
@@ -24,10 +23,11 @@ import {
   getActiveCharacter,
   requireUser,
 } from "@/lib/users";
+import { assemblePersonaPrompt } from "@/lib/persona/assemble";
 import {
-  identitySheetSchema,
-  type IdentitySheet,
-} from "@/lib/identity/schema";
+  ensureRelationshipState,
+  maybeUpdateRelationship,
+} from "@/lib/persona/relationship";
 
 export const maxDuration = 60;
 
@@ -93,7 +93,6 @@ export async function POST(req: Request) {
     }
 
     const modelId = resolveModel(user.preferredModel);
-    const identity = identitySheetSchema.parse(character.identityJson);
     const memories = await searchMemories({
       userId: user.id,
       characterId: character.id,
@@ -103,13 +102,27 @@ export async function POST(req: Request) {
     const conversation = await ensureConversation(user.id, character.id);
     const summary = await getLatestSummary(conversation.id);
     const recent = await getRecentHistory(user.id, character.id, 25);
+    const relationship = await ensureRelationshipState(user.id, character.id);
 
-    const system = buildSystemPrompt({
-      characterName: character.name,
-      identity: identity as IdentitySheet,
-      intensity: character.intensity,
-      limitsJson: (character.limitsJson as Record<string, unknown>) ?? null,
-      memories,
+    const system = assemblePersonaPrompt({
+      persona: {
+        name: character.name,
+        intensity: character.intensity,
+        soulMd: character.soulMd,
+        styleMd: character.styleMd,
+        rulesMd: character.rulesMd,
+        contextMd: character.contextMd,
+        identityJson: character.identityJson,
+        limitsJson: character.limitsJson,
+      },
+      relationship: {
+        mood: relationship.mood,
+        trust: relationship.trust,
+        affection: relationship.affection,
+        energy: relationship.energy,
+        summary: relationship.summary ?? undefined,
+      },
+      memoryBrief: memories,
       summary: summary?.content,
     });
 
@@ -172,6 +185,13 @@ export async function POST(req: Request) {
             assistantMessage: text,
             modelId,
           });
+          await maybeUpdateRelationship({
+            userId: user.id,
+            characterId: character.id,
+            userMessage: lastText,
+            assistantMessage: text,
+            modelId,
+          });
         } catch (err) {
           console.error("[chat onFinish]", err);
         }
@@ -193,7 +213,10 @@ export async function POST(req: Request) {
       const { track } = await import("@/lib/metrics");
       track("openrouter_error");
       return Response.json(
-        { error: "OpenRouter no disponible o rate limit. Reintenta en unos segundos." },
+        {
+          error:
+            "OpenRouter no disponible o rate limit. Reintenta en unos segundos.",
+        },
         { status: 502 },
       );
     }

@@ -92,19 +92,43 @@ model Character {
   userId       String
   name         String
   identityJson Json
+  /// Meuxe-style layered persona (markdown docs stored in DB for multi-tenant)
+  soulMd       String?  @db.Text
+  styleMd      String?  @db.Text
+  rulesMd      String?  @db.Text
+  contextMd    String?  @db.Text
+  metaJson     Json?
   intensity    Int      @default(3)
   limitsJson   Json?
   active       Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   conversations Conversation[]
   memories      Memory[]
   summaries     Summary[]
+  relationship  RelationshipState?
 
   @@index([userId])
   @@index([userId, active])
+}
+
+model RelationshipState {
+  id          String   @id @default(cuid())
+  userId      String
+  characterId String   @unique
+  mood        String   @default("neutral")
+  trust       Float    @default(0.35)
+  affection   Float    @default(0.3)
+  energy      Float    @default(0.7)
+  summary     String?  @db.Text
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Conversation {

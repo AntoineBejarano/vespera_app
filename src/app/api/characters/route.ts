@@ -1,9 +1,11 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { generateIdentitySheet } from "@/lib/identity/generator";
+import { generatePersonaLayers } from "@/lib/persona/generator";
 import { onboardingAnswersSchema } from "@/lib/identity/schema";
 import { maxCharactersForPlan } from "@/lib/monetization";
 import { countUserCharacters } from "@/lib/users";
+import { ensureRelationshipState } from "@/lib/persona/relationship";
+import { Prisma } from "@/generated/prisma/client";
 
 export async function GET() {
   const session = await auth();
@@ -21,6 +23,7 @@ export async function GET() {
       active: true,
       createdAt: true,
       updatedAt: true,
+      metaJson: true,
     },
   });
 
@@ -56,10 +59,30 @@ export async function POST(req: Request) {
   }
 
   try {
-    const identity = await generateIdentitySheet(
+    const layers = await generatePersonaLayers(
       parsed.data,
       user.preferredModel ?? undefined,
     );
+
+    const identity =
+      layers.identity ??
+      ({
+        temperament: layers.soulMd.slice(0, 200),
+        desires: [],
+        fears: [],
+        contradictions: [],
+        linguisticStyle: layers.styleMd.slice(0, 200),
+        humor: "natural",
+        backstory: layers.contextMd.slice(0, 300),
+        goals: [],
+        relationshipDynamic: parsed.data.relationshipType,
+        intensity: parsed.data.intensity,
+        kinks: [],
+        boundaries: parsed.data.boundaries
+          ? [parsed.data.boundaries]
+          : [],
+        excludedThemes: [],
+      } as const);
 
     await prisma.character.updateMany({
       where: { userId: user.id, active: true },
@@ -71,18 +94,21 @@ export async function POST(req: Request) {
         userId: user.id,
         name: parsed.data.name,
         identityJson: identity as object,
+        soulMd: layers.soulMd,
+        styleMd: layers.styleMd,
+        rulesMd: layers.rulesMd,
+        contextMd: layers.contextMd,
+        metaJson: layers.meta as object,
         intensity: parsed.data.intensity,
         limitsJson: {
           boundaries: parsed.data.boundaries,
-          excludedThemes: identity.excludedThemes,
-        } as object,
+          excludedThemes: identity.excludedThemes ?? [],
+        } as Prisma.InputJsonValue,
         active: true,
       },
     });
 
-    const { track } = await import("@/lib/metrics");
-    track("character_created");
-
+    await ensureRelationshipState(user.id, character.id);
     await prisma.conversation.create({
       data: {
         userId: user.id,
@@ -91,7 +117,16 @@ export async function POST(req: Request) {
       },
     });
 
-    return Response.json({ character: { id: character.id, name: character.name } });
+    const { track } = await import("@/lib/metrics");
+    track("character_created");
+
+    return Response.json({
+      character: {
+        id: character.id,
+        name: character.name,
+        layers: ["soul", "style", "rules", "context", "relationship"],
+      },
+    });
   } catch (error) {
     console.error("[characters POST]", error);
     const detail =
