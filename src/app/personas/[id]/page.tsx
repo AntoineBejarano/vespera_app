@@ -1,4 +1,5 @@
 import { getAppUser } from "@/lib/session";
+import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { prisma } from "@/lib/db";
 import { AppNav } from "@/components/AppNav";
 import { PersonaDetail } from "@/components/PersonaDetail";
@@ -9,7 +10,7 @@ type Params = { params: Promise<{ id: string }> };
 export default async function PersonaPage({ params }: Params) {
   const user = await getAppUser({ or: "redirect" });
   if (!user) redirect("/");
-  if (!user.ageVerifiedAt) redirect("/age-gate");
+  if (needsAccountAgeGate(user)) redirect("/age-gate");
   const { id } = await params;
 
   const character = await prisma.character.findFirst({

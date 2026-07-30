@@ -67,7 +67,7 @@ export async function POST(req: Request) {
       return Response.json(
         {
           error:
-            "Contenido no permitido: Vespera es solo para adultos consentidos (18+). No se permite material sexual con menores ni age-play.",
+            "Contenido no permitido: vesperer.com es solo para adultos consentidos (18+). No se permite material sexual con menores ni age-play.",
         },
         { status: 400 },
       );

@@ -56,3 +56,24 @@ select,
 button {
   border-radius: 0.75rem;
 }
+
+/* Mobile safe areas + tap targets */
+.safe-pad {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+@supports (height: 100dvh) {
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
+}
+
+@media (max-width: 640px) {
+  input,
+  textarea,
+  select,
+  button {
+    font-size: 16px; /* avoid iOS zoom on focus */
+  }
+}

@@ -73,7 +73,7 @@ export function ShimmerButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative overflow-hidden rounded-xl bg-[var(--accent)] px-6 py-3 font-medium text-white transition hover:opacity-95",
+        "relative overflow-hidden rounded-xl bg-[var(--accent)] px-6 py-3.5 font-medium text-white transition hover:opacity-95",
         className,
       )}
     >

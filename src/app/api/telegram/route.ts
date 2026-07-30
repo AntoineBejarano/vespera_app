@@ -12,7 +12,12 @@ import {
   sleep,
 } from "@/lib/chat/humanize";
 import { resolveBotByWebhookSecret } from "@/lib/telegram/bots";
-import { ensureTelegramPeer, type TelegramFrom } from "@/lib/telegram/peers";
+import {
+  attestTelegramPeerAge,
+  ensureTelegramPeer,
+  isAgeAttestMessage,
+  type TelegramFrom,
+} from "@/lib/telegram/peers";
 
 export const maxDuration = 60;
 
@@ -26,16 +31,25 @@ type TelegramUpdate = {
   };
 };
 
+const AGE_GATE_MSG = [
+  "Adults only (18+).",
+  "This chat can include sexual content between consenting adults.",
+  "Sexual content involving minors is forbidden.",
+  "",
+  "If you are 18 or older, reply: I am 18",
+  "If you are under 18, leave now — we cannot chat.",
+].join("\n");
+
 /**
  * Multi-tenant Telegram webhook.
  * N bots (DB or env) → same Character (girl) → N peers with isolated memory.
  * Bot resolved by x-telegram-bot-api-secret-token.
+ * Peers must self-attest 18+ before character replies.
  */
 export async function POST(req: Request) {
   const header = req.headers.get("x-telegram-bot-api-secret-token");
   const bot = await resolveBotByWebhookSecret(header);
   if (!bot) {
-    // Distinguish misconfig vs forbidden
     if (!process.env.TELEGRAM_BOT_TOKEN && !(await prisma.telegramBot.count())) {
       return Response.json({ error: "Telegram not configured" }, { status: 503 });
     }
@@ -54,13 +68,27 @@ export async function POST(req: Request) {
   const text = message.text?.trim() ?? "";
 
   try {
-    const peerUserId = await ensureTelegramPeer({ botId: bot.id, from });
+    const peer = await ensureTelegramPeer({ botId: bot.id, from });
     const character = await prisma.character.findUnique({
       where: { id: bot.characterId },
     });
 
     if (text.startsWith("/start")) {
       const hi = from.first_name ? `hey ${from.first_name}` : "hey";
+      if (!peer.ageAttestedAt) {
+        await telegramSendMessage(
+          chatId,
+          [
+            character
+              ? `${hi} — before we talk, age check.`
+              : `${hi} — age check first.`,
+            "",
+            AGE_GATE_MSG,
+          ].join("\n"),
+          token,
+        );
+        return Response.json({ ok: true });
+      }
       await telegramSendMessage(
         chatId,
         character
@@ -71,26 +99,41 @@ export async function POST(req: Request) {
       return Response.json({ ok: true });
     }
 
+    if (!peer.ageAttestedAt) {
+      if (isAgeAttestMessage(text)) {
+        await attestTelegramPeerAge(peer.peerId, peer.userId);
+        await telegramSendMessage(
+          chatId,
+          character
+            ? `got it — you're in. i'm ${character.name}. text me whenever`
+            : "got it — you're in. text me whenever",
+          token,
+        );
+        return Response.json({ ok: true });
+      }
+      await telegramSendMessage(chatId, AGE_GATE_MSG, token);
+      return Response.json({ ok: true });
+    }
+
     if (text === "/who" || text === "/status") {
       const rel = character
         ? await prisma.relationshipState.findUnique({
             where: {
               userId_characterId: {
-                userId: peerUserId,
+                userId: peer.userId,
                 characterId: character.id,
               },
             },
           })
         : null;
-      const phase = rel
-        ? relationshipPhase(rel.trust, rel.affection)
-        : "—";
+      const phase = rel ? relationshipPhase(rel.trust, rel.affection) : "—";
       await telegramSendMessage(
         chatId,
         [
           `telegram: ${from.first_name ?? "—"}${from.username ? ` @${from.username}` : ""}`,
           `girl: ${character?.name ?? "none"}`,
           `bot: @${bot.username}`,
+          "age: attested 18+",
           rel
             ? `${phase} · t ${rel.trust.toFixed(2)} · a ${rel.affection.toFixed(2)} · ${rel.mood}`
             : "no relationship state yet",
@@ -118,7 +161,7 @@ export async function POST(req: Request) {
     await sleep(randomReplyDelayMs());
 
     const result = await runCharacterReply({
-      userId: peerUserId,
+      userId: peer.userId,
       message: text,
       characterId: character.id,
       partner: {

@@ -1,11 +1,17 @@
 import { prisma } from "@/lib/db";
 import { getAppUser, requireAppUser } from "@/lib/session";
+import { needsAccountAgeGate } from "@/lib/legal/gate";
 
 export async function requireUser(userId?: string) {
   if (userId) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new Error("USER_NOT_FOUND");
-    if (!user.ageVerifiedAt) throw new Error("AGE_NOT_VERIFIED");
+    if (needsAccountAgeGate(user) && !user.isTelegramPeer) {
+      throw new Error("AGE_NOT_VERIFIED");
+    }
+    if (user.isTelegramPeer && !user.ageVerifiedAt) {
+      throw new Error("AGE_NOT_VERIFIED");
+    }
     return user;
   }
   return requireAppUser();

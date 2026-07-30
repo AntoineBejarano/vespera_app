@@ -194,20 +194,20 @@ export function ChatPanel({
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-57px)] max-w-3xl flex-col px-4 pb-4">
-      <div className="flex flex-wrap items-center gap-3 border-b border-[var(--line)] py-3">
+    <div className="mx-auto flex h-[calc(100dvh-57px)] max-w-3xl flex-col px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-4 sm:pb-4">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[var(--line)] py-2.5 sm:gap-3 sm:py-3">
         <a
           href={`/personas/${characterId}`}
-          className="text-sm text-[var(--muted)] hover:text-[var(--ink)]"
+          className="max-w-[40%] truncate text-sm text-[var(--muted)] hover:text-[var(--ink)]"
         >
           ← {active?.name ?? "Persona"}
         </a>
-        <span className="rounded-full border border-[var(--line)] px-2.5 py-1 text-[10px] uppercase tracking-wider text-[var(--muted)]">
+        <span className="hidden rounded-full border border-[var(--line)] px-2.5 py-1 text-[10px] uppercase tracking-wider text-[var(--muted)] sm:inline">
           Test chat
         </span>
         {characters.length > 1 ? (
           <select
-            className="border border-[var(--line)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
+            className="max-w-full border border-[var(--line)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
             value={characterId}
             onChange={(e) => switchCharacter(e.target.value)}
           >
@@ -217,19 +217,16 @@ export function ChatPanel({
               </option>
             ))}
           </select>
-        ) : (
-          <span className="font-[family-name:var(--font-display)] text-sm font-semibold text-[var(--ink)]">
-            {active?.name}
-          </span>
-        )}
+        ) : null}
         <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
-          Intensity
+          <span className="hidden sm:inline">Intensity</span>
           <input
             type="range"
             min={1}
             max={5}
             value={intensity}
             onChange={(e) => updateIntensity(Number(e.target.value))}
+            className="w-20 sm:w-28"
           />
           <span className="w-4 text-[var(--ink)]">{intensity}</span>
         </label>
@@ -316,18 +313,18 @@ export function ChatPanel({
       >
         <div className="flex gap-2">
           <input
-            className="flex-1 border border-[var(--line)] bg-[var(--bg-elevated)] px-4 py-3 text-[var(--ink)] outline-none focus:border-[var(--accent)]"
+            className="min-w-0 flex-1 border border-[var(--line)] bg-[var(--bg-elevated)] px-3 py-3 text-[var(--ink)] outline-none focus:border-[var(--accent)] sm:px-4"
             value={input}
-            placeholder="Message the agent…"
+            placeholder="Message…"
             onChange={(e) => setInput(e.target.value)}
             disabled={busy}
           />
           <button
             type="submit"
             disabled={busy}
-            className="rounded-xl bg-[var(--accent)] px-5 py-3 font-medium text-white disabled:opacity-50"
+            className="shrink-0 rounded-xl bg-[var(--accent)] px-4 py-3 font-medium text-white disabled:opacity-50 sm:px-5"
           >
-            Send
+            {busy ? "…" : "Send"}
           </button>
         </div>
       </form>

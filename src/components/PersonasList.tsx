@@ -25,13 +25,13 @@ type Persona = {
 
 export function PersonasList({ initial }: { initial: Persona[] }) {
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:py-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-xs uppercase tracking-[0.28em] text-[var(--accent)]">
             Roster
           </p>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight text-[var(--ink)]">
+          <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight text-[var(--ink)] sm:text-4xl">
             Personas
           </h1>
           <p className="mt-2 max-w-lg text-[var(--muted)]">
@@ -41,7 +41,7 @@ export function PersonasList({ initial }: { initial: Persona[] }) {
         </div>
         <Link
           href="/personas/new"
-          className="rounded-xl bg-[var(--accent)] px-5 py-3 font-medium text-white"
+          className="w-full rounded-xl bg-[var(--accent)] px-5 py-3 text-center font-medium text-white sm:w-auto"
         >
           New persona
         </Link>

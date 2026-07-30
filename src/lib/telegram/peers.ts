@@ -8,14 +8,20 @@ export type TelegramFrom = {
   username?: string;
 };
 
+export type EnsuredPeer = {
+  userId: string;
+  peerId: string;
+  ageAttestedAt: Date | null;
+};
+
 /**
  * Find or create an isolated User for this (bot, telegram person).
- * Same girl (character) can talk to N peers — each gets own memory/relationship.
+ * Age is NOT auto-verified — peer must attest 18+ in Telegram first.
  */
 export async function ensureTelegramPeer(params: {
   botId: string;
   from: TelegramFrom;
-}) {
+}): Promise<EnsuredPeer> {
   const telegramUserId = String(params.from.id);
   const existing = await prisma.telegramPeer.findUnique({
     where: {
@@ -28,14 +34,29 @@ export async function ensureTelegramPeer(params: {
   });
 
   if (existing) {
-    await prisma.telegramPeer.update({
-      where: { id: existing.id },
-      data: {
-        telegramFirstName: params.from.first_name?.trim() || null,
-        telegramLastName: params.from.last_name?.trim() || null,
-        telegramUsername: params.from.username?.trim() || null,
-      },
-    });
+    let ageAttestedAt = existing.ageAttestedAt;
+    // Grandfather peers that were auto-marked 18+ before attest field existed
+    if (!ageAttestedAt && existing.user.ageVerifiedAt) {
+      ageAttestedAt = existing.user.ageVerifiedAt;
+      await prisma.telegramPeer.update({
+        where: { id: existing.id },
+        data: {
+          ageAttestedAt,
+          telegramFirstName: params.from.first_name?.trim() || null,
+          telegramLastName: params.from.last_name?.trim() || null,
+          telegramUsername: params.from.username?.trim() || null,
+        },
+      });
+    } else {
+      await prisma.telegramPeer.update({
+        where: { id: existing.id },
+        data: {
+          telegramFirstName: params.from.first_name?.trim() || null,
+          telegramLastName: params.from.last_name?.trim() || null,
+          telegramUsername: params.from.username?.trim() || null,
+        },
+      });
+    }
     await prisma.user.update({
       where: { id: existing.userId },
       data: {
@@ -48,7 +69,11 @@ export async function ensureTelegramPeer(params: {
           existing.user.name,
       },
     });
-    return existing.userId;
+    return {
+      userId: existing.userId,
+      peerId: existing.id,
+      ageAttestedAt,
+    };
   }
 
   const stubEmail = `tg_${hashForEmail(params.botId, telegramUserId)}@peers.vespera.local`;
@@ -58,22 +83,22 @@ export async function ensureTelegramPeer(params: {
       email: stubEmail,
       name: params.from.first_name || "Telegram",
       isTelegramPeer: true,
-      ageVerifiedAt: new Date(),
-      adultConsentAt: new Date(),
+      ageVerifiedAt: null,
+      adultConsentAt: null,
       telegramFirstName: params.from.first_name?.trim() || null,
       telegramLastName: params.from.last_name?.trim() || null,
       telegramUsername: params.from.username?.trim() || null,
       settings: {
         create: {
           language: "en",
-          adultConsent: true,
+          adultConsent: false,
           dailyLimit: 200,
         },
       },
     },
   });
 
-  await prisma.telegramPeer.create({
+  const peer = await prisma.telegramPeer.create({
     data: {
       botId: params.botId,
       userId: user.id,
@@ -81,8 +106,43 @@ export async function ensureTelegramPeer(params: {
       telegramFirstName: params.from.first_name?.trim() || null,
       telegramLastName: params.from.last_name?.trim() || null,
       telegramUsername: params.from.username?.trim() || null,
+      ageAttestedAt: null,
     },
   });
 
-  return user.id;
+  return {
+    userId: user.id,
+    peerId: peer.id,
+    ageAttestedAt: null,
+  };
+}
+
+const AFFIRM =
+  /^(i\s*(am|'m)\s*18(\+|(\s*or\s*older))?|yes|y|18\+|i\s*agree|agree|adulto|soy\s*mayor|tengo\s*18)$/i;
+
+export function isAgeAttestMessage(text: string) {
+  return AFFIRM.test(text.trim());
+}
+
+export async function attestTelegramPeerAge(peerId: string, userId: string) {
+  const now = new Date();
+  await prisma.$transaction([
+    prisma.telegramPeer.update({
+      where: { id: peerId },
+      data: { ageAttestedAt: now },
+    }),
+    prisma.user.update({
+      where: { id: userId },
+      data: {
+        ageVerifiedAt: now,
+        adultConsentAt: now,
+        settings: {
+          upsert: {
+            create: { adultConsent: true, language: "en", dailyLimit: 200 },
+            update: { adultConsent: true },
+          },
+        },
+      },
+    }),
+  ]);
 }

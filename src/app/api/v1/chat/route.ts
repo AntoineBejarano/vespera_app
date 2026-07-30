@@ -4,6 +4,15 @@ import { runCharacterReply } from "@/lib/chat/engine";
 
 export const maxDuration = 60;
 
+class AgeAttestRequiredError extends Error {
+  status = 403;
+  constructor() {
+    super(
+      "endUserAgeAttested:true required — integrator must collect 18+ attestation before chat",
+    );
+  }
+}
+
 /**
  * Public persona chat API.
  * Auth: X-Api-Key = Character.apiKey
@@ -33,7 +42,24 @@ export async function POST(req: Request) {
   }
 
   const peerId = String(body.peerId ?? body.userId ?? "default").slice(0, 80);
-  const peerUserId = await ensureApiPeer(character.id, character.userId, peerId);
+  const endUserAgeAttested = Boolean(
+    body.endUserAgeAttested ?? body.ageAttested,
+  );
+
+  let peerUserId: string;
+  try {
+    peerUserId = await ensureApiPeer(
+      character.id,
+      character.userId,
+      peerId,
+      endUserAgeAttested,
+    );
+  } catch (err) {
+    if (err instanceof AgeAttestRequiredError) {
+      return Response.json({ error: err.message }, { status: 403 });
+    }
+    throw err;
+  }
 
   const result = await runCharacterReply({
     userId: peerUserId,
@@ -66,6 +92,7 @@ async function ensureApiPeer(
   characterId: string,
   ownerUserId: string,
   peerId: string,
+  endUserAgeAttested: boolean,
 ) {
   const hash = createHash("sha256")
     .update(`api:${characterId}:${peerId}`)
@@ -74,15 +101,41 @@ async function ensureApiPeer(
   const email = `api_${hash}@peers.vespera.local`;
 
   const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) return existing.id;
+  if (existing) {
+    if (!existing.ageVerifiedAt) {
+      if (!endUserAgeAttested) {
+        throw new AgeAttestRequiredError();
+      }
+      const now = new Date();
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          ageVerifiedAt: now,
+          adultConsentAt: now,
+          settings: {
+            upsert: {
+              create: { adultConsent: true, language: "en", dailyLimit: 500 },
+              update: { adultConsent: true },
+            },
+          },
+        },
+      });
+    }
+    return existing.id;
+  }
 
+  if (!endUserAgeAttested) {
+    throw new AgeAttestRequiredError();
+  }
+
+  const now = new Date();
   const user = await prisma.user.create({
     data: {
       email,
       name: peerId === "default" ? "API peer" : peerId,
       isTelegramPeer: true,
-      ageVerifiedAt: new Date(),
-      adultConsentAt: new Date(),
+      ageVerifiedAt: now,
+      adultConsentAt: now,
       settings: {
         create: {
           language: "en",
@@ -94,7 +147,6 @@ async function ensureApiPeer(
     },
   });
 
-  // Touch ownership context (unused but keeps audit trail via character owner)
   void ownerUserId;
   void characterId;
 

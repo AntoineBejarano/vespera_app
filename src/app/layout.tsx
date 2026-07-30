@@ -17,9 +17,18 @@ const body = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Vespera — Uncensored AI companions for creators",
+  title: "vesperer.com — Uncensored AI companions for creators",
   description:
     "Connect OnlyFans, Fansly, Fanvue & Telegram to a persistent character engine with memory, LLM, and human handoff.",
+  applicationName: "vesperer.com",
+  icons: {
+    icon: [
+      { url: "/brand/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/brand/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/brand/logo.png", sizes: "1024x1024", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({

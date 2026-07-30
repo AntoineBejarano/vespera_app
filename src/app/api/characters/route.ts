@@ -7,6 +7,7 @@ import { countUserCharacters } from "@/lib/users";
 import { ensureRelationshipState } from "@/lib/persona/relationship";
 import { Prisma } from "@/generated/prisma/client";
 import { requireAppUser, getAppUser } from "@/lib/session";
+import { needsAccountAgeGate } from "@/lib/legal/gate";
 
 export async function GET() {
   const user = await getAppUser();
@@ -75,7 +76,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  if (!user.ageVerifiedAt) {
+  if (needsAccountAgeGate(user)) {
     return Response.json({ error: "Age verification 18+ required" }, { status: 403 });
   }
 

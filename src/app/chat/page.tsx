@@ -1,4 +1,5 @@
 import { getAppUser } from "@/lib/session";
+import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { prisma } from "@/lib/db";
 import { AppNav } from "@/components/AppNav";
 import { ChatPanel } from "@/components/ChatPanel";
@@ -11,7 +12,7 @@ export default async function ChatPage({
 }) {
   const user = await getAppUser({ or: "redirect" });
   if (!user) redirect("/handler/sign-in");
-  if (!user.ageVerifiedAt) redirect("/age-gate");
+  if (needsAccountAgeGate(user)) redirect("/age-gate");
 
   const { characterId } = await searchParams;
   if (!characterId) redirect("/personas");

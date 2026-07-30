@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { hexclaveServerApp } from "@/hexclave/server";
+import { needsAccountAgeGate } from "@/lib/legal/gate";
 
 /**
  * Resolve Hexclave auth → local Prisma tenant User (multi-tenant).
@@ -81,6 +82,6 @@ export async function getAppUser(opts?: {
 export async function requireAppUser() {
   const user = await getAppUser({ or: "throw" });
   if (!user) throw new Error("UNAUTHORIZED");
-  if (!user.ageVerifiedAt) throw new Error("AGE_NOT_VERIFIED");
+  if (needsAccountAgeGate(user)) throw new Error("AGE_NOT_VERIFIED");
   return user;
 }

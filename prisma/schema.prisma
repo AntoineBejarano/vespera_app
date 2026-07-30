@@ -21,6 +21,12 @@ model User {
   dailyResetAt       DateTime  @default(now())
   ageVerifiedAt      DateTime?
   adultConsentAt     DateTime?
+  /// When user accepted current Terms (clickwrap)
+  tosAcceptedAt      DateTime?
+  /// When user accepted current Privacy Policy (clickwrap)
+  privacyAcceptedAt  DateTime?
+  /// LEGAL_VERSION string accepted at last attest
+  legalVersionAccepted String?
   preferredModel     String?
   language           String    @default("en")
   /// Legacy single-bot link (admin). Peers use TelegramPeer.
@@ -201,6 +207,8 @@ model TelegramPeer {
   telegramUsername String?
   telegramFirstName String?
   telegramLastName String?
+  /// Self-attest 18+ via Telegram before chatting
+  ageAttestedAt    DateTime?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

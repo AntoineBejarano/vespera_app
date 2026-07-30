@@ -1,29 +1,41 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { ADULT_COOKIE, LEGAL_VERSION } from "@/lib/legal/constants";
 
-const publicPaths = new Set([
-  "/",
-  "/login",
-  "/register",
-  "/age-gate",
-  "/pricing",
-]);
+function hasValidAdultCookie(request: NextRequest) {
+  return request.cookies.get(ADULT_COOKIE)?.value === LEGAL_VERSION;
+}
 
-/**
- * Soft gate — Hexclave hosted auth handles sign-in.
- * Page/API layers call getAppUser for real protection.
- */
-export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
+function isAgeExempt(pathname: string) {
   if (
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
-    pathname.startsWith("/handler")
+    pathname.startsWith("/handler") ||
+    pathname.startsWith("/brand") ||
+    pathname.startsWith("/icon") ||
+    pathname.startsWith("/apple-icon")
   ) {
-    return NextResponse.next();
+    return true;
   }
+
+  if (
+    pathname === "/age-gate" ||
+    pathname === "/underage" ||
+    pathname.startsWith("/legal")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Soft auth redirects + hard adult access wall (cookie = current legal version).
+ * Page/API layers still call getAppUser / ageVerifiedAt for account-level gates.
+ */
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
   // Legacy auth routes → same-domain Hexclave handler pages
   if (pathname === "/login" || pathname === "/register") {
@@ -34,7 +46,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  void publicPaths;
+  if (!isAgeExempt(pathname) && !hasValidAdultCookie(request)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/age-gate";
+    const next = `${pathname}${request.nextUrl.search}`;
+    url.search = "";
+    if (next && next !== "/") {
+      url.searchParams.set("next", next);
+    }
+    return NextResponse.redirect(url);
+  }
+
   return NextResponse.next();
 }
 

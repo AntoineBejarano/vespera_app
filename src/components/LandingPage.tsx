@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useHexclaveApp, useUser } from "@hexclave/next";
 import { AppNav } from "@/components/AppNav";
+import { BrandLogo } from "@/components/BrandLogo";
+import { LegalFooter } from "@/components/LegalFooter";
 import {
   BlurFade,
   Marquee,
@@ -97,42 +99,58 @@ export function LandingPage() {
   return (
     <div className="relative overflow-hidden">
       <AppNav />
-      <section className="relative min-h-[92vh] px-6 pb-20 pt-16">
+      <section className="relative min-h-[88dvh] px-4 pb-16 pt-10 sm:min-h-[92vh] sm:px-6 sm:pb-20 sm:pt-16">
         <RetroGrid />
         <div className="relative mx-auto flex max-w-5xl flex-col items-start">
           <BlurFade>
-            <p className="text-sm uppercase tracking-[0.35em] text-[var(--accent)]">
+            <BrandLogo href="/" size="hero" priority className="mb-2" />
+          </BlurFade>
+          <BlurFade delay={0.08}>
+            <p className="mt-4 text-[11px] uppercase tracking-[0.28em] text-[var(--accent)] sm:text-sm sm:tracking-[0.35em]">
               Uncensored · 18+ · multi-tenant
             </p>
           </BlurFade>
-          <BlurFade delay={0.08}>
-            <h1 className="mt-5 max-w-3xl font-[family-name:var(--font-display)] text-5xl leading-[0.95] text-[var(--ink)] sm:text-7xl">
+          <BlurFade delay={0.12}>
+            <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[1.85rem] leading-[1.05] text-[var(--ink)] sm:mt-4 sm:text-4xl sm:leading-[1.1]">
               Companions that stay horny, coherent, and{" "}
               <span className="italic text-[var(--accent)]">yours</span>.
             </h1>
           </BlurFade>
-          <BlurFade delay={0.16}>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-[var(--muted)]">
-              Vespera wires creator platforms into a character engine with real
-              memory — then texts like a person, not a filtered chatbot. Built
-              for adults who need heat without the lecture.
+          <BlurFade delay={0.18}>
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-[var(--muted)] sm:mt-5 sm:text-lg">
+              vesperer.com wires creator platforms into a character engine with
+              real memory — then texts like a person, not a filtered chatbot.
+              Built for adults who need heat without the lecture.
             </p>
           </BlurFade>
-          <BlurFade delay={0.24} className="mt-10 flex flex-wrap gap-4">
-            <ShimmerButton onClick={() => app.redirectToSignUp()}>
+          <BlurFade
+            delay={0.26}
+            className="mt-8 flex w-full flex-col gap-3 sm:mt-10 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-4"
+          >
+            <ShimmerButton
+              className="w-full sm:w-auto"
+              onClick={() => app.redirectToSignUp()}
+            >
               Deploy an agent — €20/mo
             </ShimmerButton>
             <button
               type="button"
-              className="border border-[var(--line)] px-6 py-3"
+              className="w-full rounded-xl border border-[var(--line)] px-6 py-3 sm:w-auto"
               onClick={() => app.redirectToSignIn()}
             >
               Sign in
             </button>
           </BlurFade>
+          <p className="mt-4 text-xs text-[var(--muted)]">
+            18+ only. By continuing you already attested age and accepted our{" "}
+            <a href="/legal/terms" className="text-[var(--accent)]">
+              Terms
+            </a>
+            .
+          </p>
 
-          <BlurFade delay={0.35} className="mt-16 w-full max-w-md">
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/90 p-4 shadow-[0_0_60px_rgba(255,77,109,0.12)]">
+          <BlurFade delay={0.35} className="mt-12 w-full max-w-md sm:mt-16">
+            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/90 p-3 shadow-[0_0_60px_rgba(255,77,109,0.12)] sm:p-4">
               <p className="text-xs uppercase tracking-wider text-[var(--muted)]">
                 Live vibe · example
               </p>
@@ -176,9 +194,9 @@ export function LandingPage() {
         </Marquee>
       </section>
 
-      <section id="pipeline" className="mx-auto max-w-5xl px-6 py-24">
+      <section id="pipeline" className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
         <BlurFade>
-          <h2 className="font-[family-name:var(--font-display)] text-4xl">
+          <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
             Platform → persona → payout energy
           </h2>
           <p className="mt-3 max-w-2xl text-[var(--muted)]">
@@ -211,15 +229,15 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-6 py-16">
+      <section className="mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-16">
         <BlurFade>
-          <h2 className="font-[family-name:var(--font-display)] text-4xl">
+          <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
             Why uncensored wins
           </h2>
           <p className="mt-3 max-w-2xl text-[var(--muted)]">
-            Filtered models kill the scene mid-sentence. Vespera is built for
-            adult chemistry that stays explicit, teasing, and human — without
-            therapist energy or corporate refusals.
+            Filtered models kill the scene mid-sentence. vesperer.com is built
+            for adult chemistry that stays explicit, teasing, and human —
+            without therapist energy or corporate refusals.
           </p>
         </BlurFade>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -251,9 +269,9 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section id="pricing" className="mx-auto max-w-5xl px-6 py-24">
+      <section id="pricing" className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
         <BlurFade>
-          <h2 className="font-[family-name:var(--font-display)] text-4xl">
+          <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
             Pricing
           </h2>
           <p className="mt-3 text-[var(--muted)]">
@@ -299,12 +317,10 @@ export function LandingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-[var(--line)] px-6 py-10 text-sm text-[var(--muted)]">
-        <div className="mx-auto flex max-w-5xl flex-wrap justify-between gap-4">
-          <p>Vespera · private AI relationships for adults · 18+</p>
-          <p>* Roadmap connectors. Telegram live today.</p>
-        </div>
-      </footer>
+      <LegalFooter />
+      <p className="px-6 pb-8 text-center text-xs text-[var(--muted)]">
+        * Roadmap connectors. Telegram live today.
+      </p>
     </div>
   );
 }

@@ -289,16 +289,16 @@ export function PersonaDetail({
   -d '{"message":"hey","peerId":"user-123"}'`;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-10">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+    <div className="mx-auto max-w-3xl space-y-5 px-4 py-8 sm:space-y-6 sm:py-10">
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <Link
             href="/personas"
             className="text-sm text-[var(--muted)] hover:text-[var(--ink)]"
           >
             ← Personas
           </Link>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl font-semibold text-[var(--ink)]">
+          <h1 className="mt-2 break-words font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--ink)] sm:text-4xl">
             {persona.name}
           </h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
@@ -307,16 +307,16 @@ export function PersonaDetail({
             {bots.reduce((n, b) => n + b.peerCount, 0)} Telegram peers
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap">
           <Link
             href={`/chat?characterId=${persona.id}`}
-            className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm hover:border-[var(--accent)]"
+            className="rounded-xl border border-[var(--line)] px-3 py-2.5 text-center text-sm hover:border-[var(--accent)] sm:px-4"
           >
             Test chat
           </Link>
           <Link
             href={`/personas/${persona.id}/memory`}
-            className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm hover:border-[var(--accent)]"
+            className="rounded-xl border border-[var(--line)] px-3 py-2.5 text-center text-sm hover:border-[var(--accent)] sm:px-4"
           >
             Memory
           </Link>
