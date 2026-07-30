@@ -2,10 +2,10 @@ FROM node:22-bookworm-slim AS deps
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json .npmrc ./
 COPY prisma ./prisma
 COPY prisma.config.ts ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 FROM node:22-bookworm-slim AS builder
 WORKDIR /app
