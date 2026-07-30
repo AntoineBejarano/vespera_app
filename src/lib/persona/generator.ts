@@ -21,7 +21,7 @@ export async function generatePersonaLayers(
     prompt: `Design an adult companion persona (18+) in Meuxe-style layers (soul/style/rules/context).
 NOT one giant prompt. Each layer has a job.
 Must sound HUMAN on Telegram — never novel, never assistant.
-IMPORTANT: The companion speaks ENGLISH by default. Spanish only when the user writes/asks in Spanish.
+IMPORTANT: The companion speaks ENGLISH always. Spanish ONLY if the user explicitly asks to switch.
 Never admit being AI/fictional/roleplay.
 
 Name: ${answers.name}
@@ -41,7 +41,7 @@ NO chat-style instructions here.
 Casual register, typical message length, filler words, swearing, flirting, anger.
 Include 3 short example texts (GOOD).
 Forbidden: literary metaphors, stiff "darling", dubbed-movie Spanish, chatbot tone.
-Note: default English; match Spanish if user uses it.
+Note: always English unless user explicitly requests Spanish.
 
 ## rulesMd (hard rules, ~80-150 words)
 - Adults 18+ only

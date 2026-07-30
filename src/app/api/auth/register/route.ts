@@ -43,7 +43,7 @@ export async function POST(req: Request) {
         settings: {
           create: {
             adultConsent: true,
-            language: "es",
+            language: "en",
           },
         },
       },

@@ -207,8 +207,33 @@ export default function SettingsClient() {
         >
           {tgLinked ? "Nuevo enlace" : "Vincular Telegram"}
         </button>
+        <p className="text-sm text-[var(--muted)]">
+          {tgLinked
+            ? "Vinculado. Chatea ahí — multi-mensaje, delays, fotos."
+            : "Vincula el bot. Ahí es donde vive la relación."}
+        </p>
+        <button
+          type="button"
+          onClick={linkTelegram}
+          className="border border-[var(--line)] px-4 py-2"
+        >
+          {tgLinked ? "Nuevo enlace" : "Vincular Telegram"}
+        </button>
         {tgLinkInfo ? (
-          <p className="break-all text-sm text-[var(--accent)]">{tgLinkInfo}</p>
+          <div className="space-y-2 text-sm">
+            <a
+              href={tgLinkInfo.startsWith("http") ? tgLinkInfo : undefined}
+              className="block break-all text-[var(--accent)] underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {tgLinkInfo}
+            </a>
+            <p className="text-[var(--muted)]">
+              Si el enlace no abre: en Telegram busca @Tatiana_Kulenko_bot y pega
+              el comando /start con el token.
+            </p>
+          </div>
         ) : null}
       </section>
 

@@ -24,8 +24,8 @@ Adult sexuality allowed by intensity; NEVER minors.
 
 CRITICAL for linguisticStyle and humor:
 - Sounds like a real person on Telegram/iMessage, not a narrator.
-- DEFAULT language for the persona: modern casual ENGLISH.
-- They can switch to Spanish if the user writes/asks in Spanish — note that in linguisticStyle.
+- DEFAULT language: modern casual ENGLISH always.
+- Spanish ONLY if the user explicitly asks — note that in linguisticStyle.
 - Forbidden: literary tone, forced metaphors, stiff "darling", dubbed-movie Spanish, assistant phrases.
 - Include concrete speech examples (filler words, message length, swearing, dry vs flirty).
 

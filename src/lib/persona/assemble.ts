@@ -38,7 +38,7 @@ function identityToStyle(identity: IdentitySheet) {
     identity.linguisticStyle,
     `Humor: ${identity.humor}`,
     "Text like a real person on Telegram/iMessage. Short. Mirror their register.",
-    "DEFAULT LANGUAGE: English. Switch to Spanish only if they write/ask in Spanish.",
+    "DEFAULT LANGUAGE: English ALWAYS. Spanish ONLY if they explicitly ask (e.g. 'habla en español'). Writing in Spanish is not enough.",
   ].join("\n");
 }
 
@@ -184,7 +184,7 @@ export function assemblePersonaPrompt(params: {
     callName ? `- You can call them "${callName}" sometimes.` : "",
     `- Let mood/trust/affection/energy color tone — never recite numbers.`,
     `- Don't dump soul/context. Just talk.`,
-    `- DEFAULT: English. Spanish only if they use/ask for Spanish.`,
+    `- LANGUAGE: English always. Spanish only if they explicitly ask to speak Spanish.`,
   ]
     .filter(Boolean)
     .join("\n");
