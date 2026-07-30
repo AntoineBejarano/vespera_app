@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useHexclaveApp } from "@hexclave/next";
+import { useHexclaveApp, useUser } from "@hexclave/next";
 import { AppNav } from "@/components/AppNav";
 import {
   BlurFade,
@@ -78,13 +78,18 @@ const PRICING = [
 
 export function LandingPage() {
   const app = useHexclaveApp();
+  const user = useUser({ or: "return-null" });
   const search = useSearchParams();
 
   useEffect(() => {
+    if (user) {
+      window.location.replace("/personas");
+      return;
+    }
     const auth = search.get("auth");
-    if (auth === "signin") app.redirectToSignIn();
-    if (auth === "signup") app.redirectToSignUp();
-  }, [app, search]);
+    if (auth === "signin") void app.redirectToSignIn();
+    if (auth === "signup") void app.redirectToSignUp();
+  }, [app, search, user]);
 
   return (
     <div className="relative overflow-hidden">
@@ -124,7 +129,7 @@ export function LandingPage() {
           </BlurFade>
 
           <BlurFade delay={0.35} className="mt-16 w-full max-w-md">
-            <div className="border border-[var(--line)] bg-[var(--bg-elevated)]/90 p-4 shadow-[0_0_60px_rgba(196,165,116,0.08)]">
+            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/90 p-4 shadow-[0_0_60px_rgba(255,77,109,0.12)]">
               <p className="text-xs uppercase tracking-wider text-[var(--muted)]">
                 Live vibe · example
               </p>
@@ -230,8 +235,8 @@ export function LandingPage() {
             },
           ].map((card, i) => (
             <BlurFade key={card.t} delay={i * 0.08}>
-              <div className="h-full border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
-                <h3 className="font-[family-name:var(--font-display)] text-2xl">
+              <div className="h-full rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
+                <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
                   {card.t}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
@@ -259,8 +264,8 @@ export function LandingPage() {
               <div
                 className={
                   tier.highlight
-                    ? "flex h-full flex-col border border-[var(--accent)] bg-[var(--accent-soft)] p-6"
-                    : "flex h-full flex-col border border-[var(--line)] bg-[var(--bg-elevated)] p-6"
+                    ? "flex h-full flex-col rounded-2xl border border-[var(--accent)] bg-[var(--accent-soft)] p-6"
+                    : "flex h-full flex-col rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-6"
                 }
               >
                 <p className="text-xs uppercase tracking-[0.25em] text-[var(--muted)]">
@@ -280,7 +285,7 @@ export function LandingPage() {
                 </ul>
                 <button
                   type="button"
-                  className="mt-8 w-full bg-[var(--accent)] px-4 py-3 text-[var(--bg)]"
+                  className="mt-8 w-full rounded-xl bg-[var(--accent)] px-4 py-3 font-medium text-white"
                   onClick={() => app.redirectToSignUp()}
                 >
                   {tier.cta}

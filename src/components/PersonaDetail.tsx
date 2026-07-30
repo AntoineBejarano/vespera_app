@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PHOTO_TAG_OPTIONS } from "@/lib/chat/photos";
+import { MagicCard } from "@/components/magicui/magic-card";
 
 type Bot = {
   id: string;
@@ -215,7 +216,7 @@ export function PersonaDetail({
   -d '{"message":"hey","peerId":"user-123"}'`;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-4 py-10">
+    <div className="mx-auto max-w-3xl space-y-6 px-4 py-10">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link
@@ -224,7 +225,7 @@ export function PersonaDetail({
           >
             ← Personas
           </Link>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl text-[var(--ink)]">
+          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl font-semibold text-[var(--ink)]">
             {persona.name}
           </h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
@@ -235,7 +236,7 @@ export function PersonaDetail({
         </div>
         <Link
           href={`/chat?characterId=${persona.id}`}
-          className="border border-[var(--line)] px-4 py-2 text-sm"
+          className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm hover:border-[var(--accent)]"
         >
           Test chat
         </Link>
@@ -245,8 +246,9 @@ export function PersonaDetail({
         <p className="text-sm text-[var(--accent)]">{message}</p>
       ) : null}
 
-      <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
-        <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
+      <MagicCard>
+      <section className="space-y-3 p-5">
+        <h2 className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
           Personality
         </h2>
         <label className="flex items-center gap-3 text-sm text-[var(--muted)]">
@@ -267,9 +269,11 @@ export function PersonaDetail({
           </p>
         ) : null}
       </section>
+      </MagicCard>
 
-      <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
-        <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
+      <MagicCard>
+      <section className="space-y-3 p-5">
+        <h2 className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
           Telegram bots
         </h2>
         <p className="text-sm text-[var(--muted)]">
@@ -297,7 +301,7 @@ export function PersonaDetail({
         <button
           type="button"
           onClick={addBot}
-          className="bg-[var(--accent)] px-4 py-2 text-[var(--bg)]"
+          className="rounded-xl bg-[var(--accent)] px-4 py-2 font-medium text-white"
         >
           Add bot + webhook
         </button>
@@ -305,7 +309,7 @@ export function PersonaDetail({
           {bots.map((b) => (
             <li
               key={b.id}
-              className="flex flex-wrap items-center gap-2 border border-[var(--line)] p-2"
+              className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--bg)]/60 p-3"
             >
               <a
                 className="text-[var(--accent)]"
@@ -334,9 +338,11 @@ export function PersonaDetail({
           ) : null}
         </ul>
       </section>
+      </MagicCard>
 
-      <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
-        <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
+      <MagicCard>
+      <section className="space-y-3 p-5">
+        <h2 className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
           Chat API
         </h2>
         <p className="text-sm text-[var(--muted)]">
@@ -365,13 +371,15 @@ export function PersonaDetail({
             {apiKey}
           </p>
         ) : null}
-        <pre className="overflow-x-auto whitespace-pre-wrap rounded border border-[var(--line)] bg-[var(--bg)] p-3 text-xs text-[var(--muted)]">
+        <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl border border-[var(--line)] bg-[var(--bg)] p-3 text-xs text-[var(--muted)]">
           {curlExample}
         </pre>
       </section>
+      </MagicCard>
 
-      <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
-        <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
+      <MagicCard>
+      <section className="space-y-3 p-5">
+        <h2 className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
           Photos + tags
         </h2>
         <input
@@ -408,24 +416,28 @@ export function PersonaDetail({
         <button
           type="button"
           onClick={addPhoto}
-          className="bg-[var(--accent)] px-4 py-2 text-[var(--bg)]"
+          className="rounded-xl bg-[var(--accent)] px-4 py-2 font-medium text-white"
         >
           Add photo
         </button>
-        <ul className="space-y-2">
+        <ul className="grid gap-2 sm:grid-cols-2">
           {photos.map((p) => (
             <li
               key={p.id}
-              className="flex items-center gap-3 border border-[var(--line)] p-2"
+              className="flex items-center gap-3 rounded-xl border border-[var(--line)] bg-[var(--bg)]/60 p-2"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.url} alt="" className="h-12 w-12 object-cover" />
+              <img
+                src={p.url}
+                alt=""
+                className="h-14 w-14 rounded-lg object-cover"
+              />
               <span className="flex-1 text-xs text-[var(--muted)]">
                 {(p.tags?.length ? p.tags : [p.kind]).join(", ")}
               </span>
               <button
                 type="button"
-                className="text-xs text-red-400"
+                className="text-xs text-[var(--danger)]"
                 onClick={() => removePhoto(p.id)}
               >
                 Remove
@@ -434,11 +446,12 @@ export function PersonaDetail({
           ))}
         </ul>
       </section>
+      </MagicCard>
 
       <button
         type="button"
         onClick={deletePersona}
-        className="text-sm text-red-400 underline"
+        className="text-sm text-[var(--danger)] underline"
       >
         Delete persona
       </button>

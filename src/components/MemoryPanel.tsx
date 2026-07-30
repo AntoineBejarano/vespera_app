@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MagicCard } from "@/components/magicui/magic-card";
 
 type MemoryRow = {
   id: string;
@@ -61,66 +62,75 @@ export function MemoryPanel() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
+      <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--ink)]">
         What she remembers
       </h1>
       <p className="mt-2 text-[var(--muted)]">
         Edit or delete memories. Transparency builds trust.
       </p>
-      {error ? <p className="mt-4 text-sm text-red-400">{error}</p> : null}
-      <ul className="mt-8 space-y-4">
+      {error ? <p className="mt-4 text-sm text-[var(--danger)]">{error}</p> : null}
+      <ul className="mt-8 space-y-3">
         {memories.length === 0 ? (
           <li className="text-[var(--muted)]">
             No long memories yet. They appear as the relationship grows.
           </li>
         ) : (
           memories.map((m) => (
-            <li
-              key={m.id}
-              className="border border-[var(--line)] bg-[var(--bg-elevated)] p-4"
-            >
-              <div className="mb-2 text-xs uppercase tracking-wider text-[var(--muted)]">
-                {m.type}
-              </div>
-              {editing[m.id] !== undefined ? (
-                <textarea
-                  className="w-full border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
-                  value={editing[m.id]}
-                  onChange={(e) =>
-                    setEditing((prev) => ({ ...prev, [m.id]: e.target.value }))
-                  }
-                />
-              ) : (
-                <p className="leading-relaxed text-[var(--ink)]">{m.content}</p>
-              )}
-              <div className="mt-3 flex gap-3 text-sm">
-                {editing[m.id] !== undefined ? (
-                  <button
-                    type="button"
-                    className="text-[var(--accent)]"
-                    onClick={() => save(m.id)}
-                  >
-                    Save
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="text-[var(--muted)]"
-                    onClick={() =>
-                      setEditing((prev) => ({ ...prev, [m.id]: m.content }))
-                    }
-                  >
-                    Edit
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="text-red-400"
-                  onClick={() => remove(m.id)}
-                >
-                  Delete
-                </button>
-              </div>
+            <li key={m.id}>
+              <MagicCard>
+                <div className="p-4">
+                  <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+                    {m.type}
+                  </div>
+                  {editing[m.id] !== undefined ? (
+                    <textarea
+                      className="w-full border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+                      value={editing[m.id]}
+                      onChange={(e) =>
+                        setEditing((prev) => ({
+                          ...prev,
+                          [m.id]: e.target.value,
+                        }))
+                      }
+                    />
+                  ) : (
+                    <p className="leading-relaxed text-[var(--ink)]">
+                      {m.content}
+                    </p>
+                  )}
+                  <div className="mt-3 flex gap-3 text-sm">
+                    {editing[m.id] !== undefined ? (
+                      <button
+                        type="button"
+                        className="text-[var(--accent)]"
+                        onClick={() => save(m.id)}
+                      >
+                        Save
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="text-[var(--muted)]"
+                        onClick={() =>
+                          setEditing((prev) => ({
+                            ...prev,
+                            [m.id]: m.content,
+                          }))
+                        }
+                      >
+                        Edit
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="text-[var(--danger)]"
+                      onClick={() => remove(m.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </MagicCard>
             </li>
           ))
         )}

@@ -6,6 +6,10 @@ import {
   randomReplyDelayMs,
   sleep,
 } from "@/lib/chat/humanize";
+import { AnimatedList } from "@/components/magicui/animated-list";
+import { TypingAnimation } from "@/components/magicui/typing-animation";
+import { BorderBeam } from "@/components/magicui/border-beam";
+import { cn } from "@/lib/utils";
 
 type Character = {
   id: string;
@@ -44,8 +48,6 @@ export function ChatPanel({
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
-
-  const active = characters.find((c) => c.id === characterId);
 
   async function switchCharacter(id: string) {
     setCharacterId(id);
@@ -170,10 +172,10 @@ export function ChatPanel({
   if (!characters.length) {
     return (
       <div className="mx-auto max-w-xl px-4 py-16 text-center">
-        <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">
+        <p className="text-xs uppercase tracking-[0.25em] text-[var(--accent)]">
           Admin · test
         </p>
-        <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
+        <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--ink)]">
           No persona
         </h1>
         <p className="mt-3 text-[var(--muted)]">
@@ -181,7 +183,7 @@ export function ChatPanel({
         </p>
         <a
           href="/personas/new"
-          className="mt-8 inline-block bg-[var(--accent)] px-6 py-3 text-[var(--bg)] transition hover:opacity-90"
+          className="mt-8 inline-block rounded-xl bg-[var(--accent)] px-6 py-3 text-white transition hover:opacity-90"
         >
           Create persona
         </a>
@@ -190,10 +192,10 @@ export function ChatPanel({
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-57px)] max-w-3xl flex-col px-4">
+    <div className="mx-auto flex h-[calc(100vh-57px)] max-w-3xl flex-col px-4 pb-4">
       <div className="flex flex-wrap items-center gap-3 border-b border-[var(--line)] py-3">
-        <span className="rounded border border-[var(--line)] px-2 py-1 text-[10px] uppercase tracking-wider text-[var(--muted)]">
-          Admin test
+        <span className="rounded-full border border-[var(--line)] px-2.5 py-1 text-[10px] uppercase tracking-wider text-[var(--muted)]">
+          Agent test
         </span>
         <select
           className="border border-[var(--line)] bg-[var(--bg-elevated)] px-3 py-2 text-sm"
@@ -226,53 +228,67 @@ export function ChatPanel({
         </button>
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto py-6">
-        {messages.length === 0 ? (
-          <p className="text-center text-sm text-[var(--muted)]">
-            Simulates Telegram (multi-bubble, delay, typos). Product: linked
-            bots.
-          </p>
-        ) : null}
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={
-              message.role === "user" ? "ml-8 text-right" : "mr-8 text-left"
-            }
-          >
-            <div
-              className={
-                message.role === "user"
-                  ? "inline-block max-w-[85%] bg-[var(--accent-soft)] px-4 py-2.5 text-left text-[var(--ink)]"
-                  : "inline-block max-w-[85%] bg-[var(--bg-elevated)] px-4 py-2.5 text-[var(--ink)]"
-              }
-            >
-              {message.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={message.imageUrl}
-                  alt=""
-                  className="mb-2 max-h-64 max-w-full rounded-sm object-cover"
-                />
-              ) : null}
-              {message.text ? (
-                <div className="whitespace-pre-wrap leading-relaxed">
-                  {message.text}
+      <div className="relative mt-3 flex-1 overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/70">
+        <BorderBeam
+          size={80}
+          duration={9}
+          colorFrom="#ff4d6d"
+          colorTo="#ffb4a2"
+          borderWidth={1.5}
+        />
+        <div className="h-full space-y-1 overflow-y-auto px-4 py-5">
+          {messages.length === 0 ? (
+            <p className="pt-16 text-center text-sm text-[var(--muted)]">
+              Simulates Telegram (multi-bubble, delay, typos). Product: linked
+              bots.
+            </p>
+          ) : (
+            <AnimatedList instant delay={60} className="gap-2.5">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={cn(
+                    "flex w-full",
+                    message.role === "user" ? "justify-end" : "justify-start",
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                      message.role === "user"
+                        ? "rounded-br-md bg-[var(--accent)] text-white"
+                        : "rounded-bl-md border border-[var(--line)] bg-[var(--bg)] text-[var(--ink)]",
+                    )}
+                  >
+                    {message.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={message.imageUrl}
+                        alt=""
+                        className="mb-2 max-h-64 max-w-full rounded-xl object-cover"
+                      />
+                    ) : null}
+                    {message.text ? (
+                      <div className="whitespace-pre-wrap">{message.text}</div>
+                    ) : null}
+                  </div>
                 </div>
-              ) : null}
+              ))}
+            </AnimatedList>
+          )}
+          {typing ? (
+            <div className="mt-3 text-sm text-[var(--muted)]">
+              <TypingAnimation typeSpeed={55}>typing</TypingAnimation>
             </div>
-          </div>
-        ))}
-        {typing ? (
-          <p className="text-sm text-[var(--muted)]">typing…</p>
-        ) : null}
-        <div ref={bottomRef} />
+          ) : null}
+          <div ref={bottomRef} />
+        </div>
       </div>
 
-      {error ? <p className="mb-2 text-sm text-red-400">{error}</p> : null}
+      {error ? <p className="mt-2 text-sm text-[var(--danger)]">{error}</p> : null}
 
       <form
-        className="border-t border-[var(--line)] py-4"
+        className="mt-3"
         onSubmit={(e) => {
           e.preventDefault();
           void send();
@@ -282,14 +298,14 @@ export function ChatPanel({
           <input
             className="flex-1 border border-[var(--line)] bg-[var(--bg-elevated)] px-4 py-3 text-[var(--ink)] outline-none focus:border-[var(--accent)]"
             value={input}
-            placeholder="Test message…"
+            placeholder="Message the agent…"
             onChange={(e) => setInput(e.target.value)}
             disabled={busy}
           />
           <button
             type="submit"
             disabled={busy}
-            className="bg-[var(--accent)] px-5 py-3 text-[var(--bg)] disabled:opacity-50"
+            className="rounded-xl bg-[var(--accent)] px-5 py-3 font-medium text-white disabled:opacity-50"
           >
             Send
           </button>

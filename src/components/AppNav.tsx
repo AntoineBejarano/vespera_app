@@ -9,7 +9,7 @@ export function AppNav({
   email?: string | null;
 }) {
   const app = useHexclaveApp();
-  const user = useUser();
+  const user = useUser({ or: "return-null" });
 
   return (
     <header className="border-b border-[var(--line)] bg-[var(--bg-elevated)]/80 backdrop-blur">
@@ -69,7 +69,7 @@ export function AppNav({
               </button>
               <button
                 type="button"
-                className="bg-[var(--accent)] px-3 py-1.5 text-[var(--bg)]"
+                className="rounded-xl bg-[var(--accent)] px-3 py-1.5 font-medium text-white"
                 onClick={() => app.redirectToSignUp()}
               >
                 Start free

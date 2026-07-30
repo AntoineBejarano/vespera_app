@@ -1,28 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #0f1419;
-  --bg-elevated: #171e26;
-  --ink: #e8e2d6;
-  --muted: #9aa3ad;
-  --line: #2a3440;
-  --accent: #c4a574;
-  --accent-soft: #2a2418;
+  --bg: #0b0a0c;
+  --bg-elevated: #16131a;
+  --ink: #f4ece8;
+  --muted: #a89896;
+  --line: #2c2430;
+  --accent: #ff4d6d;
+  --accent-2: #ffb4a2;
+  --accent-soft: #2a1218;
+  --success: #3dd6c6;
+  --danger: #ff6b6b;
   --background: var(--bg);
   --foreground: var(--ink);
+  --color-border: var(--line);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-body);
-  --font-mono: var(--font-geist-mono);
 }
 
 body {
   background:
-    radial-gradient(ellipse 80% 50% at 50% -20%, #1c2836 0%, transparent 55%),
-    linear-gradient(180deg, #0f1419 0%, #0b1015 100%);
+    radial-gradient(ellipse 70% 45% at 15% -10%, rgba(255, 77, 109, 0.16), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 90% 0%, rgba(255, 180, 162, 0.08), transparent 50%),
+    linear-gradient(180deg, #0b0a0c 0%, #120e14 100%);
   color: var(--ink);
   min-height: 100vh;
 }
@@ -42,5 +46,13 @@ a {
 }
 
 ::selection {
-  background: color-mix(in oklab, var(--accent) 40%, transparent);
+  background: color-mix(in oklab, var(--accent) 45%, transparent);
+  color: #fff;
+}
+
+input,
+textarea,
+select,
+button {
+  border-radius: 0.75rem;
 }

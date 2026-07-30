@@ -11,7 +11,7 @@ export function RetroGrid({ className }: { className?: string }) {
         className,
       )}
     >
-      <div className="absolute inset-0 animate-[vespera-grid_20s_linear_infinite] bg-[linear-gradient(to_right,rgba(196,165,116,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(196,165,116,0.12)_1px,transparent_1px)] bg-size-[48px_48px] [transform:perspective(500px)_rotateX(55deg)] [transform-origin:center_top]" />
+      <div className="absolute inset-0 animate-[vespera-grid_20s_linear_infinite] bg-[linear-gradient(to_right,rgba(255,77,109,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,77,109,0.1)_1px,transparent_1px)] bg-size-[48px_48px] [transform:perspective(500px)_rotateX(55deg)] [transform-origin:center_top]" />
     </div>
   );
 }
@@ -73,7 +73,7 @@ export function ShimmerButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative overflow-hidden bg-[var(--accent)] px-6 py-3 text-[var(--bg)] transition hover:opacity-95",
+        "relative overflow-hidden rounded-xl bg-[var(--accent)] px-6 py-3 font-medium text-white transition hover:opacity-95",
         className,
       )}
     >
