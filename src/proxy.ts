@@ -25,11 +25,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Legacy auth routes → landing CTAs use Hexclave redirects
+  // Legacy auth routes → same-domain Hexclave handler pages
   if (pathname === "/login" || pathname === "/register") {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
-    url.searchParams.set("auth", pathname === "/register" ? "signup" : "signin");
+    url.pathname =
+      pathname === "/register" ? "/handler/sign-up" : "/handler/sign-in";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 

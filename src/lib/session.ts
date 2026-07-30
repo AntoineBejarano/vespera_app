@@ -5,9 +5,8 @@ import { hexclaveServerApp } from "@/hexclave/server";
 /**
  * Resolve Hexclave auth → local Prisma tenant User (multi-tenant).
  *
- * Never use Hexclave's `{ or: "redirect" }` on the server with hosted auth —
- * it needs a browser URL for the OAuth callback and throws HexclaveAssertionError.
- * Instead redirect to `/?auth=signin` so the client can call redirectToSignIn().
+ * Never use Hexclave's `{ or: "redirect" }` on the server — it can throw
+ * HexclaveAssertionError. Send unauthenticated users to the same-domain handler.
  */
 export async function getAppUser(opts?: {
   or?: "redirect" | "throw" | "return-null";
@@ -23,14 +22,14 @@ export async function getAppUser(opts?: {
   } catch (err) {
     if (mode === "throw") throw err;
     if (mode === "redirect") {
-      redirect("/?auth=signin");
+      redirect("/handler/sign-in");
     }
     return null;
   }
 
   if (!hx) {
     if (mode === "redirect") {
-      redirect("/?auth=signin");
+      redirect("/handler/sign-in");
     }
     if (mode === "throw") {
       throw new Error("UNAUTHORIZED");

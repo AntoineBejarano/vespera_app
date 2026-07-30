@@ -82,6 +82,9 @@ export function LandingPage() {
   const search = useSearchParams();
 
   useEffect(() => {
+    // Let Hexclave finish cookie handoff if present; do not interrupt.
+    if (search.get("hexclave_cross_domain_auth")) return;
+
     if (user) {
       window.location.replace("/personas");
       return;
