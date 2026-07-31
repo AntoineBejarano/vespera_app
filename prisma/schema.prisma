@@ -50,10 +50,33 @@ model User {
   memories      Memory[]
   telegramBots  TelegramBot[]
   telegramPeers TelegramPeer[]
+  apiKeys       UserApiKey[]
 
   @@index([email])
   @@index([telegramId])
   @@index([hexclaveId])
+}
+
+/// Account-level API key for CLI / AI agents (create personas, manage).
+/// Distinct from Character.apiKey (chat-only, vesp_…).
+model UserApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  /// Display name set by the user (e.g. "cursor", "ci")
+  name       String    @default("default")
+  /// First chars for UI listing (e.g. vsk_abcd1234)
+  keyPrefix  String
+  /// sha256 hex of the full secret
+  keyHash    String    @unique
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([keyPrefix])
 }
 
 model Account {

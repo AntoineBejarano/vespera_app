@@ -141,8 +141,8 @@ export function AppNav({
                       <div className="border border-white/[0.08] bg-[var(--bg-elevated)]/95 py-2 shadow-2xl backdrop-blur-xl">
                         {[
                           { href: "/#explore", label: "Use cases" },
-                          { href: "/#features", label: "How it works" },
-                          { href: "/docs", label: "Chat API" },
+                          { href: "/#cli", label: "CLI for AIs" },
+                          { href: "/docs#cli", label: "API & CLI docs" },
                           { href: "/bring", label: "Bring a character" },
                           { href: "/help", label: "Help & FAQ" },
                         ].map((item) => (

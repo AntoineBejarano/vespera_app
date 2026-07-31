@@ -53,6 +53,7 @@ const CHANNELS = [
   { name: "Web", status: "live" },
   { name: "Telegram", status: "live" },
   { name: "Chat API", status: "live" },
+  { name: "CLI for AIs", status: "live" },
   { name: "Voice", status: "live" },
 ];
 
@@ -470,6 +471,54 @@ export function LandingPage() {
               Create your first character
             </ShimmerButton>
           </BlurFade>
+        </div>
+      </section>
+
+      {/* CLI for AI agents */}
+      <section
+        id="cli"
+        className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/35 py-16 sm:py-24"
+      >
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <BlurFade>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
+                Built for AI agents
+              </p>
+              <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
+                Let your AI create the persona.
+              </h2>
+              <p className="mt-4 max-w-xl text-[var(--muted)]">
+                Give Cursor, Claude, or any agent an account API key. It can
+                create personas with your knowledge layers — then hand you a
+                chat key to put in front of customers. No click-ops.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href="/docs#cli"
+                  className="inline-flex rounded-xl bg-[var(--accent)] px-6 py-3.5 font-medium text-[var(--accent-ink)]"
+                >
+                  CLI & API docs
+                </Link>
+                <Link
+                  href="/settings"
+                  className="inline-flex rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
+                >
+                  Get an API key
+                </Link>
+              </div>
+            </BlurFade>
+            <BlurFade delay={0.08}>
+              <pre className="overflow-x-auto rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-5 text-xs leading-relaxed text-[var(--ink)] sm:text-sm">
+{`npm run vesperer -- login --key vsk_…
+npm run vesperer -- personas create --from persona.json
+
+# persona.json
+# soul / style / rules / context
+# = your business knowledge`}
+              </pre>
+            </BlurFade>
+          </div>
         </div>
       </section>
 

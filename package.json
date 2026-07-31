@@ -11,7 +11,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "postinstall": "prisma generate",
-    "telegram": "tsx telegram/bot.ts"
+    "telegram": "tsx telegram/bot.ts",
+    "vesperer": "tsx cli/src/index.ts"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.45",

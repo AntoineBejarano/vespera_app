@@ -22,14 +22,17 @@ Automated AI interactions are disclosed for EU AI Act transparency. Users attest
 
 - Web (admin chat + public character links)
 - Telegram (BotFather token in UI)
-- Chat API (`POST /api/v1/chat`)
+- Chat API (`POST /api/v1/chat` with persona key `vesp_…`)
+- CLI / Personas API for AI agents (`vsk_…` account key → `POST /api/v1/personas`)
 - Voice demos
 
 WhatsApp and Discord are not available yet.
 
-## For builders
+## For builders & AI agents
 
-- [Chat API docs](https://vesperer.com/docs)
+- [API & CLI docs](https://vesperer.com/docs#cli) — create personas with account keys; chat with persona keys
+- Account key: Settings → API keys (`vsk_…`)
+- CLI: `npm run vesperer -- login --key vsk_…` then `personas create --from persona.json`
 - [Technology](https://vesperer.com/technology)
 - [Supported formats](https://vesperer.com/bring)
 - [Sitemap](https://vesperer.com/sitemap.xml)

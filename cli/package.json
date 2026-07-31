@@ -1,0 +1,30 @@
+{
+  "name": "vesperer",
+  "version": "0.1.0",
+  "description": "CLI for Vesperer — create personas with an account API key (built for AI agents)",
+  "type": "module",
+  "bin": {
+    "vesperer": "./bin/vesperer.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "vesperer",
+    "ai",
+    "persona",
+    "cli",
+    "agents"
+  ],
+  "license": "MIT"
+}
