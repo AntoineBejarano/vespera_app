@@ -4,15 +4,17 @@ export const monetization = {
     free: {
       id: "free",
       dailyMessages: Number(process.env.DAILY_MESSAGE_LIMIT ?? "40"),
-      maxCharacters: 20,
+      /** Starter (free) — aligned with public pricing. */
+      maxCharacters: 1,
       label: "Free",
     },
     premium: {
       id: "premium",
       dailyMessages: 9999,
-      maxCharacters: 50,
+      /** Studio-tier ceiling until granular Creator/Studio billing ships. */
+      maxCharacters: 3,
       label: "Premium",
-      // Stripe no es viable para adulto; usar Telegram Stars o procesador adult-friendly.
+      // Billing checkout not wired yet. Adult-friendly processor / Telegram Stars later.
       paymentNote:
         "Pagos: Telegram Stars o procesador compatible con adult (no Stripe).",
     },

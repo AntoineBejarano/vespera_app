@@ -74,6 +74,14 @@ export default function SettingsClient() {
           <Link href="/personas" className="text-[var(--accent)]">
             Personas
           </Link>
+          . Need a hand?{" "}
+          <Link href="/help" className="text-[var(--accent)]">
+            Help
+          </Link>{" "}
+          ·{" "}
+          <Link href="/docs" className="text-[var(--accent)]">
+            API docs
+          </Link>
           . Plan: {plan}.{" "}
           {usage
             ? `Today: ${usage.used}/${usage.limit} (${usage.remaining} left).`

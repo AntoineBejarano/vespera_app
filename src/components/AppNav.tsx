@@ -7,7 +7,8 @@ import { useHexclaveApp, useUser } from "@hexclave/next";
 const MARKETING_LINKS = [
   { href: "/#create", label: "Create" },
   { href: "/voice", label: "Voice" },
-  { href: "/bring", label: "Bring" },
+  { href: "/docs", label: "Docs" },
+  { href: "/help", label: "Help" },
   { href: "/#pricing", label: "Pricing" },
 ];
 
@@ -68,6 +69,7 @@ export function AppNav({
         ? MARKETING_LINKS
         : [
             { href: "/#create", label: "Create" },
+            { href: "/help", label: "Help" },
             { href: "/#pricing", label: "Pricing" },
           ];
 
@@ -102,6 +104,9 @@ export function AppNav({
               <Link href="/personas" className={linkClass}>
                 Personas
               </Link>
+              <Link href="/help" className={linkClass}>
+                Help
+              </Link>
               <Link href="/settings" className={linkClass}>
                 Settings
               </Link>
@@ -135,11 +140,11 @@ export function AppNav({
                     <div className="absolute left-0 top-full z-50 min-w-[11.5rem] pt-3">
                       <div className="border border-white/[0.08] bg-[var(--bg-elevated)]/95 py-2 shadow-2xl backdrop-blur-xl">
                         {[
-                          { href: "/#explore", label: "All categories" },
-                          { href: "/c/luna", label: "Companions" },
-                          { href: "/c/einstein", label: "Historical minds" },
-                          { href: "/c/aiko", label: "Roleplay" },
-                          { href: "/c/stoic-mentor", label: "Mentors" },
+                          { href: "/#explore", label: "Use cases" },
+                          { href: "/#features", label: "How it works" },
+                          { href: "/docs", label: "Chat API" },
+                          { href: "/bring", label: "Bring a character" },
+                          { href: "/help", label: "Help & FAQ" },
                         ].map((item) => (
                           <Link
                             key={item.label}
@@ -230,6 +235,20 @@ export function AppNav({
                   onClick={() => setOpen(false)}
                 >
                   Personas
+                </Link>
+                <Link
+                  href="/help"
+                  className="py-2.5 hover:text-[var(--ink)]"
+                  onClick={() => setOpen(false)}
+                >
+                  Help
+                </Link>
+                <Link
+                  href="/docs"
+                  className="py-2.5 hover:text-[var(--ink)]"
+                  onClick={() => setOpen(false)}
+                >
+                  Docs
                 </Link>
                 <Link
                   href="/settings"

@@ -5,10 +5,11 @@ export const SITE_URL =
   process.env.NEXTAUTH_URL?.replace(/\/$/, "") ||
   "https://vesperer.com";
 
-export const SITE_TAGLINE = "Create characters people never forget.";
+export const SITE_TAGLINE =
+  "Answer every client with all your knowledge — and build the connection that keeps them.";
 
 export const SITE_DESCRIPTION =
-  "Most AI characters forget everything and feel generic. Vesperer builds characters with real identity and long-term memory — a closer, more human connection with your audience, students, or clients. Deploy on web, WhatsApp, Telegram, Discord, or your own app.";
+  "Vesperer turns your business knowledge, voice, and rules into an AI that answers clients with memory — so relationships compound across web, Telegram, voice, and your own app via API.";
 
 /** Main (non-XXX) brand — icy blue from logo */
 export const BRAND_ACCENT = "#5badee";

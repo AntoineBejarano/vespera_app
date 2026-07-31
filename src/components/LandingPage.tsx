@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useHexclaveApp, useUser } from "@hexclave/next";
@@ -10,226 +9,155 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { LegalFooter } from "@/components/LegalFooter";
 import {
   BlurFade,
-  Marquee,
   RetroGrid,
   ShimmerButton,
 } from "@/components/magicui/effects";
-import { LANDING_IMAGES } from "@/lib/landing/images";
 import { VoiceLandingSection } from "@/components/VoiceLandingSection";
 import type { VoiceAgentId } from "@/lib/voice/types";
 
-const CATEGORIES = [
-  {
-    id: "companions",
-    title: "Companions",
-    body: "Characters built for connection, memory and long-term relationships.",
-    href: "/c/luna",
-    image: LANDING_IMAGES.companion,
-  },
-  {
-    id: "historical",
-    title: "Historical Minds",
-    body: "Learn and debate with personalities inspired by history’s greatest thinkers.",
-    href: "/c/einstein",
-    image: LANDING_IMAGES.einstein,
-  },
-  {
-    id: "roleplay",
-    title: "Roleplay & Stories",
-    body: "Build characters for worlds, adventures and interactive fiction.",
-    href: "/c/aiko",
-    image: LANDING_IMAGES.anime,
-  },
-  {
-    id: "mentors",
-    title: "Mentors",
-    body: "Create coaches, tutors and guides that understand their users over time.",
-    href: "/c/stoic-mentor",
-    image: LANDING_IMAGES.stoic,
-  },
-  {
-    id: "creators",
-    title: "Virtual Creators",
-    body: "Build original digital personalities for communities and audiences.",
-    href: "#creators",
-    image: LANDING_IMAGES.creator,
-  },
-  {
-    id: "original",
-    title: "Original Characters",
-    body: "Turn any idea, artwork or story into an interactive personality.",
-    href: "/c/luna",
-    image: LANDING_IMAGES.fantasy,
-  },
-];
-
 const PROBLEMS = [
   {
-    t: "They forget everything",
-    d: "Between conversations, context vanishes. Every return visit feels like starting over.",
+    t: "Your knowledge stays trapped",
+    d: "FAQs, playbooks, and product details live in docs and heads — customers still wait for a human who happens to be online.",
   },
   {
-    t: "They feel generic",
-    d: "Personality drifts or sounds like every other bot — no stable identity your audience can trust.",
+    t: "Every reply starts from zero",
+    d: "Generic bots forget the last conversation. Clients repeat themselves. Trust erodes with every handoff.",
   },
   {
-    t: "The connection breaks",
-    d: "Without memory and identity, students, fans, and customers never form a lasting bond.",
+    t: "The relationship never compounds",
+    d: "Without memory and a stable voice, you don’t get loyalty — just tickets, churn, and another forgettable chatbot.",
   },
 ];
 
 const SOLUTIONS = [
   {
-    t: "Real identity",
-    d: "Characters with who they are, how they speak, and what they will never become — not a disposable prompt.",
+    t: "Teach it your business",
+    d: "Encode how you sound, what you sell, what you never say, and the knowledge your best teammate would use on day one.",
   },
   {
-    t: "Long-term memory",
-    d: "They remember people, events, preferences, and promises across sessions — so the relationship compounds.",
+    t: "Answer with full context",
+    d: "Customers get replies grounded in your rules and memory — not a blank prompt that invents a personality each turn.",
   },
   {
-    t: "Closer, more human",
-    d: "A durable bond with your audience, students, or clients — not another forgetful chatbot.",
+    t: "Connections that stick",
+    d: "Each person is remembered across sessions. That continuity is what turns support and sales into a living relationship.",
   },
   {
-    t: "Same self, every channel",
-    d: "Deploy on web, WhatsApp, Telegram, Discord, or your own app — same personality and memories everywhere.",
+    t: "Same self where you already work",
+    d: "Deploy on web, Telegram, voice, or your own app via API — one identity, peer-isolated memory per customer.",
   },
 ];
 
 const CHANNELS = [
-  "Web",
-  "WhatsApp",
-  "Telegram",
-  "Discord",
-  "Your own app",
-  "Voice",
+  { name: "Web", status: "live" },
+  { name: "Telegram", status: "live" },
+  { name: "Chat API", status: "live" },
+  { name: "Voice", status: "live" },
 ];
 
 const STEPS = [
   {
     n: "1",
-    t: "Describe them",
-    d: "Start with a sentence, an image, an existing character file or your own detailed configuration.",
+    t: "Define the voice",
+    d: "Soul, style, rules, and the knowledge your business needs customers to hear.",
   },
   {
     n: "2",
-    t: "Shape their personality",
-    d: "Adjust voice, boundaries, humor, emotion, knowledge and relationship style.",
+    t: "Test like a client",
+    d: "Chat in the admin panel. Correct drift. Teach what must stay consistent.",
   },
   {
     n: "3",
-    t: "Talk and improve",
-    d: "Test conversations, correct mistakes and teach the character what should remain consistent.",
+    t: "Connect a channel",
+    d: "Paste a Telegram bot token, publish a link, or call the chat API with an API key.",
   },
   {
     n: "4",
-    t: "Share or deploy",
-    d: "Publish a link or put the same character on web, WhatsApp, Telegram, Discord, or your app.",
+    t: "Let relationships grow",
+    d: "Memory compounds per customer — so every return visit feels like continuity, not a reset.",
   },
 ];
 
-const IMPORT_OPTIONS = [
-  "Upload a Character Card",
-  "Paste a character prompt",
-  "Import JSON",
-  "Upload conversations",
-  "Rebuild from a description",
+const USE_CASES = [
+  {
+    t: "Customer support",
+    d: "Answer product questions with your docs and policies — 24/7, in your tone.",
+  },
+  {
+    t: "Sales & onboarding",
+    d: "Guide prospects with the same pitch your team uses, then remember where they left off.",
+  },
+  {
+    t: "Education & coaching",
+    d: "Mentors and tutors that keep student progress and never lose the thread.",
+  },
+  {
+    t: "Community & creators",
+    d: "A stable personality for fans and members — same self on web and Telegram.",
+  },
 ];
 
 const COMPARE = [
   {
+    ordinary: "Answers from a generic system prompt",
+    vesperer: "Answers from your identity, rules, and knowledge",
+  },
+  {
     ordinary: "Forgets past conversations",
-    vesperer: "Remembers meaningful events",
+    vesperer: "Remembers each customer across sessions",
   },
   {
-    ordinary: "Repeats the same behavior",
-    vesperer: "Evolves through interaction",
+    ordinary: "Personality drifts every model update",
+    vesperer: "Stable soul / style / rules layers",
   },
   {
-    ordinary: "Personality drifts",
-    vesperer: "Keeps a stable identity",
+    ordinary: "Locked to one chat widget",
+    vesperer: "Web, Telegram, voice, or your API",
   },
-  {
-    ordinary: "Locked to one chat box",
-    vesperer: "Same self on web, WhatsApp, Telegram, Discord, apps",
-  },
-  {
-    ordinary: "Hard to improve safely",
-    vesperer: "Test, compare and restore versions",
-  },
-];
-
-const VERSIONS = [
-  "Luna — Original",
-  "Luna — More playful",
-  "Luna — Dark romance",
-  "Luna — Public version",
 ];
 
 const AUDIENCES = [
   {
-    t: "For yourself",
-    d: "Private companions and mentors with real identity and memory that stays yours.",
+    t: "Solo operators",
+    d: "Put your expertise behind an AI that talks to clients while you focus on the work.",
   },
   {
-    t: "For creators & teachers",
-    d: "Characters your audience or students return to — same personality, lasting memories.",
+    t: "Creators & teachers",
+    d: "Characters and guides your audience returns to — same personality, lasting memory.",
   },
   {
-    t: "For brands & studios",
-    d: "Deploy one identity across channels and manage a roster from a single workspace.",
+    t: "Small teams",
+    d: "One consistent voice across channels instead of five conflicting chatbot experiments.",
   },
 ];
-
-const MOSAIC = [
-  { label: "Companion", image: LANDING_IMAGES.companion, href: "/?agent=luna#voice" },
-  {
-    label: "Einstein",
-    image: LANDING_IMAGES.einstein,
-    href: "/?agent=einstein#voice",
-  },
-  { label: "Anime", image: LANDING_IMAGES.anime, href: "/c/aiko" },
-  {
-    label: "Stoic mentor",
-    image: LANDING_IMAGES.stoic,
-    href: "/?agent=stoic-mentor#voice",
-  },
-  { label: "Fantasy", image: LANDING_IMAGES.fantasy, href: "/c/luna" },
-];
-
-function parseVoiceAgent(value: string | null): VoiceAgentId {
-  if (value === "luna" || value === "einstein" || value === "stoic-mentor") {
-    return value;
-  }
-  return "einstein";
-}
 
 const PRICING = [
   {
     name: "Starter",
     price: "Free",
     period: "",
-    blurb: "Create your first character and start talking.",
+    blurb: "One character. Learn the loop end to end.",
     features: [
       "1 character",
       "Long-term memory basics",
-      "Private chat",
+      "Private admin chat",
       "Bring an existing character",
+      "Export identity & config",
     ],
-    cta: "Create a character",
+    cta: "Start free",
     highlight: false,
   },
   {
     name: "Creator",
     price: "€20",
     period: "/mo",
-    blurb: "One living character with deeper memory and deploy options.",
+    blurb: "Production character with channel deploy.",
     features: [
       "1 production character",
       "Persistent memory",
-      "Version history",
-      "Channel deploy (Telegram)",
+      "Telegram deploy",
+      "Chat API key",
       "Export identity & config",
     ],
     cta: "Start creating",
@@ -239,18 +167,79 @@ const PRICING = [
     name: "Studio",
     price: "€59",
     period: "/mo",
-    blurb: "A small roster for creators and teams.",
+    blurb: "A small roster for operators who need more than one voice.",
     features: [
       "Up to 3 characters",
-      "Compare & restore versions",
+      "Telegram + API per character",
+      "Higher message limits",
       "Priority routing",
-      "Multi-channel deploy",
-      "Workspace controls",
+      "Export & ownership",
     ],
     cta: "Scale to Studio",
     highlight: false,
   },
 ];
+
+function parseVoiceAgent(value: string | null): VoiceAgentId {
+  if (value === "luna" || value === "einstein" || value === "stoic-mentor") {
+    return value;
+  }
+  return "einstein";
+}
+
+/** Product-shaped hero visual — no AI face portraits. */
+function LandingProductPreview() {
+  return (
+    <div className="relative w-full overflow-hidden border-t border-[var(--line)] bg-[var(--bg-elevated)]/80">
+      <div className="mx-auto grid max-w-6xl lg:grid-cols-2">
+        <div className="border-b border-[var(--line)] p-5 sm:p-7 lg:border-b-0 lg:border-r">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+            Your knowledge
+          </p>
+          <ul className="mt-4 space-y-2.5 text-sm">
+            {[
+              "Refund policy · 14 days, unused seats",
+              "Pricing · Starter free, Creator €20/mo",
+              "Tone · clear, warm, never pushy",
+              "Never invent discounts or legal advice",
+            ].map((line) => (
+              <li
+                key={line}
+                className="rounded-lg border border-[var(--line)] bg-[var(--bg)] px-3 py-2.5 text-[var(--ink)]"
+              >
+                {line}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="p-5 sm:p-7">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+            Customer conversation
+          </p>
+          <div className="mt-4 space-y-3 text-sm">
+            <p className="ml-8 rounded-xl bg-[var(--accent-soft)] px-3 py-2.5 text-right text-[var(--ink)] sm:ml-16">
+              Can I get a refund if I haven’t used my seats?
+            </p>
+            <p className="mr-4 rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2.5 text-[var(--ink)] sm:mr-10">
+              Yes — unused seats within 14 days. I’ll walk you through it the
+              same way our team would.
+            </p>
+            <p className="ml-8 rounded-xl bg-[var(--accent-soft)] px-3 py-2.5 text-right text-[var(--ink)] sm:ml-16">
+              Perfect. I asked last week about Creator vs Studio too.
+            </p>
+            <p className="mr-4 rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2.5 text-[var(--ink)] sm:mr-10">
+              I remember — you were deciding between one production character
+              and a small roster. Want the same comparison again?
+            </p>
+          </div>
+          <p className="mt-4 text-xs text-[var(--accent-2)]">
+            Knowledge in. Continuity out. That’s the connection.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function LandingPage() {
   const app = useHexclaveApp();
@@ -287,153 +276,85 @@ export function LandingPage() {
     <div className="relative overflow-hidden">
       <AppNav variant="marketing" />
 
-      {/* 1. Hero */}
-      <section className="relative min-h-[90dvh] px-4 pb-16 pt-10 sm:min-h-[92vh] sm:px-6 sm:pb-20 sm:pt-14">
+      {/* Hero — one composition: brand, promise, CTA, product plane */}
+      <section className="relative flex min-h-[92dvh] flex-col">
         <RetroGrid />
-        <div className="relative mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16">
-          <div>
-            <BlurFade>
-              <BrandLogo href="/" size="hero" priority className="mb-6" />
-            </BlurFade>
-            <BlurFade delay={0.06}>
-              <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)] sm:text-xs sm:tracking-[0.35em]">
-                AI character creation
-              </p>
-            </BlurFade>
-            <BlurFade delay={0.1}>
-              <h1 className="mt-3 max-w-xl font-[family-name:var(--font-display)] text-[2.15rem] leading-[1.05] tracking-tight text-[var(--ink)] sm:text-5xl sm:leading-[1.05]">
-                Create characters people{" "}
-                <span className="italic text-[var(--accent-2)]">never forget</span>
-                .
-              </h1>
-            </BlurFade>
-            <BlurFade delay={0.16}>
-              <p className="mt-5 max-w-lg text-base leading-relaxed text-[var(--muted)] sm:text-lg">
-                Most characters forget everything and feel generic. We build ones
-                with real identity and long-term memory — so the bond with your
-                audience, students, or clients actually lasts.
-              </p>
-            </BlurFade>
-            <BlurFade
-              delay={0.22}
-              className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap"
-            >
-              <ShimmerButton
-                className="w-full sm:w-auto"
-                onClick={() => app.redirectToSignUp()}
-              >
-                Create your first character
-              </ShimmerButton>
-              <Link
-                href="/?agent=einstein#voice"
-                className="inline-flex w-full items-center justify-center rounded-xl border border-[var(--line)] px-6 py-3.5 text-center sm:w-auto"
-              >
-                Talk to Einstein
-              </Link>
-            </BlurFade>
-            <p className="mt-4 text-xs text-[var(--muted)]">
-              Start free — or speak with Einstein from the landing. No account needed for the demo.
-            </p>
-          </div>
-
-          <BlurFade delay={0.18} className="relative w-full">
-            <div className="grid grid-cols-3 gap-2 pb-2 sm:gap-3 sm:pb-3">
-              {MOSAIC.map((item, i) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`group relative aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-white/10 transition duration-500 hover:ring-[var(--accent-2)]/50 ${
-                    i === 2 ? "translate-y-3 sm:translate-y-4" : ""
-                  } ${i === 1 || i === 4 ? "translate-y-1.5 sm:translate-y-2" : ""}`}
-                >
-                  <Image
-                    src={item.image.src}
-                    alt={item.image.alt}
-                    fill
-                    sizes="(max-width: 1024px) 30vw, 180px"
-                    priority={i < 3}
-                    className="object-cover object-top transition duration-700 group-hover:scale-[1.04]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--accent-2)]">
-                      {item.label}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            <div className="relative z-10 mx-auto mt-3 w-[min(100%,22rem)] rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/95 p-3.5 shadow-[0_16px_50px_rgba(91,173,238,0.16)] backdrop-blur-md sm:mt-4 sm:w-[min(100%,24rem)] sm:p-4">
-              <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
-                Memory · live
-              </p>
-              <div className="mt-2.5 space-y-2 text-sm">
-                <p className="ml-8 rounded-xl bg-[var(--accent-soft)] px-3 py-2 text-right text-[var(--ink)] sm:ml-10">
-                  You remembered.
-                </p>
-                <p className="mr-4 rounded-xl bg-[var(--bg)] px-3 py-2 text-[var(--ink)] sm:mr-6">
-                  Of course. You told me before your interview last Thursday.
-                </p>
-              </div>
-              <p className="mt-2.5 text-xs text-[var(--accent-2)]">
-                Your character remembers everything that matters.
-              </p>
-            </div>
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 pb-10 pt-12 sm:px-6 sm:pb-14 sm:pt-16">
+          <BlurFade>
+            <BrandLogo href="/" size="hero" priority className="mb-8" />
           </BlurFade>
-        </div>
-      </section>
-
-      {/* Category strip */}
-      <section className="border-y border-[var(--line)] py-6">
-        <Marquee className="px-4">
-          {CATEGORIES.map((c) => (
-            <span
-              key={c.id}
-              className="whitespace-nowrap text-sm uppercase tracking-[0.22em] text-[var(--muted)]"
+          <BlurFade delay={0.05}>
+            <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)] sm:text-xs sm:tracking-[0.35em]">
+              AI that knows your business
+            </p>
+          </BlurFade>
+          <BlurFade delay={0.1}>
+            <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[2.2rem] leading-[1.05] tracking-tight text-[var(--ink)] sm:text-5xl sm:leading-[1.05]">
+              Answer every client with{" "}
+              <span className="italic text-[var(--accent-2)]">
+                all your knowledge
+              </span>
+              — and build the connection that keeps them.
+            </h1>
+          </BlurFade>
+          <BlurFade delay={0.16}>
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
+              Give Vesperer your voice, rules, and expertise. It replies to
+              customers like a teammate who never forgets — so relationships
+              compound instead of resetting every chat.
+            </p>
+          </BlurFade>
+          <BlurFade
+            delay={0.22}
+            className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap"
+          >
+            <ShimmerButton
+              className="w-full sm:w-auto"
+              onClick={() => app.redirectToSignUp()}
             >
-              {c.title}
-            </span>
-          ))}
-        </Marquee>
+              Start answering clients
+            </ShimmerButton>
+            <Link
+              href="/docs"
+              className="inline-flex w-full items-center justify-center rounded-xl border border-[var(--line)] px-6 py-3.5 text-center sm:w-auto"
+            >
+              Read the API docs
+            </Link>
+          </BlurFade>
+          <p className="mt-4 text-xs text-[var(--muted)]">
+            Free to start · Web, Telegram, voice & API · No sales call required
+          </p>
+        </div>
+        <BlurFade delay={0.2} className="relative z-10">
+          <LandingProductPreview />
+        </BlurFade>
       </section>
 
-      {/* 2. Categories */}
+      {/* Use cases — no AI portraits */}
       <section
         id="explore"
         className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
       >
         <BlurFade>
           <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            Who do you want to bring to life?
+            Where connections grow your business
           </h2>
+          <p className="mt-3 max-w-2xl text-[var(--muted)]">
+            Same engine — different jobs. Support, sales, teaching, community:
+            the AI speaks with your knowledge and remembers each person.
+          </p>
         </BlurFade>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {CATEGORIES.map((cat, i) => (
-            <BlurFade key={cat.id} delay={i * 0.05}>
-              <a
-                href={cat.href}
-                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/70 transition hover:border-[var(--accent)]/40 hover:bg-[var(--bg-elevated)]"
-              >
-                <div className="relative aspect-[16/10] overflow-hidden">
-                  <Image
-                    src={cat.image.src}
-                    alt={cat.image.alt}
-                    fill
-                    sizes="(max-width: 1024px) 50vw, 360px"
-                    className="object-cover object-top transition duration-700 group-hover:scale-[1.04]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-elevated)] via-transparent to-transparent" />
-                </div>
-                <div className="flex flex-1 flex-col p-5 pt-3">
-                  <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold">
-                    {cat.title}
-                  </h3>
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-[var(--muted)]">
-                    {cat.body}
-                  </p>
-                </div>
-              </a>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2">
+          {USE_CASES.map((item, i) => (
+            <BlurFade key={item.t} delay={i * 0.05}>
+              <div className="h-full border-l-2 border-[var(--accent)]/50 pl-5">
+                <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+                  {item.t}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+                  {item.d}
+                </p>
+              </div>
             </BlurFade>
           ))}
         </div>
@@ -441,17 +362,16 @@ export function LandingPage() {
 
       <VoiceLandingSection defaultAgent={voiceAgent} />
 
-      {/* 3. Problem */}
+      {/* Problem */}
       <section className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/35 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <BlurFade>
             <h2 className="max-w-2xl font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              Today, most brand and character AIs have two serious problems.
+              Most business AIs fail the moment a real customer shows up.
             </h2>
             <p className="mt-4 max-w-2xl text-[var(--muted)]">
-              They forget everything between conversations. And their personality
-              drifts — or feels generic. The result: no real connection with the
-              people you care about reaching.
+              They don’t carry your knowledge. They don’t remember the person.
+              So they never become the connection your business runs on.
             </p>
           </BlurFade>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -471,18 +391,18 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* 4. Solution */}
+      {/* Solution */}
       <section
         id="features"
         className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
       >
         <BlurFade>
           <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            We build characters with real identity and long-term memory.
+            Your knowledge in. Living connections out.
           </h2>
           <p className="mt-3 max-w-2xl text-[var(--muted)]">
-            The result is a closer, more human connection — and you can deploy
-            that same character everywhere without losing who they are.
+            Identity, memory, and channels — so the AI answers like you would,
+            and the relationship doesn’t die between sessions.
           </p>
         </BlurFade>
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -501,20 +421,20 @@ export function LandingPage() {
         </div>
         <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[var(--line)] pt-8">
           <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
-            Deploy anywhere
+            Available now
           </p>
           {CHANNELS.map((channel) => (
             <span
-              key={channel}
+              key={channel.name}
               className="text-sm text-[var(--ink)] opacity-80"
             >
-              {channel}
+              {channel.name}
             </span>
           ))}
         </div>
       </section>
 
-      {/* 5. Creation flow */}
+      {/* Flow */}
       <section
         id="create"
         className="border-y border-[var(--line)] py-16 sm:py-24"
@@ -522,10 +442,10 @@ export function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <BlurFade>
             <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              From idea to living character in minutes.
+              From your expertise to a live channel in minutes.
             </h2>
             <p className="mt-3 max-w-2xl text-[var(--muted)]">
-              Describe. Talk. Improve. Share.
+              No sales call. Configure, test, deploy — self-serve.
             </p>
           </BlurFade>
           <ol className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -547,13 +467,13 @@ export function LandingPage() {
           </ol>
           <BlurFade delay={0.2} className="mt-10">
             <ShimmerButton onClick={() => app.redirectToSignUp()}>
-              Build a character
+              Create your first character
             </ShimmerButton>
           </BlurFade>
         </div>
       </section>
 
-      {/* 6. Bring character */}
+      {/* Bring */}
       <section
         id="bring"
         className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
@@ -561,12 +481,11 @@ export function LandingPage() {
         <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-center">
           <BlurFade>
             <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              Already created a character somewhere else?
+              Already built the knowledge somewhere else?
             </h2>
             <p className="mt-4 max-w-xl text-[var(--muted)]">
-              Bring your own character description, prompt, card or conversation
-              history. Vesperer helps reconstruct its identity and memories
-              without forcing you to start from zero.
+              Import a Character Card, prompt, or SillyTavern export. Rebuild
+              identity and memory without starting from a blank page.
             </p>
             <div className="mt-8">
               <Link
@@ -576,14 +495,15 @@ export function LandingPage() {
                 Bring my character
               </Link>
             </div>
-            <p className="mt-4 max-w-md text-xs leading-relaxed text-[var(--muted)]/80">
-              Only import characters and content you created or have permission
-              to use.
-            </p>
           </BlurFade>
           <BlurFade delay={0.1}>
             <ul className="space-y-3">
-              {IMPORT_OPTIONS.map((opt) => (
+              {[
+                "Upload a Character Card",
+                "Paste a character prompt",
+                "Import JSON / SillyTavern",
+                "Rebuild from a description",
+              ].map((opt) => (
                 <li
                   key={opt}
                   className="rounded-xl border border-[var(--line)] bg-[var(--bg-elevated)] px-4 py-3 text-sm"
@@ -592,30 +512,25 @@ export function LandingPage() {
                 </li>
               ))}
             </ul>
-            <p className="mt-4 text-xs text-[var(--muted)]">
-              Supported formats: Character Card · JSON · prompt & description ·
-              conversation export · SillyTavern · manual recreation · your own
-              files.
-            </p>
           </BlurFade>
         </div>
       </section>
 
-      {/* 7. Before / after */}
+      {/* Compare */}
       <section className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/35 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <BlurFade>
             <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              Not just another prompt.
+              Not another generic chatbot.
             </h2>
           </BlurFade>
           <div className="mt-10 overflow-hidden rounded-2xl border border-[var(--line)]">
             <div className="grid grid-cols-2 bg-[var(--bg)] text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
               <div className="border-b border-r border-[var(--line)] px-4 py-3">
-                Ordinary character
+                Ordinary bot
               </div>
               <div className="border-b border-[var(--line)] px-4 py-3 text-[var(--accent)]">
-                Vesperer character
+                Vesperer
               </div>
             </div>
             {COMPARE.map((row) => (
@@ -635,108 +550,69 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* 8. Versioning */}
-      <section
-        id="versions"
-        className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
-      >
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <BlurFade>
-            <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              Change them without losing who they were.
-            </h2>
-            <p className="mt-4 max-w-xl text-[var(--muted)]">
-              Try a warmer personality, a darker storyline or a different
-              speaking style. Compare versions and return to an earlier one
-              whenever you need.
-            </p>
-            <p className="mt-4 text-sm text-[var(--muted)]/80">
-              Version history, forks and behavioral comparison — when you want
-              the deeper tools.
-            </p>
-          </BlurFade>
-          <BlurFade delay={0.1}>
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
-              <ul className="space-y-2">
-                {VERSIONS.map((v, i) => (
-                  <li
-                    key={v}
-                    className={`rounded-xl px-4 py-3 text-sm ${
-                      i === 0
-                        ? "bg-[var(--accent-soft)] text-[var(--ink)] ring-1 ring-[var(--accent)]/40"
-                        : "bg-[var(--bg)] text-[var(--muted)]"
-                    }`}
-                  >
-                    {v}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {["Compare", "Restore", "Duplicate"].map((action) => (
-                  <span
-                    key={action}
-                    className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-xs uppercase tracking-[0.16em] text-[var(--muted)]"
-                  >
-                    {action}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </BlurFade>
-        </div>
-      </section>
-
-      {/* 9. Audiences */}
+      {/* Audiences */}
       <section
         id="creators"
-        className="border-y border-[var(--line)] py-16 sm:py-24"
+        className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
       >
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <BlurFade>
-            <h2 className="max-w-3xl font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              Keep it private. Share it with one person. Or build an audience.
-            </h2>
-          </BlurFade>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {AUDIENCES.map((a, i) => (
-              <BlurFade key={a.t} delay={i * 0.07}>
-                <div
-                  id={a.t === "For studios" ? "studios" : undefined}
-                  className="h-full rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/70 p-6"
-                >
-                  <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
-                    {a.t}
-                  </h3>
-                  <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
-                    {a.d}
-                  </p>
-                </div>
-              </BlurFade>
-            ))}
-          </div>
+        <BlurFade>
+          <h2 className="max-w-3xl font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
+            Built for people who run the relationship themselves.
+          </h2>
+        </BlurFade>
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          {AUDIENCES.map((a, i) => (
+            <BlurFade key={a.t} delay={i * 0.07}>
+              <div className="h-full rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/70 p-6">
+                <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
+                  {a.t}
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
+                  {a.d}
+                </p>
+              </div>
+            </BlurFade>
+          ))}
         </div>
       </section>
 
       {/* Ownership */}
       <section
         id="ownership"
-        className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20"
+        className="border-y border-[var(--line)] py-16 sm:py-20"
       >
-        <BlurFade>
-          <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            Your character should belong to you.
-          </h2>
-          <p className="mt-4 max-w-2xl text-[var(--muted)]">
-            Export its identity, memories and configuration. Your character is
-            not permanently tied to one model or one platform.
-          </p>
-        </BlurFade>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <BlurFade>
+            <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
+              Your knowledge should belong to you.
+            </h2>
+            <p className="mt-4 max-w-2xl text-[var(--muted)]">
+              Export identity, memories, and configuration anytime. Delete your
+              account and data from Settings — including the auth identity —
+              when you leave.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-4">
+              <Link
+                href="/help"
+                className="text-sm text-[var(--accent)] hover:underline"
+              >
+                Help & FAQ →
+              </Link>
+              <Link
+                href="/docs"
+                className="text-sm text-[var(--accent)] hover:underline"
+              >
+                API documentation →
+              </Link>
+            </div>
+          </BlurFade>
+        </div>
       </section>
 
-      {/* Pricing */}
+      {/* Pricing — checkout not wired yet; CTAs go to signup */}
       <section
         id="pricing"
-        className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/35 py-16 sm:py-24"
+        className="bg-[var(--bg-elevated)]/35 py-16 sm:py-24"
       >
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <BlurFade>
@@ -744,7 +620,8 @@ export function LandingPage() {
               Pricing
             </h2>
             <p className="mt-3 text-[var(--muted)]">
-              Start free. Grow when your characters do.
+              Start free. Paid plans unlock when billing goes live — signup
+              works today.
             </p>
           </BlurFade>
           <div className="mt-12 grid gap-4 lg:grid-cols-3">
@@ -790,18 +667,18 @@ export function LandingPage() {
       <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
         <BlurFade>
           <h2 className="max-w-3xl font-[family-name:var(--font-display)] text-3xl font-semibold leading-tight sm:text-5xl">
-            Same personality. Same memories.
+            Your knowledge.
             <span className="mt-3 block italic text-[var(--accent-2)]">
-              Everywhere your audience already is.
+              Their conversation. A connection that lasts.
             </span>
           </h2>
           <p className="mt-5 max-w-xl text-[var(--muted)]">
-            Web, WhatsApp, Telegram, Discord, or your own app — one character,
-            one lasting connection.
+            Put an AI on web, Telegram, voice, or your API that actually knows
+            your business — and remembers every client.
           </p>
           <div className="mt-10">
             <ShimmerButton onClick={() => app.redirectToSignUp()}>
-              Create your first character
+              Start answering clients
             </ShimmerButton>
           </div>
         </BlurFade>

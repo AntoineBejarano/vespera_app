@@ -9,13 +9,13 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Technology — identity, memory, continuity",
   description:
-    "How Vesperer keeps AI characters consistent: layered identity, long-term memory, evolving relationships and portable configuration across models and channels.",
+    "How Vesperer keeps AI characters consistent: layered identity, long-term memory, evolving relationships and portable configuration across web, Telegram, voice and API.",
   alternates: { canonical: `${SITE_URL}/technology` },
   keywords: TECHNOLOGY_KEYWORDS,
   openGraph: {
     title: `Technology · ${SITE_NAME}`,
     description:
-      "Identity layers, long-term memory, relationship state, versioning, and export for AI characters.",
+      "Identity layers, long-term memory, relationship state, and export for AI characters.",
     url: `${SITE_URL}/technology`,
     type: "website",
   },
@@ -43,10 +43,6 @@ const LAYERS = [
   {
     t: "Continuity across channels",
     d: "Keep one character definition when you change models, devices, APIs or messaging surfaces.",
-  },
-  {
-    t: "Versioning",
-    d: "Try alternate personalities, compare behavior and restore earlier versions without destroying the original.",
   },
   {
     t: "Ownership & export",
@@ -97,9 +93,9 @@ export default function TechnologyPage() {
           The engine behind characters that remember.
         </h1>
         <p className="mt-5 max-w-2xl text-lg text-[var(--muted)]">
-          {SITE_NAME} is the creator layer for AI personalities: a persistent
-          identity that can grow, be versioned, and live across supported
-          environments — without explaining infrastructure on the homepage.
+          {SITE_NAME} is the layer that turns your knowledge and voice into an
+          AI clients can talk to — with persistent identity, long-term memory,
+          and channels you configure yourself.
         </p>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2">
@@ -124,13 +120,19 @@ export default function TechnologyPage() {
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
             Each character can expose a chat API key, connect to Telegram, and
-            keep peer-isolated memory. Human handoff and connector workflows are
-            available for creator and studio deployments.
+            keep peer-isolated memory. Full request shapes live in the public
+            docs — no sales call required.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              href="/#create"
+              href="/docs"
               className="rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-medium text-[var(--accent-ink)]"
+            >
+              Chat API docs
+            </Link>
+            <Link
+              href="/#create"
+              className="rounded-xl border border-[var(--line)] px-5 py-3 text-sm"
             >
               Create a character
             </Link>

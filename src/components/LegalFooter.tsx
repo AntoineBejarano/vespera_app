@@ -2,12 +2,12 @@ import Link from "next/link";
 import { LEGAL_PAGES } from "@/lib/legal/constants";
 
 const MARKETING_LINKS = [
-  { href: "/technology", label: "Developers" },
+  { href: "/docs", label: "API docs" },
+  { href: "/help", label: "Help" },
+  { href: "/technology", label: "Technology" },
   { href: "/voice", label: "Voice" },
+  { href: "/bring", label: "Bring a character" },
   { href: "/legal/acceptable-use", label: "Safety" },
-  { href: "/#ownership", label: "Ownership" },
-  { href: "/bring", label: "Supported Formats" },
-  { href: "/#studios", label: "Private Deployment" },
 ];
 
 export function LegalFooter({

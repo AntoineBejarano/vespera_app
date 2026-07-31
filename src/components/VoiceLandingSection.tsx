@@ -21,15 +21,14 @@ export function VoiceLandingSection({
             Vesperer Voice
           </p>
           <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-5xl">
-            Talk to Einstein — he remembers you.
+            Hear the continuity — try a live voice demo.
           </h2>
           <p className="mt-4 max-w-xl text-[var(--muted)]">
-            Click the portrait, allow the mic, and speak. Switch to Luna or the
-            Stoic Mentor anytime. Same peer memory across turns — chat and voice
-            share continuity.
+            Allow the mic and speak. Same peer memory across turns — chat and
+            voice share continuity, the way a client relationship should.
           </p>
           <ul className="mt-6 space-y-2 text-sm text-[var(--muted)]">
-            <li>· Pick Einstein, Luna, or Stoic Mentor</li>
+            <li>· Switch between demo agents anytime</li>
             <li>· Speak or type — memory sticks either way</li>
             <li>· No account needed for this demo</li>
           </ul>
