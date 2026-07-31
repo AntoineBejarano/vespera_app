@@ -4,17 +4,17 @@ export type CastVoice = {
   voiceId: string;
   modelId: string;
   label: string;
-  desiredLibraryVoiceId?: string;
+  /** Used if the primary voiceId is blocked (e.g. free plan + library voice). */
+  fallbackVoiceId?: string;
 };
 
 /**
  * Fixed cast voices. End users cannot change these.
- * Audition in the voice library; professional voices need a paid API plan.
+ * Professional / library voices need a paid API plan; fallbackVoiceId keeps demos alive.
  */
 export const CHARACTER_VOICES: Record<VoiceAgentId, CastVoice> = {
   einstein: {
     voiceId: "IKne3meq5aSn9XLyUdCD",
-    desiredLibraryVoiceId: "vmVmHDKBkkCgbLVIOJRb",
     modelId: "eleven_flash_v2_5",
     label: "Einstein",
   },
@@ -31,6 +31,7 @@ export const CHARACTER_VOICES: Record<VoiceAgentId, CastVoice> = {
   tatiana: {
     // https://elevenlabs.io/app/voice-library?voiceId=t6lBrEl93uCiLR1Lgm8v
     voiceId: "t6lBrEl93uCiLR1Lgm8v",
+    fallbackVoiceId: "FGY2WhTYpPnrIDTdsKH5", // premade Laura — free-tier deliverable
     modelId: "eleven_flash_v2_5",
     label: "Tatiana",
   },
@@ -70,7 +71,6 @@ export function resolveVoiceForCharacter(character: {
     return CHARACTER_VOICES["stoic-mentor"];
   }
 
-  // After Dark default until per-character cast IDs live on Character.
   if (character.isAdult) {
     return CHARACTER_VOICES.tatiana;
   }

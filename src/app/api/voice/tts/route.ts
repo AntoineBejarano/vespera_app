@@ -30,6 +30,7 @@ export async function POST(req: Request) {
   try {
     const audio = await synthesizeSpeech({
       voiceId: voice.voiceId,
+      fallbackVoiceId: voice.fallbackVoiceId,
       text: parsed.data.text,
       modelId: voice.modelId,
     });

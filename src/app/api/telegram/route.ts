@@ -205,28 +205,44 @@ export async function POST(req: Request) {
 
     const bubbles = result.bubbles;
 
-    if (wantVoice && cast && bubbles.length) {
-      const spoken = spokenTextFromBubbles(bubbles);
-      try {
-        await telegramSendChatAction(chatId, "upload_voice", token);
-        const audio = await synthesizeSpeech({
-          voiceId: cast.voiceId,
-          text: spoken,
-          modelId: cast.modelId,
-          outputFormat: "opus_48000_128",
-        });
-        await telegramSendVoice(chatId, audio, token);
-        return Response.json({ ok: true });
-      } catch (err) {
-        console.error("[telegram voice]", err);
-        // Fall through to text bubbles if synthesis / send fails.
+    // Voice-note asks never send a photo — that felt like the wrong reply.
+    if (voiceAsk) {
+      if (wantVoice && cast && bubbles.length) {
+        const spoken = spokenTextFromBubbles(bubbles);
+        try {
+          await telegramSendChatAction(chatId, "upload_voice", token);
+          const audio = await synthesizeSpeech({
+            voiceId: cast.voiceId,
+            fallbackVoiceId: cast.fallbackVoiceId,
+            text: spoken,
+            modelId: cast.modelId,
+            outputFormat: "opus_48000_128",
+          });
+          await telegramSendVoice(chatId, audio, token);
+          return Response.json({ ok: true });
+        } catch (err) {
+          console.error("[telegram voice]", err);
+          await telegramSendMessage(
+            chatId,
+            bubbles[0] ?? "couldn't send the voice note — try again in a sec?",
+            token,
+          );
+          return Response.json({ ok: true });
+        }
       }
-    } else if (voiceAsk && !cast) {
-      await telegramSendMessage(
-        chatId,
-        "voice isn't cast for this character yet — texting you instead",
-        token,
-      );
+
+      if (!cast) {
+        await telegramSendMessage(
+          chatId,
+          "voice isn't cast for this character yet — texting you instead",
+          token,
+        );
+      }
+      for (let i = 0; i < bubbles.length; i++) {
+        if (i > 0) await sleep(randomBetweenBubblesMs());
+        await telegramSendMessage(chatId, bubbles[i]!, token);
+      }
+      return Response.json({ ok: true });
     }
 
     let photoSent = false;
