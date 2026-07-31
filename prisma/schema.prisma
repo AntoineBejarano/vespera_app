@@ -27,6 +27,9 @@ model User {
   privacyAcceptedAt  DateTime?
   /// LEGAL_VERSION string accepted at last attest
   legalVersionAccepted String?
+  /// B2B: accepted Platform Operator Responsibilities (channels/API)
+  platformOperatorAcceptedAt DateTime?
+  platformOperatorVersion  String?
   preferredModel     String?
   language           String    @default("en")
   /// Legacy single-bot link (admin). Peers use TelegramPeer.

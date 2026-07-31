@@ -1,19 +1,38 @@
 /** Bump when legal text materially changes — invalidates adult cookie + re-attest. */
-export const LEGAL_VERSION = "2026-07-30";
+export const LEGAL_VERSION = "2026-08-01";
 
 export const ADULT_COOKIE = "vesperer_adult";
 
 /** Cookie value = legal version accepted */
 export const ADULT_COOKIE_MAX_AGE_SEC = 60 * 60 * 24 * 365; // 1 year
 
+/**
+ * Operator details — sourced from UK Companies House (company 16506991).
+ * @see https://find-and-update.company-information.service.gov.uk/company/16506991
+ */
 export const LEGAL_OPERATOR = {
   brand: "vesperer.com",
   productName: "vesperer",
-  contactEmail: "legal@vesperer.com",
-  /** Replace with counsel-approved entity details before relying on these texts in court. */
-  companyPlaceholder: "[LEGAL_COMPANY_NAME]",
-  jurisdictionPlaceholder: "[LEGAL_JURISDICTION]",
-  addressPlaceholder: "[REGISTERED_ADDRESS]",
+  companyName: "Deevly Labs LTD",
+  companyNumber: "16506991",
+  registeredAddress:
+    process.env.LEGAL_REGISTERED_ADDRESS?.trim() ||
+    "128 City Road, London, United Kingdom, EC1V 2NX",
+  jurisdiction:
+    process.env.LEGAL_JURISDICTION?.trim() ||
+    "England and Wales, United Kingdom",
+  governingLaw:
+    process.env.LEGAL_GOVERNING_LAW?.trim() || "England and Wales",
+  incorporatedOn: "10 June 2025",
+  companiesHouseUrl:
+    "https://find-and-update.company-information.service.gov.uk/company/16506991",
+  contactEmail:
+    process.env.LEGAL_CONTACT_EMAIL?.trim() || "legal@vesperer.com",
+  /** Abuse / safety reports */
+  abuseEmail:
+    process.env.ABUSE_EMAIL?.trim() ||
+    process.env.LEGAL_CONTACT_EMAIL?.trim() ||
+    "legal@vesperer.com",
 };
 
 export type LegalSlug =

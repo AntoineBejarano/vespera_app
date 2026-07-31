@@ -5,6 +5,10 @@ import { z } from "zod";
 import { requireAppUser, getAppUser } from "@/lib/session";
 import { isValidSlug } from "@/lib/characters/slug";
 import { ensureUniqueSlug } from "@/lib/characters/public";
+import {
+  ensurePlatformOperatorAttestation,
+  isPlatformOperatorRequiredError,
+} from "@/lib/legal/operator";
 
 const patchSchema = z.object({
   active: z.boolean().optional(),
@@ -23,6 +27,7 @@ const patchSchema = z.object({
   categories: z.array(z.string().max(40)).max(8).optional(),
   allowFork: z.boolean().optional(),
   isAdult: z.boolean().optional(),
+  platformOperatorAccepted: z.boolean().optional(),
 });
 
 type Params = { params: Promise<{ id: string }> };
@@ -81,6 +86,25 @@ export async function PATCH(req: Request, { params }: Params) {
   let nextSlug = character.slug;
   const publishing = parsed.data.isPublic === true;
   const unpublishing = parsed.data.isPublic === false;
+  const firstPublish = publishing && !character.isPublic;
+
+  if (firstPublish) {
+    try {
+      await ensurePlatformOperatorAttestation({
+        userId: user.id,
+        user,
+        platformOperatorAccepted: parsed.data.platformOperatorAccepted,
+      });
+    } catch (err) {
+      if (isPlatformOperatorRequiredError(err)) {
+        return Response.json(
+          { error: err.message, code: err.code },
+          { status: 403 },
+        );
+      }
+      throw err;
+    }
+  }
 
   if (parsed.data.slug !== undefined) {
     const candidate = parsed.data.slug.toLowerCase().trim();

@@ -7,6 +7,10 @@ import {
 } from "@/lib/telegram/bots";
 import { z } from "zod";
 import { requireAppUser, getAppUser } from "@/lib/session";
+import {
+  ensurePlatformOperatorAttestation,
+  isPlatformOperatorRequiredError,
+} from "@/lib/legal/operator";
 
 export async function GET() {
   const user = await requireAppUser().catch(() => null);
@@ -45,6 +49,7 @@ const createSchema = z.object({
   characterId: z.string().min(1),
   label: z.string().max(80).optional(),
   setWebhook: z.boolean().optional(),
+  platformOperatorAccepted: z.boolean().optional(),
 });
 
 export async function POST(req: Request) {
@@ -62,6 +67,19 @@ export async function POST(req: Request) {
   });
   if (!character) {
     return Response.json({ error: "Character not found" }, { status: 404 });
+  }
+
+  try {
+    await ensurePlatformOperatorAttestation({
+      userId: user.id,
+      user,
+      platformOperatorAccepted: parsed.data.platformOperatorAccepted,
+    });
+  } catch (err) {
+    if (isPlatformOperatorRequiredError(err)) {
+      return Response.json({ error: err.message, code: err.code }, { status: 403 });
+    }
+    throw err;
   }
 
   const username = parsed.data.username.replace(/^@/, "");

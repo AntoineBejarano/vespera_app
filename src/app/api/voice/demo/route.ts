@@ -2,7 +2,12 @@ import { generateText } from "ai";
 import { z } from "zod";
 import { getOpenRouter } from "@/lib/ai/openrouter";
 import { resolveModel } from "@/lib/ai/models";
-import { containsProhibitedMinorContent } from "@/lib/ai/safety";
+import {
+  evaluateContentSafety,
+  isSafetyKillSwitchActive,
+  logSafetyBlock,
+  SAFETY_BLOCK_MESSAGE,
+} from "@/lib/ai/safety";
 import { getVoiceAgent } from "@/lib/voice/agents";
 import type { VoiceAgentId } from "@/lib/voice/types";
 import { redisGet, redisSet } from "@/lib/memory/redis";
@@ -81,11 +86,15 @@ export async function POST(req: Request) {
   }
 
   const { message, peerId, agent } = parsed.data;
-  if (containsProhibitedMinorContent(message)) {
-    return Response.json(
-      { error: "Message blocked by safety filters." },
-      { status: 400 },
-    );
+
+  if (isSafetyKillSwitchActive()) {
+    return Response.json({ error: "Service temporarily unavailable." }, { status: 503 });
+  }
+
+  const inputSafety = evaluateContentSafety(message);
+  if (inputSafety.blocked) {
+    logSafetyBlock("voice_demo_input", inputSafety.rule);
+    return Response.json({ error: inputSafety.userMessage }, { status: 400 });
   }
 
   const profile = getVoiceAgent(agent as VoiceAgentId);
@@ -127,17 +136,23 @@ ${memoryBlock}`;
     });
 
     const reply = (text || "I'm here — tell me more.").trim();
-    const facts = extractFacts(message, reply, memory.facts);
+    const outputSafety = evaluateContentSafety(reply);
+    const safeReply = outputSafety.blocked ? SAFETY_BLOCK_MESSAGE : reply;
+    if (outputSafety.blocked) {
+      logSafetyBlock("voice_demo_output", outputSafety.rule);
+    }
+
+    const facts = extractFacts(message, safeReply, memory.facts);
     const turns = [
       ...memory.turns,
       { role: "user" as const, content: message },
-      { role: "assistant" as const, content: reply },
+      { role: "assistant" as const, content: safeReply },
     ].slice(-16);
 
     await saveMemory(peerId, agent, { facts, turns });
 
     return Response.json({
-      text: reply,
+      text: safeReply,
       agent: {
         slug: profile.id,
         name: profile.name,

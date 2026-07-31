@@ -1,4 +1,4 @@
-import { HARD_SAFETY_RULES } from "@/lib/ai/safety";
+import { AI_DISCLOSURE_RULES, HARD_SAFETY_RULES } from "@/lib/ai/safety";
 import { HUMAN_LIKE_STYLE_RULES } from "@/lib/ai/human-like";
 import type { RelationshipSnapshot } from "@/lib/persona/schema";
 import type { IdentitySheet } from "@/lib/identity/schema";
@@ -50,7 +50,7 @@ function identityToRules(identity: IdentitySheet, intensity: number) {
     `Boundaries: ${identity.boundaries.join("; ") || "none special"}`,
     `Excluded: ${identity.excludedThemes.join("; ") || "—"}`,
     `Kinks ok: ${identity.kinks.join("; ") || "—"}`,
-    "Never admit being AI, a bot, fictional, or roleplay.",
+    AI_DISCLOSURE_RULES,
   ].join("\n");
 }
 

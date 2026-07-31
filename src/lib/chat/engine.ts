@@ -2,7 +2,12 @@ import { streamText } from "ai";
 import { prisma } from "@/lib/db";
 import { getOpenRouter } from "@/lib/ai/openrouter";
 import { resolveModel } from "@/lib/ai/models";
-import { containsProhibitedMinorContent } from "@/lib/ai/safety";
+import {
+  evaluateContentSafety,
+  isSafetyKillSwitchActive,
+  logSafetyBlock,
+  SAFETY_BLOCK_MESSAGE,
+} from "@/lib/ai/safety";
 import { checkAndIncrementDailyLimit } from "@/lib/memory/limits";
 import { appendHistory, getRecentHistory } from "@/lib/memory/history";
 import { searchMemories } from "@/lib/memory/vector";
@@ -113,11 +118,22 @@ export async function runCharacterReply(params: {
   const text = params.message.trim();
   if (!text) return { ok: false, error: "Empty message", status: 400 };
 
-  if (containsProhibitedMinorContent(text)) {
+  if (isSafetyKillSwitchActive()) {
     return {
       ok: false,
-      error:
-        "Content not allowed (adults 18+ only, no minors / age-play).",
+      error: "Service temporarily unavailable.",
+      status: 503,
+    };
+  }
+
+  const inputSafety = evaluateContentSafety(text);
+  if (inputSafety.blocked) {
+    logSafetyBlock("chat_input", inputSafety.rule, {
+      userId: params.userId,
+    });
+    return {
+      ok: false,
+      error: inputSafety.userMessage,
       status: 400,
     };
   }
@@ -271,7 +287,16 @@ export async function runCharacterReply(params: {
   });
 
   const reply = await result.text;
-  const bubbles = scrubBubbles(splitIntoBubbles(reply));
+  const outputSafety = evaluateContentSafety(reply);
+  const safeReply = outputSafety.blocked ? SAFETY_BLOCK_MESSAGE : reply;
+  if (outputSafety.blocked) {
+    logSafetyBlock("chat_output", outputSafety.rule, {
+      userId: params.userId,
+      characterId: character.id,
+    });
+  }
+
+  const bubbles = scrubBubbles(splitIntoBubbles(safeReply));
   const stored = bubbles.join("\n\n");
 
   // Still persist something for memory even if scrubbed empty (photo-only turn)
@@ -297,7 +322,7 @@ export async function runCharacterReply(params: {
     data: { updatedAt: new Date() },
   });
 
-  if (persistContent && persistContent !== "(sent a photo)") {
+  if (persistContent && persistContent !== "(sent a photo)" && !outputSafety.blocked) {
     await maybeCreateSummary({
       conversationId: conversation.id,
       characterId: character.id,

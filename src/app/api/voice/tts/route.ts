@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { evaluateContentSafety, logSafetyBlock } from "@/lib/ai/safety";
 import { getCharacterVoice } from "@/lib/voice/characters";
 import { synthesizeSpeech } from "@/lib/voice/elevenlabs";
 
@@ -17,6 +18,12 @@ export async function POST(req: Request) {
   const parsed = bodySchema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) {
     return Response.json({ error: "Invalid voice request" }, { status: 400 });
+  }
+
+  const inputSafety = evaluateContentSafety(parsed.data.text);
+  if (inputSafety.blocked) {
+    logSafetyBlock("voice_tts_input", inputSafety.rule);
+    return Response.json({ error: inputSafety.userMessage }, { status: 400 });
   }
 
   const voice = getCharacterVoice(parsed.data.agent);

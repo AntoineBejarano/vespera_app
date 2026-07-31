@@ -34,29 +34,14 @@ export async function ensureTelegramPeer(params: {
   });
 
   if (existing) {
-    let ageAttestedAt = existing.ageAttestedAt;
-    // Grandfather peers that were auto-marked 18+ before attest field existed
-    if (!ageAttestedAt && existing.user.ageVerifiedAt) {
-      ageAttestedAt = existing.user.ageVerifiedAt;
-      await prisma.telegramPeer.update({
-        where: { id: existing.id },
-        data: {
-          ageAttestedAt,
-          telegramFirstName: params.from.first_name?.trim() || null,
-          telegramLastName: params.from.last_name?.trim() || null,
-          telegramUsername: params.from.username?.trim() || null,
-        },
-      });
-    } else {
-      await prisma.telegramPeer.update({
-        where: { id: existing.id },
-        data: {
-          telegramFirstName: params.from.first_name?.trim() || null,
-          telegramLastName: params.from.last_name?.trim() || null,
-          telegramUsername: params.from.username?.trim() || null,
-        },
-      });
-    }
+    await prisma.telegramPeer.update({
+      where: { id: existing.id },
+      data: {
+        telegramFirstName: params.from.first_name?.trim() || null,
+        telegramLastName: params.from.last_name?.trim() || null,
+        telegramUsername: params.from.username?.trim() || null,
+      },
+    });
     await prisma.user.update({
       where: { id: existing.userId },
       data: {
@@ -72,7 +57,7 @@ export async function ensureTelegramPeer(params: {
     return {
       userId: existing.userId,
       peerId: existing.id,
-      ageAttestedAt,
+      ageAttestedAt: existing.ageAttestedAt,
     };
   }
 

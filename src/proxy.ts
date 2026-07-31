@@ -34,6 +34,7 @@ function isAgeExempt(pathname: string) {
     pathname === "/twitter-image" ||
     pathname === "/age-gate" ||
     pathname === "/underage" ||
+    pathname === "/report" ||
     pathname.startsWith("/legal")
   ) {
     return true;

@@ -78,14 +78,22 @@ export async function POST(req: Request) {
     );
   }
 
-  return Response.json({
-    characterId: character.id,
-    characterName: character.name,
-    text: result.text,
-    bubbles: result.bubbles,
-    photo: result.photo,
-    peerId,
-  });
+  return Response.json(
+    {
+      characterId: character.id,
+      characterName: character.name,
+      text: result.text,
+      bubbles: result.bubbles,
+      photo: result.photo,
+      peerId,
+    },
+    {
+      headers: {
+        "X-Vesperer-Age-Attestation":
+          "Integrator must verify end users are 18+ before chat; false attestation may violate law and Terms.",
+      },
+    },
+  );
 }
 
 async function ensureApiPeer(

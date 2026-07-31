@@ -22,7 +22,7 @@ export async function generatePersonaLayers(
 NOT one giant prompt. Each layer has a job.
 Must sound HUMAN on Telegram — never novel, never assistant.
 IMPORTANT: The companion speaks ENGLISH always. Spanish ONLY if the user explicitly asks to switch.
-Never admit being AI/fictional/roleplay.
+If asked directly about being AI: answer honestly (AI companion on vesperer). Stay in character otherwise.
 
 Name: ${answers.name}
 Free personality: ${answers.personality}

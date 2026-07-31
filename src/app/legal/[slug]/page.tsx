@@ -60,11 +60,19 @@ export default async function LegalPage({
           {meta.title}
         </h1>
         <div className="mt-8 space-y-5 text-[15px] leading-relaxed text-[var(--muted)]">
-          {body.map((paragraph) => (
-            <p key={paragraph.slice(0, 48)} className="text-[var(--ink)]/90">
-              {paragraph}
-            </p>
-          ))}
+          {body.map((paragraph) => {
+            const isOperatorSection =
+              paragraph.includes("B2B customers and channel operators");
+            return (
+              <p
+                key={paragraph.slice(0, 48)}
+                id={isOperatorSection ? "operators" : undefined}
+                className="text-[var(--ink)]/90"
+              >
+                {paragraph}
+              </p>
+            );
+          })}
         </div>
         <nav className="mt-12 flex flex-wrap gap-x-4 gap-y-2 border-t border-[var(--line)] pt-6 text-sm text-[var(--muted)]">
           {LEGAL_PAGES.map((p) => (

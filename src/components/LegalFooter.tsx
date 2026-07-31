@@ -48,7 +48,7 @@ export function LegalFooter({
 
         <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <p>
-            Vesperer
+            Vesperer · operated by Deevly Labs LTD (Co. 16506991)
             {variant === "after-dark" ? " · After Dark" : ""}
             {variant === "after-dark" || variant === "default"
               ? " · adults only (18+)"
@@ -65,6 +65,9 @@ export function LegalFooter({
                 {p.title}
               </Link>
             ))}
+            <Link href="/report" className="hover:text-[var(--ink)]">
+              Report abuse
+            </Link>
           </nav>
         </div>
 

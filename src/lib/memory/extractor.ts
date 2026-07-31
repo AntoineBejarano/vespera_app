@@ -3,7 +3,12 @@ import { z } from "zod";
 import { getOpenRouter } from "@/lib/ai/openrouter";
 import { resolveModel } from "@/lib/ai/models";
 import { upsertMemory, type MemoryType } from "@/lib/memory/vector";
-import { containsProhibitedMinorContent } from "@/lib/ai/safety";
+import {
+  evaluateContentSafety,
+  isSafetyKillSwitchActive,
+  logSafetyBlock,
+  SAFETY_BLOCK_MESSAGE,
+} from "@/lib/ai/safety";
 
 const extractionSchema = z.object({
   shouldSave: z.boolean(),
@@ -31,8 +36,8 @@ export async function maybeExtractMemories(params: {
   modelId?: string;
 }) {
   if (
-    containsProhibitedMinorContent(params.userMessage) ||
-    containsProhibitedMinorContent(params.assistantMessage)
+    evaluateContentSafety(params.userMessage).blocked ||
+    evaluateContentSafety(params.assistantMessage).blocked
   ) {
     return;
   }

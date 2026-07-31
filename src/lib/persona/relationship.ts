@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getOpenRouter } from "@/lib/ai/openrouter";
 import { resolveModel } from "@/lib/ai/models";
-import { containsProhibitedMinorContent } from "@/lib/ai/safety";
+import { evaluateContentSafety } from "@/lib/ai/safety";
 
 const updateSchema = z.object({
   mood: z.string(),
@@ -49,8 +49,8 @@ export async function maybeUpdateRelationship(params: {
   modelId?: string;
 }) {
   if (
-    containsProhibitedMinorContent(params.userMessage) ||
-    containsProhibitedMinorContent(params.assistantMessage)
+    evaluateContentSafety(params.userMessage).blocked ||
+    evaluateContentSafety(params.assistantMessage).blocked
   ) {
     return;
   }

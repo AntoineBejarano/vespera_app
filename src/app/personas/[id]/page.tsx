@@ -1,5 +1,6 @@
 import { getAppUser } from "@/lib/session";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
+import { hasPlatformOperatorAttestation } from "@/lib/legal/operator";
 import { prisma } from "@/lib/db";
 import { AppNav } from "@/components/AppNav";
 import { PersonaDetail } from "@/components/PersonaDetail";
@@ -36,6 +37,7 @@ export default async function PersonaPage({ params }: Params) {
     <>
       <AppNav email={user.email} />
       <PersonaDetail
+        operatorAttested={hasPlatformOperatorAttestation(user)}
         persona={{
           id: character.id,
           name: character.name,

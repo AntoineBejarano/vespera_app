@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PHOTO_TAG_OPTIONS } from "@/lib/chat/photos";
 import { MagicCard } from "@/components/magicui/magic-card";
+import { PlatformOperatorAck } from "@/components/PlatformOperatorAck";
 
 type Bot = {
   id: string;
@@ -71,12 +72,16 @@ const DOC_FIELDS = [
 export function PersonaDetail({
   persona,
   appUrl,
+  operatorAttested: operatorAttestedInitial = false,
 }: {
   persona: Persona;
   appUrl: string;
+  operatorAttested?: boolean;
 }) {
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
+  const [operatorAttested, setOperatorAttested] = useState(operatorAttestedInitial);
+  const [operatorAck, setOperatorAck] = useState(false);
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [intensity, setIntensity] = useState(persona.intensity);
   const [name, setName] = useState(persona.name);
@@ -112,10 +117,31 @@ export function PersonaDetail({
   const [isAdult, setIsAdult] = useState(persona.isAdult);
   const [savingPublic, setSavingPublic] = useState(false);
 
+  function operatorPayload() {
+    return operatorAttested || operatorAck
+      ? { platformOperatorAccepted: true as const }
+      : {};
+  }
+
+  function requireOperatorAck(action: string): boolean {
+    if (operatorAttested || operatorAck) return true;
+    setMessage(`Accept Platform Operator Responsibilities to ${action}.`);
+    return false;
+  }
+
   async function revealOrCreateKey() {
+    const creating = !persona.hasApiKey && !apiKey;
+    if (creating && !requireOperatorAck("create an API key")) return;
+
     const method = persona.hasApiKey || apiKey ? "GET" : "POST";
     const res = await fetch(`/api/characters/${persona.id}/apikey`, {
       method,
+      ...(method === "POST"
+        ? {
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(operatorPayload()),
+          }
+        : {}),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -123,8 +149,11 @@ export function PersonaDetail({
       return;
     }
     if (!data.apiKey && method === "GET") {
+      if (!requireOperatorAck("create an API key")) return;
       const created = await fetch(`/api/characters/${persona.id}/apikey`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(operatorPayload()),
       });
       const d = await created.json();
       if (!created.ok) {
@@ -132,6 +161,7 @@ export function PersonaDetail({
         return;
       }
       setApiKey(d.apiKey);
+      setOperatorAttested(true);
       setMessage("API key created — copy it now");
       return;
     }
@@ -141,8 +171,11 @@ export function PersonaDetail({
 
   async function rotateKey() {
     if (!confirm("Rotate API key? Old key stops working.")) return;
+    if (!requireOperatorAck("rotate the API key")) return;
     const res = await fetch(`/api/characters/${persona.id}/apikey`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(operatorPayload()),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -150,6 +183,7 @@ export function PersonaDetail({
       return;
     }
     setApiKey(data.apiKey);
+    setOperatorAttested(true);
     setMessage("New API key — copy it now");
   }
 
@@ -203,6 +237,7 @@ export function PersonaDetail({
       setMessage("Token and username required");
       return;
     }
+    if (!requireOperatorAck("connect a Telegram bot")) return;
     const res = await fetch("/api/bots", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -212,6 +247,7 @@ export function PersonaDetail({
         characterId: persona.id,
         label: botLabel.trim() || undefined,
         setWebhook: true,
+        ...operatorPayload(),
       }),
     });
     const data = await res.json();
@@ -219,6 +255,7 @@ export function PersonaDetail({
       setMessage(data.error ?? "Bot error");
       return;
     }
+    setOperatorAttested(true);
     setBotToken("");
     setBotUsername("");
     setBotLabel("");
@@ -301,6 +338,9 @@ export function PersonaDetail({
   }
 
   async function savePublicProfile(nextPublic?: boolean) {
+    const publishing = (nextPublic ?? isPublic) && !persona.isPublic;
+    if (publishing && !requireOperatorAck("publish a public page")) return;
+
     setSavingPublic(true);
     setMessage(null);
     const res = await fetch(`/api/characters/${persona.id}`, {
@@ -318,6 +358,7 @@ export function PersonaDetail({
           .slice(0, 8),
         allowFork,
         isAdult,
+        ...(publishing ? operatorPayload() : {}),
       }),
     });
     const data = await res.json();
@@ -326,6 +367,7 @@ export function PersonaDetail({
       setMessage(data.error ?? "Could not update public profile");
       return;
     }
+    if (publishing) setOperatorAttested(true);
     setIsPublic(Boolean(data.character.isPublic));
     setSlug(data.character.slug ?? "");
     setMessage(
@@ -339,7 +381,9 @@ export function PersonaDetail({
   const curlExample = `curl -X POST ${appUrl || "https://YOUR_APP"}/api/v1/chat \\
   -H "Content-Type: application/json" \\
   -H "X-Api-Key: ${apiKey || "YOUR_KEY"}" \\
-  -d '{"message":"hey","peerId":"user-123"}'`;
+  -d '{"message":"hey","peerId":"user-123","endUserAgeAttested":true}'`;
+
+  const showOperatorAck = !operatorAttested;
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 px-4 py-8 sm:space-y-6 sm:py-10">
@@ -447,6 +491,13 @@ export function PersonaDetail({
               Mark as 18+ listing
             </label>
           </div>
+          {showOperatorAck && !isPublic ? (
+            <PlatformOperatorAck
+              checked={operatorAck}
+              onChange={setOperatorAck}
+              compact
+            />
+          ) : null}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -626,6 +677,13 @@ export function PersonaDetail({
           onChange={(e) => setBotLabel(e.target.value)}
           placeholder="Label (optional)"
         />
+        {showOperatorAck ? (
+          <PlatformOperatorAck
+            checked={operatorAck}
+            onChange={setOperatorAck}
+            compact
+          />
+        ) : null}
         <button
           type="button"
           onClick={addBot}
@@ -678,6 +736,13 @@ export function PersonaDetail({
           <code className="text-[var(--ink)]">peerId</code> per end-user for
           isolated memory.
         </p>
+        {showOperatorAck ? (
+          <PlatformOperatorAck
+            checked={operatorAck}
+            onChange={setOperatorAck}
+            compact
+          />
+        ) : null}
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
