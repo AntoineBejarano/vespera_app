@@ -35,10 +35,8 @@ export const CHARACTER_VOICES: Record<
     label: "Stoic Mentor",
   },
   tatiana: {
-    // Premade fallback until paid plan unlocks library API
-    voiceId: "FGY2WhTYpPnrIDTdsKH5", // Laura — Enthusiast, Quirky
-    // https://elevenlabs.io/app/voice-library?voiceId=dHAwRJVaEPhU907QLTPW
-    desiredLibraryVoiceId: "dHAwRJVaEPhU907QLTPW", // Tatiana Kulenko
+    // https://elevenlabs.io/app/voice-library?voiceId=t6lBrEl93uCiLR1Lgm8v
+    voiceId: "t6lBrEl93uCiLR1Lgm8v",
     modelId: "eleven_flash_v2_5",
     label: "Tatiana",
   },
