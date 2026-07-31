@@ -1,11 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import {
-  VoiceAgentWidget,
-  type VoiceAgentId,
-} from "@/components/VoiceAgentWidget";
+import { VoiceAgentWidget } from "@/components/VoiceAgentWidget";
 import { BlurFade } from "@/components/magicui/effects";
+import type { VoiceAgentId } from "@/lib/voice/types";
 
 export function VoiceLandingSection({
   defaultAgent = "einstein",
@@ -43,7 +41,11 @@ export function VoiceLandingSection({
           </Link>
         </BlurFade>
         <BlurFade delay={0.08}>
-          <VoiceAgentWidget compact defaultAgent={defaultAgent} />
+          <VoiceAgentWidget
+            compact
+            catalog="sfw"
+            defaultAgent={defaultAgent}
+          />
         </BlurFade>
       </div>
     </section>

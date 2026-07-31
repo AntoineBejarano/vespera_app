@@ -1,39 +1,19 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import { LANDING_IMAGES } from "@/lib/landing/images";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { listVoiceAgents } from "@/lib/voice/agents";
+import type { VoiceAgentId, VoiceCatalog } from "@/lib/voice/types";
 
-export type VoiceAgentId = "luna" | "einstein" | "stoic-mentor";
-
-const AGENTS: {
-  id: VoiceAgentId;
-  name: string;
-  blurb: string;
-  image: string;
-}[] = [
-  {
-    id: "luna",
-    name: "Luna",
-    blurb: "Companion · per-user bond + emotional memory",
-    image: LANDING_IMAGES.companion.src,
-  },
-  {
-    id: "einstein",
-    name: "Einstein",
-    blurb: "Historical mind · remembers your questions across chat & voice",
-    image: LANDING_IMAGES.einstein.src,
-  },
-  {
-    id: "stoic-mentor",
-    name: "Stoic Mentor",
-    blurb: "Calm guide · creators can version and ship",
-    image: LANDING_IMAGES.stoic.src,
-  },
-];
+export type { VoiceAgentId };
 
 function isVoiceAgentId(value: string | null | undefined): value is VoiceAgentId {
-  return value === "luna" || value === "einstein" || value === "stoic-mentor";
+  return (
+    value === "luna" ||
+    value === "einstein" ||
+    value === "stoic-mentor" ||
+    value === "tatiana"
+  );
 }
 
 type SpeechRecognitionLike = {
@@ -57,8 +37,11 @@ function getRecognition(): SpeechRecognitionLike | null {
   return Ctor ? new Ctor() : null;
 }
 
-function peerKey() {
-  const key = "vesperer_voice_peer";
+function peerKey(catalog: VoiceCatalog) {
+  const key =
+    catalog === "after-dark"
+      ? "vesperer_voice_peer_after_dark"
+      : "vesperer_voice_peer";
   let id = localStorage.getItem(key);
   if (!id) {
     id = `vp_${crypto.randomUUID().replace(/-/g, "").slice(0, 24)}`;
@@ -69,14 +52,22 @@ function peerKey() {
 
 export function VoiceAgentWidget({
   compact = false,
-  defaultAgent = "luna",
+  catalog = "sfw",
+  defaultAgent,
 }: {
   compact?: boolean;
+  catalog?: VoiceCatalog;
   defaultAgent?: VoiceAgentId;
 }) {
-  const [agent, setAgent] = useState<VoiceAgentId>(
-    isVoiceAgentId(defaultAgent) ? defaultAgent : "luna",
-  );
+  const agents = useMemo(() => listVoiceAgents(catalog), [catalog]);
+  const initial =
+    defaultAgent &&
+    isVoiceAgentId(defaultAgent) &&
+    agents.some((a) => a.id === defaultAgent)
+      ? defaultAgent
+      : agents[0]?.id ?? "luna";
+
+  const [agent, setAgent] = useState<VoiceAgentId>(initial);
   const [listening, setListening] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -86,27 +77,45 @@ export function VoiceAgentWidget({
   const [error, setError] = useState<string | null>(null);
   const [supported, setSupported] = useState(true);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
-  const active = AGENTS.find((a) => a.id === agent) ?? AGENTS[0];
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const objectUrlRef = useRef<string | null>(null);
+  const active = agents.find((a) => a.id === agent) ?? agents[0];
 
   useEffect(() => {
     setSupported(Boolean(getRecognition()));
+    return () => {
+      audioRef.current?.pause();
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
   }, []);
 
   useEffect(() => {
-    if (!isVoiceAgentId(defaultAgent)) return;
-    setAgent(defaultAgent);
+    if (
+      defaultAgent &&
+      isVoiceAgentId(defaultAgent) &&
+      agents.some((a) => a.id === defaultAgent)
+    ) {
+      setAgent(defaultAgent);
+    } else if (agents[0]) {
+      setAgent(agents[0].id);
+    }
     setTranscript("");
     setReply("");
     setMemories([]);
     setError(null);
-  }, [defaultAgent]);
+  }, [defaultAgent, agents]);
+
+  function stopAudio() {
+    audioRef.current?.pause();
+    if (audioRef.current) audioRef.current.currentTime = 0;
+    setSpeaking(false);
+  }
 
   function selectAgent(id: VoiceAgentId) {
     if (id === agent) return;
     recognitionRef.current?.stop();
-    window.speechSynthesis?.cancel();
+    stopAudio();
     setListening(false);
-    setSpeaking(false);
     setAgent(id);
     setTranscript("");
     setReply("");
@@ -114,15 +123,34 @@ export function VoiceAgentWidget({
     setError(null);
   }
 
-  function speak(text: string) {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 1.02;
-    utter.pitch = 1;
-    utter.onstart = () => setSpeaking(true);
-    utter.onend = () => setSpeaking(false);
-    window.speechSynthesis.speak(utter);
+  async function speak(text: string, agentId: VoiceAgentId) {
+    stopAudio();
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+
+    const res = await fetch("/api/voice/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, agent: agentId }),
+    });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (res.status === 404) return;
+      throw new Error(data.error ?? "Voice playback failed");
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    objectUrlRef.current = url;
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    audio.onplay = () => setSpeaking(true);
+    audio.onended = () => setSpeaking(false);
+    audio.onerror = () => setSpeaking(false);
+    await audio.play();
   }
 
   async function sendMessage(message: string) {
@@ -134,7 +162,7 @@ export function VoiceAgentWidget({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message,
-          peerId: peerKey(),
+          peerId: peerKey(catalog),
           agent,
         }),
       });
@@ -142,7 +170,7 @@ export function VoiceAgentWidget({
       if (!res.ok) throw new Error(data.error ?? "Voice agent failed");
       setReply(data.text);
       setMemories(Array.isArray(data.memories) ? data.memories : []);
-      speak(data.text);
+      await speak(data.text, agent);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Voice agent failed");
     } finally {
@@ -165,12 +193,8 @@ export function VoiceAgentWidget({
       return;
     }
 
-    window.speechSynthesis?.cancel();
-    setSpeaking(false);
-    recognition.lang =
-      typeof navigator !== "undefined" && navigator.language
-        ? navigator.language
-        : "en-US";
+    stopAudio();
+    recognition.lang = "en-US";
     recognition.interimResults = true;
     recognition.continuous = false;
     recognition.onresult = (ev) => {
@@ -191,6 +215,8 @@ export function VoiceAgentWidget({
     setListening(true);
   }
 
+  if (!active) return null;
+
   return (
     <div
       className={
@@ -199,24 +225,26 @@ export function VoiceAgentWidget({
           : "rounded-[2rem] border border-[var(--line)] bg-[var(--bg-elevated)]/85 p-6 sm:p-8"
       }
     >
-      <div className="flex flex-wrap gap-2">
-        {AGENTS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => selectAgent(item.id)}
-            className={`rounded-full px-3 py-1.5 text-xs font-medium tracking-[0.04em] transition ${
-              agent === item.id
-                ? "bg-[var(--accent)] text-[var(--accent-ink)]"
-                : "border border-[var(--line)] text-[var(--muted)] hover:text-[var(--ink)]"
-            }`}
-          >
-            {item.name}
-          </button>
-        ))}
-      </div>
+      {agents.length > 1 ? (
+        <div className="flex flex-wrap gap-2">
+          {agents.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => selectAgent(item.id)}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium tracking-[0.04em] transition ${
+                agent === item.id
+                  ? "bg-[var(--accent)] text-[var(--accent-ink)]"
+                  : "border border-[var(--line)] text-[var(--muted)] hover:text-[var(--ink)]"
+              }`}
+            >
+              {item.name}
+            </button>
+          ))}
+        </div>
+      ) : null}
 
-      <div className="mt-6 flex flex-col items-center text-center">
+      <div className={`flex flex-col items-center text-center ${agents.length > 1 ? "mt-6" : ""}`}>
         <button
           type="button"
           onClick={toggleListen}
@@ -265,6 +293,10 @@ export function VoiceAgentWidget({
         </p>
         <p className="mt-1 max-w-sm text-sm text-[var(--muted)]">
           {active.blurb}. Memory sticks for you across turns.
+        </p>
+        <p className="mt-2 text-[10px] uppercase tracking-[0.18em] text-[var(--accent-2)]">
+          Fixed cast voice · ElevenLabs
+          {active.isAdult ? " · 18+" : ""}
         </p>
       </div>
 

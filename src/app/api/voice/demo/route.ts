@@ -3,7 +3,8 @@ import { z } from "zod";
 import { getOpenRouter } from "@/lib/ai/openrouter";
 import { resolveModel } from "@/lib/ai/models";
 import { containsProhibitedMinorContent } from "@/lib/ai/safety";
-import { getShowcaseBySlug } from "@/lib/characters/showcase";
+import { getVoiceAgent } from "@/lib/voice/agents";
+import type { VoiceAgentId } from "@/lib/voice/types";
 import { redisGet, redisSet } from "@/lib/memory/redis";
 
 export const maxDuration = 60;
@@ -11,7 +12,9 @@ export const maxDuration = 60;
 const bodySchema = z.object({
   message: z.string().min(1).max(2000),
   peerId: z.string().min(8).max(80),
-  agent: z.enum(["luna", "einstein", "stoic-mentor"]).default("luna"),
+  agent: z
+    .enum(["luna", "einstein", "stoic-mentor", "tatiana"])
+    .default("luna"),
 });
 
 type DemoMemory = {
@@ -85,8 +88,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const showcase = getShowcaseBySlug(agent);
-  if (!showcase) {
+  const profile = getVoiceAgent(agent as VoiceAgentId);
+  if (!profile) {
     return Response.json({ error: "Unknown agent" }, { status: 404 });
   }
 
@@ -95,13 +98,13 @@ export async function POST(req: Request) {
     ? `Long-term memory about this caller (never forget these):\n${memory.facts.map((f) => `- ${f}`).join("\n")}`
     : "No prior long-term memories yet. Learn important facts naturally.";
 
-  const system = `${showcase.soulMd}
+  const system = `${profile.soulMd}
 
-${showcase.styleMd}
+${profile.styleMd}
 
-${showcase.rulesMd}
+${profile.rulesMd}
 
-${showcase.contextMd}
+${profile.contextMd}
 
 You are speaking on a live voice call. Keep replies short (1–3 spoken sentences), natural, and conversational — no markdown, no bullet lists.
 Always use long-term memory. If the caller mentioned their name, plans, preferences, or promises before, reference them.
@@ -136,10 +139,10 @@ ${memoryBlock}`;
     return Response.json({
       text: reply,
       agent: {
-        slug: showcase.slug,
-        name: showcase.name,
-        imageUrl: showcase.imageUrl,
-        openingLine: showcase.openingLine,
+        slug: profile.id,
+        name: profile.name,
+        imageUrl: profile.image,
+        isAdult: profile.isAdult,
       },
       memories: facts.slice(0, 8),
       rememberedCount: facts.length,

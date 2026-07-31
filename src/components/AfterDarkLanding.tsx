@@ -13,6 +13,7 @@ import {
   RetroGrid,
   ShimmerButton,
 } from "@/components/magicui/effects";
+import { VoiceAgentWidget } from "@/components/VoiceAgentWidget";
 
 const INTEGRATIONS = [
   "OnlyFans",
@@ -209,6 +210,38 @@ export function AfterDarkLanding() {
             </span>
           ))}
         </Marquee>
+      </section>
+
+      <section
+        id="voice"
+        className="scroll-mt-24 border-b border-[var(--line)] bg-[var(--bg-elevated)]/30 py-16 sm:py-24"
+      >
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <BlurFade>
+            <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
+              After Dark Voice · 18+
+            </p>
+            <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-5xl">
+              Talk to Tatiana — she remembers what you like.
+            </h2>
+            <p className="mt-4 max-w-xl text-[var(--muted)]">
+              Fixed cast voice for adult companions. Same memory layer as chat —
+              intimacy that compounds instead of resetting every session.
+            </p>
+            <ul className="mt-6 space-y-2 text-sm text-[var(--muted)]">
+              <li>· Cast: Tatiana Kulenko (ElevenLabs)</li>
+              <li>· Per-user relationship memory</li>
+              <li>· Voice + chat continuity for creator lines</li>
+            </ul>
+          </BlurFade>
+          <BlurFade delay={0.08}>
+            <VoiceAgentWidget
+              compact
+              catalog="after-dark"
+              defaultAgent="tatiana"
+            />
+          </BlurFade>
+        </div>
       </section>
 
       <section

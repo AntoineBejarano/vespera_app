@@ -15,8 +15,8 @@ import {
   ShimmerButton,
 } from "@/components/magicui/effects";
 import { LANDING_IMAGES } from "@/lib/landing/images";
-import type { VoiceAgentId } from "@/components/VoiceAgentWidget";
 import { VoiceLandingSection } from "@/components/VoiceLandingSection";
+import type { VoiceAgentId } from "@/lib/voice/types";
 
 const CATEGORIES = [
   {

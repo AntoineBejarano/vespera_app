@@ -3,23 +3,50 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useHexclaveApp, useUser } from "@hexclave/next";
-import { BrandLogo } from "@/components/BrandLogo";
 
 const MARKETING_LINKS = [
-  { href: "/#explore", label: "Explore" },
   { href: "/#create", label: "Create" },
   { href: "/voice", label: "Voice" },
-  { href: "/bring", label: "Bring a Character" },
-  { href: "/#creators", label: "For Creators" },
-  { href: "/#studios", label: "For Studios" },
+  { href: "/bring", label: "Bring" },
   { href: "/#pricing", label: "Pricing" },
 ];
 
 const AFTER_DARK_LINKS = [
+  { href: "/after-dark#voice", label: "Voice" },
   { href: "/after-dark#pipeline", label: "How it works" },
   { href: "/after-dark#pricing", label: "Pricing" },
-  { href: "/", label: "Main site" },
 ];
+
+function Wordmark({
+  href,
+  subtitle,
+  onClick,
+  accentClass,
+}: {
+  href: string;
+  subtitle?: string;
+  onClick?: () => void;
+  accentClass: string;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="group min-w-0"
+      aria-label="Vesperer"
+    >
+      <span className="font-[family-name:var(--font-display)] text-[1.05rem] font-semibold tracking-[-0.03em] text-[var(--ink)] sm:text-[1.15rem]">
+        Vesper
+        <span className={accentClass}>er</span>
+      </span>
+      {subtitle ? (
+        <span className="mt-0.5 block text-[9px] uppercase tracking-[0.28em] text-[var(--muted)]">
+          {subtitle}
+        </span>
+      ) : null}
+    </Link>
+  );
+}
 
 export function AppNav({
   email,
@@ -39,46 +66,52 @@ export function AppNav({
       : variant === "marketing"
         ? MARKETING_LINKS
         : [
-            { href: "/#explore", label: "How it works" },
+            { href: "/#create", label: "Create" },
             { href: "/#pricing", label: "Pricing" },
           ];
 
+  const homeHref = user
+    ? "/personas"
+    : variant === "after-dark"
+      ? "/after-dark"
+      : "/";
+
+  const accentClass =
+    variant === "after-dark"
+      ? "text-[var(--accent)]"
+      : "text-[var(--accent-2)]";
+
+  const linkClass =
+    "text-[13px] tracking-[0.01em] text-[var(--muted)] transition-colors hover:text-[var(--ink)]";
+
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--line)] bg-[var(--bg-elevated)]/90 backdrop-blur">
-      <div className="safe-pad mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-        <BrandLogo
-          href={
-            user
-              ? "/personas"
-              : variant === "after-dark"
-                ? "/after-dark"
-                : "/"
-          }
-          size="sm"
+    <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[var(--bg)]/70 backdrop-blur-xl">
+      <div className="safe-pad mx-auto flex h-14 max-w-6xl items-center justify-between gap-6 px-4 sm:h-16 sm:px-6">
+        <Wordmark
+          href={homeHref}
           onClick={() => setOpen(false)}
-          priority
-          variant={variant === "after-dark" ? "after-dark" : "default"}
+          accentClass={accentClass}
           subtitle={variant === "after-dark" ? "After Dark" : undefined}
         />
 
         {/* Desktop */}
-        <nav className="hidden items-center gap-4 text-sm text-[var(--muted)] lg:flex">
+        <nav className="hidden items-center gap-7 lg:flex">
           {user ? (
             <>
-              <Link href="/personas" className="hover:text-[var(--ink)]">
+              <Link href="/personas" className={linkClass}>
                 Personas
               </Link>
-              <Link href="/settings" className="hover:text-[var(--ink)]">
+              <Link href="/settings" className={linkClass}>
                 Settings
               </Link>
               <button
                 type="button"
-                className="hover:text-[var(--ink)]"
+                className={linkClass}
                 onClick={() => app.redirectToSignOut()}
               >
                 Sign out
               </button>
-              <span className="max-w-[10rem] truncate text-xs xl:max-w-none">
+              <span className="max-w-[10rem] truncate text-xs text-[var(--muted)]/80 xl:max-w-none">
                 {email ?? user.primaryEmail}
               </span>
             </>
@@ -92,27 +125,26 @@ export function AppNav({
                 >
                   <button
                     type="button"
-                    className="hover:text-[var(--ink)]"
+                    className={linkClass}
                     aria-expanded={exploreOpen}
                   >
                     Explore
                   </button>
                   {exploreOpen ? (
-                    <div className="absolute left-0 top-full z-50 min-w-[12rem] pt-2">
-                      <div className="rounded-xl border border-[var(--line)] bg-[var(--bg-elevated)] py-2 shadow-xl">
+                    <div className="absolute left-0 top-full z-50 min-w-[11.5rem] pt-3">
+                      <div className="border border-white/[0.08] bg-[var(--bg-elevated)]/95 py-2 shadow-2xl backdrop-blur-xl">
                         {[
                           { href: "/#explore", label: "All categories" },
                           { href: "/c/luna", label: "Companions" },
-                          { href: "/after-dark", label: "Companions (18+)" },
-                          { href: "/c/einstein", label: "Historical Minds" },
-                          { href: "/c/aiko", label: "Roleplay / Anime" },
+                          { href: "/after-dark", label: "Companions 18+" },
+                          { href: "/c/einstein", label: "Historical minds" },
+                          { href: "/c/aiko", label: "Roleplay" },
                           { href: "/c/stoic-mentor", label: "Mentors" },
-                          { href: "/#creators", label: "Virtual Creators" },
                         ].map((item) => (
                           <Link
                             key={item.label}
                             href={item.href}
-                            className="block px-4 py-2 hover:bg-[var(--accent-soft)] hover:text-[var(--ink)]"
+                            className="block px-4 py-2 text-[13px] text-[var(--muted)] transition hover:bg-white/[0.03] hover:text-[var(--ink)]"
                           >
                             {item.label}
                           </Link>
@@ -122,30 +154,37 @@ export function AppNav({
                   ) : null}
                 </div>
               ) : null}
-              {guestLinks
-                .filter((l) => !(variant === "marketing" && l.label === "Explore"))
-                .map((link) => (
-                  <Link
-                    key={link.href + link.label}
-                    href={link.href}
-                    className="hover:text-[var(--ink)]"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+
+              {guestLinks.map((link) => (
+                <Link
+                  key={link.href + link.label}
+                  href={link.href}
+                  className={linkClass}
+                >
+                  {link.label}
+                </Link>
+              ))}
+
+              {variant === "after-dark" ? (
+                <Link href="/" className={linkClass}>
+                  Main site
+                </Link>
+              ) : null}
+
               <button
                 type="button"
-                className="hover:text-[var(--ink)]"
+                className={linkClass}
                 onClick={() => app.redirectToSignIn()}
               >
                 Sign in
               </button>
+
               <button
                 type="button"
-                className="rounded-xl bg-[var(--accent)] px-3 py-1.5 font-medium text-[var(--accent-ink)]"
+                className="ml-1 border border-[var(--ink)]/20 px-3.5 py-1.5 text-[13px] font-medium tracking-[0.01em] text-[var(--ink)] transition hover:border-[var(--accent)]/50 hover:bg-[var(--accent-soft)]"
                 onClick={() => app.redirectToSignUp()}
               >
-                {variant === "after-dark" ? "Enter 18+" : "Create a character"}
+                {variant === "after-dark" ? "Enter 18+" : "Get started"}
               </button>
             </>
           )}
@@ -154,7 +193,7 @@ export function AppNav({
         {/* Mobile toggle */}
         <button
           type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--line)] text-[var(--ink)] lg:hidden"
+          className="inline-flex h-10 w-10 items-center justify-center text-[var(--ink)] lg:hidden"
           aria-expanded={open}
           aria-label={open ? "Close menu" : "Open menu"}
           onClick={() => setOpen((v) => !v)}
@@ -162,40 +201,40 @@ export function AppNav({
           <span className="sr-only">Menu</span>
           <span className="flex flex-col gap-1.5">
             <span
-              className={`block h-0.5 w-4 bg-current transition ${open ? "translate-y-2 rotate-45" : ""}`}
+              className={`block h-px w-5 bg-current transition ${open ? "translate-y-[7px] rotate-45" : ""}`}
             />
             <span
-              className={`block h-0.5 w-4 bg-current transition ${open ? "opacity-0" : ""}`}
+              className={`block h-px w-5 bg-current transition ${open ? "opacity-0" : ""}`}
             />
             <span
-              className={`block h-0.5 w-4 bg-current transition ${open ? "-translate-y-2 -rotate-45" : ""}`}
+              className={`block h-px w-5 bg-current transition ${open ? "-translate-y-[7px] -rotate-45" : ""}`}
             />
           </span>
         </button>
       </div>
 
       {open ? (
-        <nav className="safe-pad border-t border-[var(--line)] px-4 py-4 lg:hidden">
-          <div className="flex flex-col gap-3 text-base text-[var(--muted)]">
+        <nav className="safe-pad border-t border-white/[0.06] px-4 py-5 lg:hidden sm:px-6">
+          <div className="flex flex-col gap-1 text-[15px] text-[var(--muted)]">
             {user ? (
               <>
                 <Link
                   href="/personas"
-                  className="py-2 hover:text-[var(--ink)]"
+                  className="py-2.5 hover:text-[var(--ink)]"
                   onClick={() => setOpen(false)}
                 >
                   Personas
                 </Link>
                 <Link
                   href="/settings"
-                  className="py-2 hover:text-[var(--ink)]"
+                  className="py-2.5 hover:text-[var(--ink)]"
                   onClick={() => setOpen(false)}
                 >
                   Settings
                 </Link>
                 <button
                   type="button"
-                  className="py-2 text-left hover:text-[var(--ink)]"
+                  className="py-2.5 text-left hover:text-[var(--ink)]"
                   onClick={() => {
                     setOpen(false);
                     void app.redirectToSignOut();
@@ -203,34 +242,48 @@ export function AppNav({
                 >
                   Sign out
                 </button>
-                <p className="truncate text-xs text-[var(--muted)]">
-                  {email ?? user.primaryEmail}
-                </p>
               </>
             ) : (
               <>
+                {variant === "marketing" ? (
+                  <Link
+                    href="/#explore"
+                    className="py-2.5 hover:text-[var(--ink)]"
+                    onClick={() => setOpen(false)}
+                  >
+                    Explore
+                  </Link>
+                ) : null}
                 {guestLinks.map((link) => (
                   <Link
                     key={link.href + link.label}
                     href={link.href}
-                    className="py-2 hover:text-[var(--ink)]"
+                    className="py-2.5 hover:text-[var(--ink)]"
                     onClick={() => setOpen(false)}
                   >
                     {link.label}
                   </Link>
                 ))}
-                {variant === "marketing" ? (
+                {variant === "after-dark" ? (
                   <Link
-                    href="/after-dark"
-                    className="py-2 hover:text-[var(--ink)]"
+                    href="/"
+                    className="py-2.5 hover:text-[var(--ink)]"
                     onClick={() => setOpen(false)}
                   >
-                    18+ Experiences
+                    Main site
                   </Link>
-                ) : null}
+                ) : (
+                  <Link
+                    href="/after-dark"
+                    className="py-2.5 hover:text-[var(--ink)]"
+                    onClick={() => setOpen(false)}
+                  >
+                    After Dark 18+
+                  </Link>
+                )}
                 <button
                   type="button"
-                  className="py-2 text-left hover:text-[var(--ink)]"
+                  className="py-2.5 text-left hover:text-[var(--ink)]"
                   onClick={() => {
                     setOpen(false);
                     void app.redirectToSignIn();
@@ -240,15 +293,13 @@ export function AppNav({
                 </button>
                 <button
                   type="button"
-                  className="mt-1 rounded-xl bg-[var(--accent)] px-4 py-3 font-medium text-[var(--accent-ink)]"
+                  className="mt-3 border border-[var(--ink)]/20 px-4 py-3 text-left font-medium text-[var(--ink)]"
                   onClick={() => {
                     setOpen(false);
                     void app.redirectToSignUp();
                   }}
                 >
-                  {variant === "after-dark"
-                    ? "Enter 18+"
-                    : "Create a character"}
+                  {variant === "after-dark" ? "Enter 18+" : "Get started"}
                 </button>
               </>
             )}
