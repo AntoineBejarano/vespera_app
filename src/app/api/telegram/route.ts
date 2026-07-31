@@ -3,6 +3,7 @@ import {
   telegramSendChatAction,
   telegramSendMessage,
   telegramSendPhoto,
+  telegramSendVoice,
 } from "@/lib/telegram/api";
 import { runCharacterReply } from "@/lib/chat/engine";
 import { relationshipPhase } from "@/lib/persona/phases";
@@ -18,6 +19,13 @@ import {
   isAgeAttestMessage,
   type TelegramFrom,
 } from "@/lib/telegram/peers";
+import { resolveVoiceForCharacter } from "@/lib/voice/characters";
+import { synthesizeSpeech } from "@/lib/voice/elevenlabs";
+import {
+  spokenTextFromBubbles,
+  wantsVoiceMessage,
+  withVoiceNoteCue,
+} from "@/lib/voice/intent";
 
 export const maxDuration = 60;
 
@@ -143,7 +151,8 @@ export async function POST(req: Request) {
       return Response.json({ ok: true });
     }
 
-    if (!text || text.startsWith("/")) {
+    const voiceAsk = wantsVoiceMessage(text);
+    if ((!text || text.startsWith("/")) && !voiceAsk) {
       await telegramSendMessage(chatId, "just text me", token);
       return Response.json({ ok: true });
     }
@@ -157,12 +166,19 @@ export async function POST(req: Request) {
       return Response.json({ ok: true });
     }
 
-    await telegramSendChatAction(chatId, "typing", token);
+    const cast = resolveVoiceForCharacter(character);
+    const wantVoice = voiceAsk && Boolean(cast) && Boolean(process.env.ELEVENLABS_API_KEY?.trim());
+
+    await telegramSendChatAction(
+      chatId,
+      wantVoice ? "record_voice" : "typing",
+      token,
+    );
     await sleep(randomReplyDelayMs());
 
     const result = await runCharacterReply({
       userId: peer.userId,
-      message: text,
+      message: voiceAsk ? withVoiceNoteCue(text) : text,
       characterId: character.id,
       partner: {
         channel: "telegram",
@@ -188,6 +204,31 @@ export async function POST(req: Request) {
     }
 
     const bubbles = result.bubbles;
+
+    if (wantVoice && cast && bubbles.length) {
+      const spoken = spokenTextFromBubbles(bubbles);
+      try {
+        await telegramSendChatAction(chatId, "upload_voice", token);
+        const audio = await synthesizeSpeech({
+          voiceId: cast.voiceId,
+          text: spoken,
+          modelId: cast.modelId,
+          outputFormat: "opus_48000_128",
+        });
+        await telegramSendVoice(chatId, audio, token);
+        return Response.json({ ok: true });
+      } catch (err) {
+        console.error("[telegram voice]", err);
+        // Fall through to text bubbles if synthesis / send fails.
+      }
+    } else if (voiceAsk && !cast) {
+      await telegramSendMessage(
+        chatId,
+        "voice isn't cast for this character yet — texting you instead",
+        token,
+      );
+    }
+
     let photoSent = false;
 
     for (let i = 0; i < bubbles.length; i++) {

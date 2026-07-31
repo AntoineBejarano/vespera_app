@@ -39,7 +39,7 @@ export async function telegramSendMessage(
 
 export async function telegramSendChatAction(
   chatId: number | string,
-  action: "typing" | "upload_photo" = "typing",
+  action: "typing" | "upload_photo" | "record_voice" | "upload_voice" = "typing",
   botToken?: string | null,
 ) {
   const token = botToken || process.env.TELEGRAM_BOT_TOKEN;
@@ -49,6 +49,32 @@ export async function telegramSendChatAction(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chat_id: chatId, action }),
   });
+}
+
+/** Send an OGG/OPUS buffer as a Telegram voice note. */
+export async function telegramSendVoice(
+  chatId: number | string,
+  audio: Buffer,
+  botToken?: string | null,
+  filename = "voice.ogg",
+) {
+  const token = requireToken(botToken);
+  const form = new FormData();
+  form.append("chat_id", String(chatId));
+  form.append(
+    "voice",
+    new Blob([new Uint8Array(audio)], { type: "audio/ogg" }),
+    filename,
+  );
+
+  const res = await fetch(`${TELEGRAM_API}/bot${token}/sendVoice`, {
+    method: "POST",
+    body: form,
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Telegram sendVoice failed: ${body}`);
+  }
 }
 
 export async function telegramSendPhoto(

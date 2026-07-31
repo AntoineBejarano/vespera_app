@@ -4,7 +4,7 @@ import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 export function getElevenLabs() {
   const apiKey = process.env.ELEVENLABS_API_KEY?.trim();
   if (!apiKey) {
-    throw new Error("ELEVENLABS_API_KEY is not configured");
+    throw new Error("Voice API key is not configured");
   }
   return new ElevenLabsClient({ apiKey });
 }
@@ -26,12 +26,14 @@ export async function synthesizeSpeech(params: {
   voiceId: string;
   text: string;
   modelId?: string;
+  /** Telegram voice notes prefer OGG/OPUS. */
+  outputFormat?: "mp3_44100_128" | "opus_48000_128";
 }): Promise<Buffer> {
   const client = getElevenLabs();
   const audio = await client.textToSpeech.convert(params.voiceId, {
     text: params.text,
     modelId: params.modelId ?? "eleven_flash_v2_5",
-    outputFormat: "mp3_44100_128",
+    outputFormat: params.outputFormat ?? "mp3_44100_128",
   });
 
   if (Buffer.isBuffer(audio)) return audio;
