@@ -8,6 +8,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 const MARKETING_LINKS = [
   { href: "/#explore", label: "Explore" },
   { href: "/#create", label: "Create" },
+  { href: "/voice", label: "Voice" },
   { href: "/bring", label: "Bring a Character" },
   { href: "/#creators", label: "For Creators" },
   { href: "/#studios", label: "For Studios" },

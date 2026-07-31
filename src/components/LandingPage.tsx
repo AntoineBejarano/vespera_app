@@ -15,6 +15,7 @@ import {
   ShimmerButton,
 } from "@/components/magicui/effects";
 import { LANDING_IMAGES } from "@/lib/landing/images";
+import { VoiceLandingSection } from "@/components/VoiceLandingSection";
 
 const CATEGORIES = [
   {
@@ -408,6 +409,8 @@ export function LandingPage() {
           .
         </p>
       </section>
+
+      <VoiceLandingSection />
 
       {/* 3. Problem */}
       <section className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/35 py-16 sm:py-24">

@@ -6,7 +6,15 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/after-dark", "/bring", "/technology", "/c/", "/legal/"],
+        allow: [
+          "/",
+          "/after-dark",
+          "/bring",
+          "/technology",
+          "/voice",
+          "/c/",
+          "/legal/",
+        ],
         disallow: [
           "/api/",
           "/handler/",

@@ -3,6 +3,7 @@ import { LEGAL_PAGES, LEGAL_VERSION } from "@/lib/legal/constants";
 
 const MARKETING_LINKS = [
   { href: "/technology", label: "Developers" },
+  { href: "/voice", label: "Voice AI" },
   { href: "/legal/acceptable-use", label: "Safety" },
   { href: "/#ownership", label: "Ownership" },
   { href: "/bring", label: "Supported Formats" },
