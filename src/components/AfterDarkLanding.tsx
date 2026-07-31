@@ -32,6 +32,62 @@ const PIPELINE = [
   "Human Handoff",
 ];
 
+const COMPETE_STEPS = [
+  {
+    n: "01",
+    t: "Start a heat",
+    d: "Invite up to 5 friends into a private competition with the same girl.",
+  },
+  {
+    n: "02",
+    t: "Each flirts alone",
+    d: "Separate chats. Separate memory. Nobody sees anyone else’s game.",
+  },
+  {
+    n: "03",
+    t: "She ranks you",
+    d: "Tatiana scores chemistry, confidence, and how well you listen — live.",
+  },
+];
+
+const COMPETE_BOARD = [
+  {
+    place: "1st",
+    name: "Marco",
+    score: 86,
+    note: "“He actually remembered what I said. That’s rare.”",
+    lead: true,
+  },
+  {
+    place: "2nd",
+    name: "Leo",
+    score: 71,
+    note: "“Funny. A little try-hard. Still in the game.”",
+    lead: false,
+  },
+  {
+    place: "3rd",
+    name: "Sam",
+    score: 54,
+    note: "“Cute opener. Then he repeated himself.”",
+    lead: false,
+  },
+  {
+    place: "4th",
+    name: "Jules",
+    score: 38,
+    note: "“Too fast. Slow down if you want me.”",
+    lead: false,
+  },
+  {
+    place: "5th",
+    name: "Nik",
+    score: 22,
+    note: "“He sent ‘hey’ three times. I’m not a slot machine.”",
+    lead: false,
+  },
+];
+
 const PRICING = [
   {
     name: "Agent",
@@ -241,6 +297,106 @@ export function AfterDarkLanding() {
               catalog="after-dark"
               defaultAgent="tatiana"
             />
+          </BlurFade>
+        </div>
+      </section>
+
+      <section
+        id="compete"
+        className="scroll-mt-24 border-b border-[var(--line)] py-16 sm:py-24"
+      >
+        <div className="mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.05fr] lg:items-start">
+          <BlurFade>
+            <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
+              Friend heat · 18+
+            </p>
+            <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold leading-[1.05] sm:text-5xl">
+              Who in your group actually{" "}
+              <span className="italic text-[var(--accent)]">lands her</span>?
+            </h2>
+            <p className="mt-4 max-w-xl text-[var(--muted)]">
+              Create a competition with your friends. Everyone chats Tatiana in
+              private — she keeps a separate memory for each of you, then ranks
+              who’s winning based on how she feels about the conversation.
+            </p>
+            <ol className="mt-8 space-y-5">
+              {COMPETE_STEPS.map((step) => (
+                <li key={step.n} className="flex gap-4">
+                  <span className="font-[family-name:var(--font-display)] text-sm text-[var(--accent)]">
+                    {step.n}
+                  </span>
+                  <div>
+                    <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
+                      {step.t}
+                    </p>
+                    <p className="mt-1 text-sm text-[var(--muted)]">{step.d}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <ShimmerButton onClick={() => app.redirectToSignUp()}>
+                Start a competition
+              </ShimmerButton>
+              <a
+                href="#voice"
+                className="inline-flex items-center rounded-xl border border-[var(--line)] px-5 py-3.5 text-sm"
+              >
+                Practice with Tatiana first
+              </a>
+            </div>
+            <p className="mt-4 text-xs text-[var(--muted)]">
+              Private chats only. She never leaks your friends’ messages — just
+              the scoreboard and her verdict.
+            </p>
+          </BlurFade>
+
+          <BlurFade delay={0.1}>
+            <div className="border border-[var(--line)] bg-[var(--bg-elevated)]/80 p-5 sm:p-6">
+              <div className="flex items-end justify-between gap-3 border-b border-[var(--line)] pb-4">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+                    Live board · Friday night heat
+                  </p>
+                  <p className="mt-1 font-[family-name:var(--font-display)] text-xl font-semibold">
+                    Tatiana’s ranking
+                  </p>
+                </div>
+                <p className="text-xs text-[var(--accent-2)]">updating…</p>
+              </div>
+              <ul className="mt-2 divide-y divide-[var(--line)]">
+                {COMPETE_BOARD.map((row) => (
+                  <li
+                    key={row.name}
+                    className={`py-4 ${row.lead ? "bg-[var(--accent-soft)]/40 px-3 -mx-3 sm:px-4 sm:-mx-4" : ""}`}
+                  >
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
+                        <span className="mr-2 text-[var(--muted)]">
+                          {row.place}
+                        </span>
+                        {row.name}
+                        {row.lead ? (
+                          <span className="ml-2 text-xs uppercase tracking-[0.18em] text-[var(--accent)]">
+                            leading
+                          </span>
+                        ) : null}
+                      </p>
+                      <p className="font-[family-name:var(--font-display)] text-2xl tabular-nums text-[var(--accent-2)]">
+                        {row.score}
+                      </p>
+                    </div>
+                    <p className="mt-2 text-sm italic leading-relaxed text-[var(--muted)]">
+                      {row.note}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-5 border-t border-[var(--line)] pt-4 text-xs text-[var(--muted)]">
+                Scores from chemistry, wit, listening, and whether she’d keep
+                talking — judged in-character by Tatiana.
+              </p>
+            </div>
           </BlurFade>
         </div>
       </section>

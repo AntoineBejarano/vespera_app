@@ -13,6 +13,7 @@ const MARKETING_LINKS = [
 
 const AFTER_DARK_LINKS = [
   { href: "/after-dark#voice", label: "Voice" },
+  { href: "/after-dark#compete", label: "Compete" },
   { href: "/after-dark#pipeline", label: "How it works" },
   { href: "/after-dark#pricing", label: "Pricing" },
 ];
