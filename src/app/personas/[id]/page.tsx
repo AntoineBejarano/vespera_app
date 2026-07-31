@@ -11,7 +11,7 @@ type Params = { params: Promise<{ id: string }> };
 export default async function PersonaPage({ params }: Params) {
   const user = await getAppUser({ or: "redirect" });
   if (!user) redirect("/");
-  if (needsAccountAgeGate(user)) redirect("/age-gate");
+  if (needsAccountAgeGate(user)) redirect("/age-gate?zone=standard");
   const { id } = await params;
 
   const character = await prisma.character.findFirst({

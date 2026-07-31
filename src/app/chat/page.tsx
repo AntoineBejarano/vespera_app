@@ -12,7 +12,7 @@ export default async function ChatPage({
 }) {
   const user = await getAppUser({ or: "redirect" });
   if (!user) redirect("/handler/sign-in");
-  if (needsAccountAgeGate(user)) redirect("/age-gate");
+  if (needsAccountAgeGate(user)) redirect("/age-gate?zone=standard");
 
   const { characterId } = await searchParams;
   if (!characterId) redirect("/personas");

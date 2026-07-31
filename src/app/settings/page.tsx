@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 export default async function SettingsPage() {
   const user = await getAppUser({ or: "redirect" });
   if (!user) redirect("/");
-  if (needsAccountAgeGate(user)) redirect("/age-gate");
+  if (needsAccountAgeGate(user)) redirect("/age-gate?zone=standard");
 
   return (
     <>

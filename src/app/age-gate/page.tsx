@@ -13,16 +13,22 @@ function AgeGateInner() {
   const search = useSearchParams();
   const app = useHexclaveApp();
   const user = useUser({ or: "return-null" });
+  const zone = search.get("zone") === "adult" ? "adult" : "standard";
+
   const [ageOk, setAgeOk] = useState(false);
   const [adultOk, setAdultOk] = useState(false);
+  const [aiOk, setAiOk] = useState(false);
   const [tosOk, setTosOk] = useState(false);
   const [privacyOk, setPrivacyOk] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const nextPath = safeNext(search.get("next"));
-  const intent = search.get("intent"); // signup | signin | enter
-  const ready = ageOk && adultOk && tosOk && privacyOk;
+  const intent = search.get("intent");
+  const isAdult = zone === "adult";
+  const ready = isAdult
+    ? ageOk && adultOk && tosOk && privacyOk
+    : aiOk && tosOk && privacyOk;
 
   async function continueFlow() {
     if (!ready) return;
@@ -30,16 +36,28 @@ function AgeGateInner() {
     setError(null);
 
     try {
-      const attest = await fetch("/api/legal/adult-attest", {
+      const attestEndpoint = isAdult
+        ? "/api/legal/adult-attest"
+        : "/api/legal/access-attest";
+      const attestBody = isAdult
+        ? {
+            ageConfirmed: true,
+            adultConsent: true,
+            tosAccepted: true,
+            privacyAccepted: true,
+            legalVersion: LEGAL_VERSION,
+          }
+        : {
+            aiDisclosureAccepted: true,
+            tosAccepted: true,
+            privacyAccepted: true,
+            legalVersion: LEGAL_VERSION,
+          };
+
+      const attest = await fetch(attestEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ageConfirmed: true,
-          adultConsent: true,
-          tosAccepted: true,
-          privacyAccepted: true,
-          legalVersion: LEGAL_VERSION,
-        }),
+        body: JSON.stringify(attestBody),
       });
       const attestData = await attest.json();
       if (!attest.ok) throw new Error(attestData.error ?? "Attestation failed");
@@ -49,8 +67,13 @@ function AgeGateInner() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            ageConfirmed: true,
-            adultConsent: true,
+            zone,
+            ...(isAdult
+              ? {
+                  ageConfirmed: true,
+                  adultConsent: true,
+                }
+              : { aiDisclosureAccepted: true }),
             tosAccepted: true,
             privacyAccepted: true,
             legalVersion: LEGAL_VERSION,
@@ -58,7 +81,7 @@ function AgeGateInner() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "Failed");
-        router.replace(nextPath || "/personas");
+        router.replace(nextPath || (isAdult ? "/after-dark" : "/personas"));
         router.refresh();
         return;
       }
@@ -72,7 +95,7 @@ function AgeGateInner() {
         return;
       }
 
-      router.replace(nextPath || "/");
+      router.replace(nextPath || (isAdult ? "/after-dark" : "/"));
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");
@@ -87,45 +110,80 @@ function AgeGateInner() {
         <div>
           <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
             Vesper<span className="text-[var(--accent)]">er</span>
+            {isAdult ? (
+              <span className="text-[var(--accent-2)]"> After Dark</span>
+            ) : null}
           </p>
           <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
-            Adults only · 18+
+            {isAdult ? "Adults only · 18+" : "AI transparency · EU AI Act"}
           </p>
         </div>
       </div>
 
       <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--ink)] sm:text-4xl">
-        Confirm you are an adult
+        {isAdult ? "Confirm you are an adult" : "Before you continue"}
       </h1>
       <p className="mt-4 leading-relaxed text-[var(--muted)]">
-        This site contains adult sexual content and tools for adult creators.
-        You must be 18 or older (or the age of majority where you live, if
-        higher) to continue. Sexual content involving minors is strictly
-        forbidden.
+        {isAdult ? (
+          <>
+            After Dark contains adult sexual content and tools for adult
+            creators. You must be 18 or older. Sexual content involving minors
+            is strictly forbidden.
+          </>
+        ) : (
+          <>
+            Vesperer uses automated AI systems to power characters, memory, and
+            messaging. We disclose this in line with transparency expectations
+            under the EU AI Act and similar rules. This gate does not cover
+            adult content — that lives only in{" "}
+            <Link href="/after-dark" className="text-[var(--accent)] underline">
+              After Dark
+            </Link>
+            .
+          </>
+        )}
       </p>
 
       <div className="mt-8 space-y-4 text-[var(--ink)]">
-        <label className="flex items-start gap-3">
-          <input
-            type="checkbox"
-            className="mt-1 size-4 accent-[var(--accent)]"
-            checked={ageOk}
-            onChange={(e) => setAgeOk(e.target.checked)}
-          />
-          <span>I confirm that I am 18 years of age or older.</span>
-        </label>
-        <label className="flex items-start gap-3">
-          <input
-            type="checkbox"
-            className="mt-1 size-4 accent-[var(--accent)]"
-            checked={adultOk}
-            onChange={(e) => setAdultOk(e.target.checked)}
-          />
-          <span>
-            I consent to viewing and using consensual adult content and accept
-            the ban on anything involving minors.
-          </span>
-        </label>
+        {isAdult ? (
+          <>
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                className="mt-1 size-4 accent-[var(--accent)]"
+                checked={ageOk}
+                onChange={(e) => setAgeOk(e.target.checked)}
+              />
+              <span>I confirm that I am 18 years of age or older.</span>
+            </label>
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                className="mt-1 size-4 accent-[var(--accent)]"
+                checked={adultOk}
+                onChange={(e) => setAdultOk(e.target.checked)}
+              />
+              <span>
+                I consent to viewing and using consensual adult content and
+                accept the ban on anything involving minors.
+              </span>
+            </label>
+          </>
+        ) : (
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-1 size-4 accent-[var(--accent)]"
+              checked={aiOk}
+              onChange={(e) => setAiOk(e.target.checked)}
+            />
+            <span>
+              I understand that interactions may be generated or assisted by
+              automated AI systems and that I am not always speaking with a
+              human operator unless stated.
+            </span>
+          </label>
+        )}
         <label className="flex items-start gap-3">
           <input
             type="checkbox"
@@ -168,16 +226,22 @@ function AgeGateInner() {
               target="_blank"
             >
               Privacy Policy
-            </Link>{" "}
-            and the{" "}
-            <Link
-              href="/legal/adult-content"
-              className="text-[var(--accent)] underline-offset-2 hover:underline"
-              target="_blank"
-            >
-              Adult Content Notice
             </Link>
-            .
+            {isAdult ? (
+              <>
+                {" "}
+                and the{" "}
+                <Link
+                  href="/legal/adult-content"
+                  className="text-[var(--accent)] underline-offset-2 hover:underline"
+                  target="_blank"
+                >
+                  Adult Content Notice
+                </Link>
+              </>
+            ) : (
+              "."
+            )}
           </span>
         </label>
       </div>
@@ -194,26 +258,35 @@ function AgeGateInner() {
           {loading
             ? "Saving…"
             : user
-              ? "Enter Vesperer"
+              ? isAdult
+                ? "Enter After Dark"
+                : "Enter Vesperer"
               : intent === "signup"
                 ? "Continue to sign up"
                 : intent === "signin"
                   ? "Continue to sign in"
-                  : "Enter site"}
+                  : "Continue"}
         </button>
-        <Link
-          href="/underage"
-          className="w-full rounded-xl border border-[var(--line)] px-6 py-3.5 text-center text-[var(--muted)] hover:text-[var(--ink)] sm:w-auto"
-        >
-          I am under 18 — exit
-        </Link>
+        {isAdult ? (
+          <Link
+            href="/underage"
+            className="w-full rounded-xl border border-[var(--line)] px-6 py-3.5 text-center text-[var(--muted)] hover:text-[var(--ink)] sm:w-auto"
+          >
+            I am under 18 — exit
+          </Link>
+        ) : (
+          <Link
+            href="/"
+            className="w-full rounded-xl border border-[var(--line)] px-6 py-3.5 text-center text-[var(--muted)] hover:text-[var(--ink)] sm:w-auto"
+          >
+            Back to home
+          </Link>
+        )}
       </div>
 
       <p className="mt-6 text-xs leading-relaxed text-[var(--muted)]">
-        Legal version {LEGAL_VERSION}. This gate is a self-attestation record
-        stored as a necessary cookie
-        {user ? " and on your account" : ""}. It is not government ID
-        verification.
+        Legal version {LEGAL_VERSION}. Stored as a necessary cookie
+        {user ? " and on your account" : ""}.
       </p>
     </main>
   );

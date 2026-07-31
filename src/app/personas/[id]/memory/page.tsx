@@ -10,7 +10,7 @@ type Params = { params: Promise<{ id: string }> };
 export default async function PersonaMemoryPage({ params }: Params) {
   const user = await getAppUser({ or: "redirect" });
   if (!user) redirect("/handler/sign-in");
-  if (needsAccountAgeGate(user)) redirect("/age-gate");
+  if (needsAccountAgeGate(user)) redirect("/age-gate?zone=standard");
 
   const { id } = await params;
   const character = await prisma.character.findFirst({

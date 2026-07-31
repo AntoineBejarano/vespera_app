@@ -11,7 +11,7 @@ export const hexclaveClientApp = new HexclaveClientApp({
     signUp: "/handler/sign-up",
     home: "/personas",
     afterSignIn: "/personas",
-    afterSignUp: "/age-gate",
+    afterSignUp: "/age-gate?zone=standard",
     afterSignOut: "/",
   },
 });

@@ -62,6 +62,7 @@ export async function proxy(request: NextRequest) {
   if (!isAgeExempt(pathname) && !hasValidAdultCookie(request)) {
     const url = request.nextUrl.clone();
     url.pathname = "/age-gate";
+    url.searchParams.set("zone", "standard");
     const next = `${pathname}${request.nextUrl.search}`;
     url.search = "";
     if (next && next !== "/") {

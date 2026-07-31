@@ -137,7 +137,6 @@ export function AppNav({
                         {[
                           { href: "/#explore", label: "All categories" },
                           { href: "/c/luna", label: "Companions" },
-                          { href: "/after-dark", label: "Companions 18+" },
                           { href: "/c/einstein", label: "Historical minds" },
                           { href: "/c/aiko", label: "Roleplay" },
                           { href: "/c/stoic-mentor", label: "Mentors" },
@@ -183,7 +182,13 @@ export function AppNav({
               <button
                 type="button"
                 className="ml-1 border border-[var(--ink)]/20 px-3.5 py-1.5 text-[13px] font-medium tracking-[0.01em] text-[var(--ink)] transition hover:border-[var(--accent)]/50 hover:bg-[var(--accent-soft)]"
-                onClick={() => app.redirectToSignUp()}
+                onClick={() => {
+                  if (variant === "after-dark") {
+                    window.location.href = "/age-gate?zone=adult&intent=signup";
+                    return;
+                  }
+                  void app.redirectToSignUp();
+                }}
               >
                 {variant === "after-dark" ? "Enter 18+" : "Get started"}
               </button>
@@ -273,15 +278,7 @@ export function AppNav({
                   >
                     Main site
                   </Link>
-                ) : (
-                  <Link
-                    href="/after-dark"
-                    className="py-2.5 hover:text-[var(--ink)]"
-                    onClick={() => setOpen(false)}
-                  >
-                    After Dark 18+
-                  </Link>
-                )}
+                ) : null}
                 <button
                   type="button"
                   className="py-2.5 text-left hover:text-[var(--ink)]"
@@ -297,6 +294,11 @@ export function AppNav({
                   className="mt-3 border border-[var(--ink)]/20 px-4 py-3 text-left font-medium text-[var(--ink)]"
                   onClick={() => {
                     setOpen(false);
+                    if (variant === "after-dark") {
+                      window.location.href =
+                        "/age-gate?zone=adult&intent=signup";
+                      return;
+                    }
                     void app.redirectToSignUp();
                   }}
                 >

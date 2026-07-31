@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LEGAL_PAGES, LEGAL_VERSION } from "@/lib/legal/constants";
+import { LEGAL_PAGES } from "@/lib/legal/constants";
 
 const MARKETING_LINKS = [
   { href: "/technology", label: "Developers" },
@@ -8,7 +8,6 @@ const MARKETING_LINKS = [
   { href: "/#ownership", label: "Ownership" },
   { href: "/bring", label: "Supported Formats" },
   { href: "/#studios", label: "Private Deployment" },
-  { href: "/after-dark", label: "18+ Experiences" },
 ];
 
 export function LegalFooter({
@@ -48,12 +47,9 @@ export function LegalFooter({
 
         <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <p>
-            Vesperer · operated by Deevly Labs LTD (Co. 16506991)
+            Vesperer
             {variant === "after-dark" ? " · After Dark" : ""}
-            {variant === "after-dark" || variant === "default"
-              ? " · adults only (18+)"
-              : ""}
-            {" · "}legal v{LEGAL_VERSION}
+            {variant === "after-dark" ? " · adults only (18+)" : ""}
           </p>
           <nav className="flex flex-wrap gap-x-4 gap-y-2">
             {LEGAL_PAGES.map((p) => (
@@ -68,13 +64,20 @@ export function LegalFooter({
             <Link href="/report" className="hover:text-[var(--ink)]">
               Report abuse
             </Link>
+            {variant === "marketing" ? (
+              <Link href="/after-dark" className="hover:text-[var(--ink)]">
+                After Dark (18+)
+              </Link>
+            ) : null}
           </nav>
         </div>
 
         <p className="text-xs leading-relaxed text-[var(--muted)]/80">
-          {variant === "marketing"
-            ? "Vesperer helps you create AI characters with persistent identity and memory. Adult experiences are offered separately under Vesperer After Dark. Sexual content involving minors is strictly prohibited."
-            : "Access is restricted to adults. Sexual content involving minors is strictly prohibited. Self-attestation gates are not a substitute for jurisdiction-specific age-assurance or counsel-reviewed contracts."}
+          {variant === "after-dark"
+            ? "After Dark is an adults-only zone. Sexual content involving minors is strictly prohibited."
+            : variant === "marketing"
+              ? "Vesperer provides AI character infrastructure with identity, memory, and automated-interaction disclosures (EU AI Act transparency). Adult content is only in After Dark, a separate 18+ zone."
+              : "Automated AI interactions are disclosed per our Terms and Privacy Policy. Illegal and exploitative content is prohibited."}
         </p>
       </div>
     </footer>

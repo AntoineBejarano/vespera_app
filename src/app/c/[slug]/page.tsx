@@ -54,7 +54,7 @@ export default async function PublicCharacterPage({ params }: Params) {
   if (character.isAdult) {
     const jar = await cookies();
     if (jar.get(ADULT_COOKIE)?.value !== LEGAL_VERSION) {
-      redirect(`/age-gate?next=${encodeURIComponent(`/c/${slug}`)}`);
+      redirect(`/age-gate?zone=adult&next=${encodeURIComponent(`/c/${slug}`)}`);
     }
   }
 

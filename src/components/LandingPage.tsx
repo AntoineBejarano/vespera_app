@@ -22,7 +22,7 @@ const CATEGORIES = [
   {
     id: "companions",
     title: "Companions",
-    body: "Characters built for connection, intimacy and long-term relationships.",
+    body: "Characters built for connection, memory and long-term relationships.",
     href: "/c/luna",
     image: LANDING_IMAGES.companion,
   },
@@ -437,13 +437,6 @@ export function LandingPage() {
             </BlurFade>
           ))}
         </div>
-        <p className="mt-6 text-sm text-[var(--muted)]">
-          Private adult companions live separately in{" "}
-          <Link href="/after-dark" className="text-[var(--accent-2)]">
-            Vesperer After Dark
-          </Link>
-          .
-        </p>
       </section>
 
       <VoiceLandingSection defaultAgent={voiceAgent} />
@@ -790,13 +783,6 @@ export function LandingPage() {
               </BlurFade>
             ))}
           </div>
-          <p className="mt-6 text-sm text-[var(--muted)]">
-            Looking for private adult companions and agency seats?{" "}
-            <Link href="/after-dark#pricing" className="text-[var(--accent)]">
-              See Vesperer After Dark
-            </Link>
-            .
-          </p>
         </div>
       </section>
 

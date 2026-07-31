@@ -150,8 +150,14 @@ export function AfterDarkLanding() {
       return;
     }
     const auth = search.get("auth");
-    if (auth === "signin") void app.redirectToSignIn();
-    if (auth === "signup") void app.redirectToSignUp();
+    if (auth === "signin") {
+      window.location.replace("/age-gate?zone=adult&intent=signin");
+      return;
+    }
+    if (auth === "signup") {
+      window.location.replace("/age-gate?zone=adult&intent=signup");
+      return;
+    }
   }, [app, search, user]);
 
   return (
@@ -197,14 +203,18 @@ export function AfterDarkLanding() {
           >
             <ShimmerButton
               className="w-full sm:w-auto"
-              onClick={() => app.redirectToSignUp()}
+              onClick={() => {
+                window.location.href = "/age-gate?zone=adult&intent=signup";
+              }}
             >
               Enter 18+ — Deploy an agent €20/mo
             </ShimmerButton>
             <button
               type="button"
               className="w-full rounded-xl border border-[var(--line)] px-6 py-3 sm:w-auto"
-              onClick={() => app.redirectToSignIn()}
+              onClick={() => {
+                window.location.href = "/age-gate?zone=adult&intent=signin";
+              }}
             >
               Sign in
             </button>
@@ -335,7 +345,11 @@ export function AfterDarkLanding() {
               ))}
             </ol>
             <div className="mt-8 flex flex-wrap gap-3">
-              <ShimmerButton onClick={() => app.redirectToSignUp()}>
+              <ShimmerButton
+                onClick={() => {
+                  window.location.href = "/age-gate?zone=adult&intent=signup";
+                }}
+              >
                 Start a competition
               </ShimmerButton>
               <a
@@ -559,7 +573,9 @@ export function AfterDarkLanding() {
                 <button
                   type="button"
                   className="mt-8 w-full rounded-xl bg-[var(--accent)] px-4 py-3 font-medium text-[var(--accent-ink)]"
-                  onClick={() => app.redirectToSignUp()}
+                  onClick={() => {
+                    window.location.href = "/age-gate?zone=adult&intent=signup";
+                  }}
                 >
                   {tier.cta}
                 </button>

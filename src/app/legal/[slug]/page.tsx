@@ -45,10 +45,10 @@ export default async function LegalPage({
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
           <BrandLogo href="/" size="sm" />
           <Link
-            href="/age-gate"
+            href="/age-gate?zone=standard"
             className="text-sm text-[var(--muted)] hover:text-[var(--ink)]"
           >
-            Age gate
+            Access gate
           </Link>
         </div>
       </header>

@@ -47,7 +47,7 @@ const USE_CASES = [
   },
   {
     t: "Per-user relationships",
-    d: "One character, many bonds. Each user gets a private memory lane so intimacy and trust grow independently.",
+    d: "One character, many bonds. Each user gets a private memory lane so rapport and trust grow independently.",
   },
   {
     t: "Chat ↔ voice continuity",

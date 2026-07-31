@@ -2,7 +2,7 @@ import { prisma } from "@/lib/db";
 import { getAppUser } from "@/lib/session";
 import { LEGAL_VERSION } from "@/lib/legal/constants";
 
-/** Confirm 18+ + legal clickwrap after Hexclave sign-up / account gate */
+/** Legal + AI transparency attestation (standard) or adult gate (After Dark). */
 export async function POST(req: Request) {
   const user = await getAppUser();
   if (!user) {
@@ -10,17 +10,25 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json().catch(() => ({}));
-  if (
-    !body.ageConfirmed ||
-    !body.adultConsent ||
-    !body.tosAccepted ||
-    !body.privacyAccepted
-  ) {
+  const zone = body.zone === "adult" ? "adult" : "standard";
+
+  if (!body.tosAccepted || !body.privacyAccepted) {
     return Response.json(
-      {
-        error:
-          "Age confirmation, adult consent, Terms, and Privacy acceptance required",
-      },
+      { error: "Terms and Privacy acceptance required" },
+      { status: 400 },
+    );
+  }
+
+  if (zone === "adult") {
+    if (!body.ageConfirmed || !body.adultConsent) {
+      return Response.json(
+        { error: "Age confirmation and adult consent required" },
+        { status: 400 },
+      );
+    }
+  } else if (!body.aiDisclosureAccepted) {
+    return Response.json(
+      { error: "AI transparency acknowledgment required" },
       { status: 400 },
     );
   }
@@ -37,18 +45,18 @@ export async function POST(req: Request) {
     where: { id: user.id },
     data: {
       ageVerifiedAt: now,
-      adultConsentAt: now,
       tosAcceptedAt: now,
       privacyAcceptedAt: now,
       legalVersionAccepted: LEGAL_VERSION,
+      adultConsentAt: zone === "adult" ? now : user.adultConsentAt,
       settings: {
         upsert: {
           create: {
-            adultConsent: true,
+            adultConsent: zone === "adult",
             language: "en",
           },
           update: {
-            adultConsent: true,
+            ...(zone === "adult" ? { adultConsent: true } : {}),
           },
         },
       },
@@ -59,5 +67,6 @@ export async function POST(req: Request) {
     ok: true,
     userId: updated.id,
     legalVersion: LEGAL_VERSION,
+    zone,
   });
 }

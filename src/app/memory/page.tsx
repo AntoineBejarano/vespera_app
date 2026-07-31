@@ -6,6 +6,6 @@ import { redirect } from "next/navigation";
 export default async function MemoryPage() {
   const user = await getAppUser({ or: "redirect" });
   if (!user) redirect("/handler/sign-in");
-  if (needsAccountAgeGate(user)) redirect("/age-gate");
+  if (needsAccountAgeGate(user)) redirect("/age-gate?zone=standard");
   redirect("/personas");
 }

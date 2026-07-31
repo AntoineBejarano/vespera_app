@@ -63,7 +63,7 @@ function LoginForm() {
       </form>
       <p className="mt-6 text-sm text-[var(--muted)]">
         No account?{" "}
-        <Link href="/age-gate" className="text-[var(--accent)]">
+        <Link href="/age-gate?zone=standard" className="text-[var(--accent)]">
           Register
         </Link>
       </p>

@@ -1,5 +1,5 @@
-/** Bump when legal text materially changes — invalidates adult cookie + re-attest. */
-export const LEGAL_VERSION = "2026-08-01";
+/** Bump when legal text materially changes — invalidates access cookie + re-attest. */
+export const LEGAL_VERSION = "2026-08-02";
 
 export const ADULT_COOKIE = "vesperer_adult";
 
