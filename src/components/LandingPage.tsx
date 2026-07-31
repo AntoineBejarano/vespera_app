@@ -15,6 +15,7 @@ import {
   ShimmerButton,
 } from "@/components/magicui/effects";
 import { LANDING_IMAGES } from "@/lib/landing/images";
+import type { VoiceAgentId } from "@/components/VoiceAgentWidget";
 import { VoiceLandingSection } from "@/components/VoiceLandingSection";
 
 const CATEGORIES = [
@@ -64,36 +65,45 @@ const CATEGORIES = [
 
 const PROBLEMS = [
   {
-    t: "They forget",
-    d: "Important moments vanish after a few conversations.",
+    t: "They forget everything",
+    d: "Between conversations, context vanishes. Every return visit feels like starting over.",
   },
   {
-    t: "They drift",
-    d: "Personality, tone and relationships become inconsistent.",
+    t: "They feel generic",
+    d: "Personality drifts or sounds like every other bot — no stable identity your audience can trust.",
   },
   {
-    t: "They stay trapped",
-    d: "Your character cannot easily move to another model or platform.",
+    t: "The connection breaks",
+    d: "Without memory and identity, students, fans, and customers never form a lasting bond.",
   },
 ];
 
 const SOLUTIONS = [
   {
-    t: "A real identity",
-    d: "Define who they are, what they want, how they speak and what they will never become.",
+    t: "Real identity",
+    d: "Characters with who they are, how they speak, and what they will never become — not a disposable prompt.",
   },
   {
     t: "Long-term memory",
-    d: "They remember people, events, preferences, promises and the moments that shape the relationship.",
+    d: "They remember people, events, preferences, and promises across sessions — so the relationship compounds.",
   },
   {
-    t: "Evolving relationships",
-    d: "Every user develops a different history with the same character.",
+    t: "Closer, more human",
+    d: "A durable bond with your audience, students, or clients — not another forgetful chatbot.",
   },
   {
-    t: "Consistent anywhere",
-    d: "Keep the same identity when you change models, devices or channels.",
+    t: "Same self, every channel",
+    d: "Deploy on web, WhatsApp, Telegram, Discord, or your own app — same personality and memories everywhere.",
   },
+];
+
+const CHANNELS = [
+  "Web",
+  "WhatsApp",
+  "Telegram",
+  "Discord",
+  "Your own app",
+  "Voice",
 ];
 
 const STEPS = [
@@ -115,7 +125,7 @@ const STEPS = [
   {
     n: "4",
     t: "Share or deploy",
-    d: "Chat privately, publish a link or connect the character to supported channels.",
+    d: "Publish a link or put the same character on web, WhatsApp, Telegram, Discord, or your app.",
   },
 ];
 
@@ -141,8 +151,8 @@ const COMPARE = [
     vesperer: "Keeps a stable identity",
   },
   {
-    ordinary: "Locked to one platform",
-    vesperer: "Can move across supported environments",
+    ordinary: "Locked to one chat box",
+    vesperer: "Same self on web, WhatsApp, Telegram, Discord, apps",
   },
   {
     ordinary: "Hard to improve safely",
@@ -160,29 +170,40 @@ const VERSIONS = [
 const AUDIENCES = [
   {
     t: "For yourself",
-    d: "Create private companions, mentors and characters that remain entirely yours.",
+    d: "Private companions and mentors with real identity and memory that stays yours.",
   },
   {
-    t: "For creators",
-    d: "Build original personalities your audience can talk to every day.",
+    t: "For creators & teachers",
+    d: "Characters your audience or students return to — same personality, lasting memories.",
   },
   {
-    t: "For studios",
-    d: "Manage, test and deploy multiple characters from one workspace.",
+    t: "For brands & studios",
+    d: "Deploy one identity across channels and manage a roster from a single workspace.",
   },
 ];
 
 const MOSAIC = [
-  { label: "Companion", image: LANDING_IMAGES.companion, href: "/c/luna" },
-  { label: "Einstein", image: LANDING_IMAGES.einstein, href: "/c/einstein" },
+  { label: "Companion", image: LANDING_IMAGES.companion, href: "/?agent=luna#voice" },
+  {
+    label: "Einstein",
+    image: LANDING_IMAGES.einstein,
+    href: "/?agent=einstein#voice",
+  },
   { label: "Anime", image: LANDING_IMAGES.anime, href: "/c/aiko" },
   {
     label: "Stoic mentor",
     image: LANDING_IMAGES.stoic,
-    href: "/c/stoic-mentor",
+    href: "/?agent=stoic-mentor#voice",
   },
   { label: "Fantasy", image: LANDING_IMAGES.fantasy, href: "/c/luna" },
 ];
+
+function parseVoiceAgent(value: string | null): VoiceAgentId {
+  if (value === "luna" || value === "einstein" || value === "stoic-mentor") {
+    return value;
+  }
+  return "einstein";
+}
 
 const PRICING = [
   {
@@ -236,6 +257,8 @@ export function LandingPage() {
   const user = useUser({ or: "return-null" });
   const search = useSearchParams();
 
+  const voiceAgent = parseVoiceAgent(search.get("agent"));
+
   useEffect(() => {
     if (search.get("hexclave_cross_domain_auth")) return;
 
@@ -247,6 +270,18 @@ export function LandingPage() {
     if (auth === "signin") void app.redirectToSignIn();
     if (auth === "signup") void app.redirectToSignUp();
   }, [app, search, user]);
+
+  useEffect(() => {
+    if (user) return;
+    const wantsVoice =
+      search.has("agent") ||
+      (typeof window !== "undefined" && window.location.hash === "#voice");
+    if (!wantsVoice) return;
+    const t = window.setTimeout(() => {
+      document.getElementById("voice")?.scrollIntoView({ behavior: "smooth" });
+    }, 80);
+    return () => window.clearTimeout(t);
+  }, [search, user]);
 
   return (
     <div className="relative overflow-hidden">
@@ -274,8 +309,9 @@ export function LandingPage() {
             </BlurFade>
             <BlurFade delay={0.16}>
               <p className="mt-5 max-w-lg text-base leading-relaxed text-[var(--muted)] sm:text-lg">
-                Give any AI character a consistent personality, long-term memory
-                and relationships that evolve naturally over time.
+                Most characters forget everything and feel generic. We build ones
+                with real identity and long-term memory — so the bond with your
+                audience, students, or clients actually lasts.
               </p>
             </BlurFade>
             <BlurFade
@@ -289,14 +325,14 @@ export function LandingPage() {
                 Create your first character
               </ShimmerButton>
               <Link
-                href="/bring"
+                href="/?agent=einstein#voice"
                 className="inline-flex w-full items-center justify-center rounded-xl border border-[var(--line)] px-6 py-3.5 text-center sm:w-auto"
               >
-                Bring an existing character
+                Talk to Einstein
               </Link>
             </BlurFade>
             <p className="mt-4 text-xs text-[var(--muted)]">
-              Start free. No technical setup required.
+              Start free — or speak with Einstein from the landing. No account needed for the demo.
             </p>
           </div>
 
@@ -410,19 +446,19 @@ export function LandingPage() {
         </p>
       </section>
 
-      <VoiceLandingSection />
+      <VoiceLandingSection defaultAgent={voiceAgent} />
 
       {/* 3. Problem */}
       <section className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/35 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <BlurFade>
             <h2 className="max-w-2xl font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              Most AI characters forget who they are.
+              Today, most brand and character AIs have two serious problems.
             </h2>
             <p className="mt-4 max-w-2xl text-[var(--muted)]">
-              Their personality changes. Their memories disappear. Every
-              conversation starts feeling the same. And when the platform
-              changes, the character you built may be gone.
+              They forget everything between conversations. And their personality
+              drifts — or feels generic. The result: no real connection with the
+              people you care about reaching.
             </p>
           </BlurFade>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -449,10 +485,11 @@ export function LandingPage() {
       >
         <BlurFade>
           <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            A character that actually grows with you.
+            We build characters with real identity and long-term memory.
           </h2>
           <p className="mt-3 max-w-2xl text-[var(--muted)]">
-            Create it once. Let it live anywhere.
+            The result is a closer, more human connection — and you can deploy
+            that same character everywhere without losing who they are.
           </p>
         </BlurFade>
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -467,6 +504,19 @@ export function LandingPage() {
                 </p>
               </div>
             </BlurFade>
+          ))}
+        </div>
+        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[var(--line)] pt-8">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+            Deploy anywhere
+          </p>
+          {CHANNELS.map((channel) => (
+            <span
+              key={channel}
+              className="text-sm text-[var(--ink)] opacity-80"
+            >
+              {channel}
+            </span>
           ))}
         </div>
       </section>
@@ -754,11 +804,15 @@ export function LandingPage() {
       <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
         <BlurFade>
           <h2 className="max-w-3xl font-[family-name:var(--font-display)] text-3xl font-semibold leading-tight sm:text-5xl">
-            Some characters are used for a conversation.
+            Same personality. Same memories.
             <span className="mt-3 block italic text-[var(--accent-2)]">
-              The best ones become part of your life.
+              Everywhere your audience already is.
             </span>
           </h2>
+          <p className="mt-5 max-w-xl text-[var(--muted)]">
+            Web, WhatsApp, Telegram, Discord, or your own app — one character,
+            one lasting connection.
+          </p>
           <div className="mt-10">
             <ShimmerButton onClick={() => app.redirectToSignUp()}>
               Create your first character

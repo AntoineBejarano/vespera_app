@@ -4,33 +4,37 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { LANDING_IMAGES } from "@/lib/landing/images";
 
-type AgentId = "luna" | "einstein" | "stoic-mentor";
+export type VoiceAgentId = "luna" | "einstein" | "stoic-mentor";
 
 const AGENTS: {
-  id: AgentId;
-  label: string;
+  id: VoiceAgentId;
+  name: string;
   blurb: string;
   image: string;
 }[] = [
   {
     id: "luna",
-    label: "Companions",
-    blurb: "Personal relationships with durable memory",
+    name: "Luna",
+    blurb: "Companion · per-user bond + emotional memory",
     image: LANDING_IMAGES.companion.src,
   },
   {
     id: "einstein",
-    label: "Mentors",
-    blurb: "Advice that remembers your goals",
+    name: "Einstein",
+    blurb: "Historical mind · remembers your questions across chat & voice",
     image: LANDING_IMAGES.einstein.src,
   },
   {
     id: "stoic-mentor",
-    label: "Support",
-    blurb: "Calm voice agents for recurring callers",
+    name: "Stoic Mentor",
+    blurb: "Calm guide · creators can version and ship",
     image: LANDING_IMAGES.stoic.src,
   },
 ];
+
+function isVoiceAgentId(value: string | null | undefined): value is VoiceAgentId {
+  return value === "luna" || value === "einstein" || value === "stoic-mentor";
+}
 
 type SpeechRecognitionLike = {
   lang: string;
@@ -65,10 +69,14 @@ function peerKey() {
 
 export function VoiceAgentWidget({
   compact = false,
+  defaultAgent = "luna",
 }: {
   compact?: boolean;
+  defaultAgent?: VoiceAgentId;
 }) {
-  const [agent, setAgent] = useState<AgentId>("luna");
+  const [agent, setAgent] = useState<VoiceAgentId>(
+    isVoiceAgentId(defaultAgent) ? defaultAgent : "luna",
+  );
   const [listening, setListening] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -83,6 +91,28 @@ export function VoiceAgentWidget({
   useEffect(() => {
     setSupported(Boolean(getRecognition()));
   }, []);
+
+  useEffect(() => {
+    if (!isVoiceAgentId(defaultAgent)) return;
+    setAgent(defaultAgent);
+    setTranscript("");
+    setReply("");
+    setMemories([]);
+    setError(null);
+  }, [defaultAgent]);
+
+  function selectAgent(id: VoiceAgentId) {
+    if (id === agent) return;
+    recognitionRef.current?.stop();
+    window.speechSynthesis?.cancel();
+    setListening(false);
+    setSpeaking(false);
+    setAgent(id);
+    setTranscript("");
+    setReply("");
+    setMemories([]);
+    setError(null);
+  }
 
   function speak(text: string) {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
@@ -137,7 +167,10 @@ export function VoiceAgentWidget({
 
     window.speechSynthesis?.cancel();
     setSpeaking(false);
-    recognition.lang = "en-US";
+    recognition.lang =
+      typeof navigator !== "undefined" && navigator.language
+        ? navigator.language
+        : "en-US";
     recognition.interimResults = true;
     recognition.continuous = false;
     recognition.onresult = (ev) => {
@@ -171,14 +204,14 @@ export function VoiceAgentWidget({
           <button
             key={item.id}
             type="button"
-            onClick={() => setAgent(item.id)}
-            className={`rounded-full px-3 py-1.5 text-xs uppercase tracking-[0.16em] transition ${
+            onClick={() => selectAgent(item.id)}
+            className={`rounded-full px-3 py-1.5 text-xs font-medium tracking-[0.04em] transition ${
               agent === item.id
                 ? "bg-[var(--accent)] text-[var(--accent-ink)]"
                 : "border border-[var(--line)] text-[var(--muted)] hover:text-[var(--ink)]"
             }`}
           >
-            {item.label}
+            {item.name}
           </button>
         ))}
       </div>
@@ -189,7 +222,11 @@ export function VoiceAgentWidget({
           onClick={toggleListen}
           disabled={thinking}
           className="group relative flex size-36 items-center justify-center rounded-full sm:size-44"
-          aria-label={listening ? "Stop listening" : "Click to speak with an agent"}
+          aria-label={
+            listening
+              ? "Stop listening"
+              : `Click to speak with ${active.name}`
+          }
         >
           <span
             className={`absolute inset-0 rounded-full bg-[var(--accent)]/20 transition ${
@@ -224,10 +261,10 @@ export function VoiceAgentWidget({
         </button>
 
         <p className="mt-5 text-sm font-medium text-[var(--ink)]">
-          Click to speak with an agent
+          Click to speak with {active.name}
         </p>
         <p className="mt-1 max-w-sm text-sm text-[var(--muted)]">
-          {active.blurb}. Unified memory means the agent never loses context.
+          {active.blurb}. Memory sticks for you across turns.
         </p>
       </div>
 
@@ -240,7 +277,7 @@ export function VoiceAgentWidget({
           ) : null}
           {reply ? (
             <p className="rounded-xl bg-[var(--bg)] px-3 py-2 text-[var(--ink)]">
-              {active.label === "Companions" ? "Luna" : active.label}: {reply}
+              {active.name}: {reply}
             </p>
           ) : null}
         </div>

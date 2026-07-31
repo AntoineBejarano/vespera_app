@@ -8,7 +8,7 @@ export const SITE_URL =
 export const SITE_TAGLINE = "Create characters people never forget.";
 
 export const SITE_DESCRIPTION =
-  "Build AI characters with real memory, evolving relationships and a personality that stays consistent across every conversation.";
+  "Most AI characters forget everything and feel generic. Vesperer builds characters with real identity and long-term memory — a closer, more human connection with your audience, students, or clients. Deploy on web, WhatsApp, Telegram, Discord, or your own app.";
 
 /** Main (non-XXX) brand — icy blue from logo */
 export const BRAND_ACCENT = "#5badee";

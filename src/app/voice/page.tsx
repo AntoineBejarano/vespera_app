@@ -3,27 +3,27 @@ import { VoiceBusinessPage } from "@/components/VoiceBusinessPage";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Voice AI agents with long-term memory",
+  title: "Voice characters with persistent memory",
   description:
-    "Vesperer Voice: conversational voice AI and AI phone agents with unified memory across voice, chat, and channels. IVR replacement, inbound agents, outbound follow-ups, and AI contact center use cases.",
+    "Vesperer Voice: the character layer for spoken AI — persistent characters, per-user relationships, emotional memory, chat↔voice continuity, creator studios, versions, engagement analytics, operator handoff, and premium monetization. Telephony (e.g. Bland) optional underneath.",
   alternates: { canonical: `${SITE_URL}/voice` },
   keywords: [
-    "voice AI",
-    "AI phone agent",
+    "voice AI characters",
+    "persistent AI character",
+    "AI character memory",
+    "chat voice continuity",
+    "emotional memory AI",
+    "creator character studio",
+    "AI character versions",
+    "voice agent monetization",
+    "operator handoff AI",
+    "Bland AI character layer",
     "conversational voice AI",
-    "IVR replacement",
-    "AI call center",
-    "inbound call agent",
-    "outbound call agent",
-    "AI contact center",
-    "voice AI with memory",
-    "Bland AI alternative",
-    "AI phone calls",
   ],
   openGraph: {
-    title: `Voice AI agents with memory · ${SITE_NAME}`,
+    title: `Voice characters with memory · ${SITE_NAME}`,
     description:
-      "Click to speak with an agent. Unified memory means your voice AI never loses context across calls and channels.",
+      "Speak with persistent characters that remember each user across chat and voice. Creator studios, variants, analytics, handoff, and premium — phone rails optional.",
     url: `${SITE_URL}/voice`,
   },
 };
@@ -37,23 +37,23 @@ const faqLd = {
       name: "What is Vesperer Voice?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Vesperer Voice is a voice AI layer for characters and agents that hold real conversations and remember callers over time across voice, chat, and channels.",
+        text: "Vesperer Voice is the spoken surface of the Vesperer character layer: persistent identities, per-user relationships, emotional memory, and continuity across chat and voice.",
       },
     },
     {
       "@type": "Question",
-      name: "Can Vesperer replace an IVR or call center?",
+      name: "Is Bland AI a competitor to Vesperer?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes. Use natural-language voice agents for IVR replacement, inbound and outbound calls, and AI contact center workflows, with durable memory for returning callers.",
+        text: "Not necessarily. Bland provides phone infrastructure; Vesperer owns the character and memory layer. Bland can be used as an optional telephony dependency underneath Vesperer characters.",
       },
     },
     {
       "@type": "Question",
-      name: "Does the voice agent remember previous conversations?",
+      name: "Does memory work across chat and voice?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes. Important facts, preferences, promises, and relationship context persist across sessions for the same peer.",
+        text: "Yes. Facts, preferences, promises, and emotional context persist for the same peer across chat, voice, and connected channels.",
       },
     },
   ],
