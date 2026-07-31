@@ -4,7 +4,6 @@ import { HexclaveProvider, HexclaveTheme } from "@hexclave/next";
 import { hexclaveServerApp } from "@/hexclave/server";
 import {
   SITE_DESCRIPTION,
-  SITE_DOMAIN,
   SITE_NAME,
   SITE_TAGLINE,
   SITE_URL,
