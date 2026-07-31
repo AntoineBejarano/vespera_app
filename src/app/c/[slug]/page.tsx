@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { PublicCharacterView } from "@/components/PublicCharacterView";
 import { getPublicCharacterBySlug } from "@/lib/characters/public";
 import { ADULT_COOKIE, LEGAL_VERSION } from "@/lib/legal/constants";
+import { characterSeoKeywords } from "@/lib/seo/keywords";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { SHOWCASE_CHARACTERS } from "@/lib/characters/showcase";
 
@@ -24,21 +25,28 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const description =
     character.soulPreview ||
     `Talk with ${character.name} on Vesperer. Create your own version with memory that lasts.`;
+  const canonical = `${SITE_URL}/c/${character.slug}`;
+  const ogImages = character.photoUrl
+    ? [{ url: new URL(character.photoUrl, SITE_URL).toString() }]
+    : undefined;
 
   return {
     title,
     description,
-    alternates: { canonical: `${SITE_URL}/c/${character.slug}` },
+    keywords: characterSeoKeywords(character.name, character.categories),
+    alternates: { canonical },
     openGraph: {
       title: `${character.name} · ${SITE_NAME}`,
       description,
-      url: `${SITE_URL}/c/${character.slug}`,
+      url: canonical,
       type: "profile",
+      ...(ogImages ? { images: ogImages } : {}),
     },
     twitter: {
       card: "summary_large_image",
       title: `${character.name} · ${SITE_NAME}`,
       description,
+      ...(ogImages ? { images: ogImages.map((i) => i.url) } : {}),
     },
     robots: character.isAdult
       ? { index: false, follow: false }
@@ -64,6 +72,12 @@ export default async function PublicCharacterPage({ params }: Params) {
     name: character.name,
     description: character.tagline,
     url: `${SITE_URL}/c/${character.slug}`,
+    ...(character.photoUrl
+      ? { image: new URL(character.photoUrl, SITE_URL).toString() }
+      : {}),
+    ...(character.categories.length
+      ? { jobTitle: character.categories.join(", ") }
+      : {}),
   };
 
   return (

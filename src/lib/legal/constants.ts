@@ -49,21 +49,25 @@ export const LEGAL_PAGES: {
   {
     slug: "terms",
     title: "Terms of Service",
-    description: "Rules for using vesperer.com",
+    description:
+      "Terms of Service for Vesperer — AI character platform eligibility, acceptable use, AI transparency, operator responsibilities, and creator ownership.",
   },
   {
     slug: "privacy",
     title: "Privacy Policy",
-    description: "How we handle personal data",
+    description:
+      "Vesperer Privacy Policy — how we process account data, chat memory, age attestation, cookies, and EU AI Act automated-interaction disclosures.",
   },
   {
     slug: "acceptable-use",
     title: "Acceptable Use Policy",
-    description: "Prohibited uses and content",
+    description:
+      "Vesperer Acceptable Use Policy — prohibited content, minor safety, exploitation, abuse reporting, and platform enforcement rules.",
   },
   {
     slug: "adult-content",
     title: "Adult Content Notice",
-    description: "18+ access and minor protection",
+    description:
+      "Vesperer After Dark Adult Content Notice — 18+ access rules, creator responsibilities, and zero tolerance for content involving minors.",
   },
 ];

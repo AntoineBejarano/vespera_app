@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { DM_Sans, Syne } from "next/font/google";
 import { HexclaveProvider, HexclaveTheme } from "@hexclave/next";
 import { hexclaveServerApp } from "@/hexclave/server";
@@ -72,6 +73,18 @@ export default function RootLayout({
       className={`${display.variable} ${body.variable} h-full antialiased`}
     >
       <body className="min-h-full font-[family-name:var(--font-body)]">
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-NTQQWCJW1F"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-NTQQWCJW1F');
+          `}
+        </Script>
         <HexclaveProvider app={hexclaveServerApp}>
           <HexclaveTheme>{children}</HexclaveTheme>
         </HexclaveProvider>

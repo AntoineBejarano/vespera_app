@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AppNav } from "@/components/AppNav";
 import { LegalFooter } from "@/components/LegalFooter";
+import { breadcrumbJsonLd } from "@/lib/seo/breadcrumbs";
+import { TECHNOLOGY_KEYWORDS } from "@/lib/seo/keywords";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -9,6 +11,20 @@ export const metadata: Metadata = {
   description:
     "How Vesperer keeps AI characters consistent: layered identity, long-term memory, evolving relationships and portable configuration across models and channels.",
   alternates: { canonical: `${SITE_URL}/technology` },
+  keywords: TECHNOLOGY_KEYWORDS,
+  openGraph: {
+    title: `Technology · ${SITE_NAME}`,
+    description:
+      "Identity layers, long-term memory, relationship state, versioning, and export for AI characters.",
+    url: `${SITE_URL}/technology`,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Technology · ${SITE_NAME}`,
+    description:
+      "The engine behind AI characters that remember — identity, memory, and continuity.",
+  },
 };
 
 const LAYERS = [
@@ -38,9 +54,40 @@ const LAYERS = [
   },
 ];
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      name: "Vesperer Technology",
+      description:
+        "How Vesperer keeps AI characters consistent with layered identity, memory, and relationship state.",
+      url: `${SITE_URL}/technology`,
+    },
+    {
+      "@type": "ItemList",
+      name: "Vesperer character engine layers",
+      itemListElement: LAYERS.map((layer, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: layer.t,
+        description: layer.d,
+      })),
+    },
+    breadcrumbJsonLd([
+      { name: "Home", path: "/" },
+      { name: "Technology", path: "/technology" },
+    ]),
+  ],
+};
+
 export default function TechnologyPage() {
   return (
     <div className="relative min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <AppNav variant="marketing" />
       <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
         <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">

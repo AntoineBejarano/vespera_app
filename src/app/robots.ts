@@ -14,6 +14,8 @@ export default function robots(): MetadataRoute.Robots {
           "/voice",
           "/c/",
           "/legal/",
+          "/llms.txt",
+          "/llm.txt",
         ],
         disallow: [
           "/api/",
@@ -26,6 +28,7 @@ export default function robots(): MetadataRoute.Robots {
           "/underage",
           "/login",
           "/register",
+          "/report",
         ],
       },
     ],

@@ -1,0 +1,45 @@
+# Vesperer
+
+> Vesperer is the character layer for AI — persistent identity, long-term memory, and relationship state that compounds across sessions and channels. Built for creators, educators, and teams who need characters that feel consistent, not disposable.
+
+Most AI chatbots forget context, drift in personality, and break trust on every return visit. Vesperer fixes that with layered identity (soul, style, rules, context), per-user memory, versioned personas, and deployment across web, voice, Telegram, and your own app via API.
+
+The public marketing site covers the general product: companions, mentors, historical minds, roleplay, and creator tools. Sexually explicit features live only in **Vesperer After Dark**, a separate adults-only zone — not on the main homepage.
+
+Automated AI interactions are disclosed for EU AI Act transparency. Users attest before product access. Illegal content, exploitation, and sexual content involving minors are prohibited platform-wide.
+
+## Product
+
+- [Home](https://vesperer.com/): Create characters people never forget — identity, memory, multi-channel deploy.
+- [Voice](https://vesperer.com/voice): Spoken AI with the same persistent character, memory, and chat↔voice continuity.
+- [Technology](https://vesperer.com/technology): Identity layers, long-term memory, relationship state, versioning, export.
+- [Bring a character](https://vesperer.com/bring): Import from Character Card, SillyTavern, or your own config — keep what you built.
+- [Pricing](https://vesperer.com/#pricing): Starter (free), Creator (€20/mo), Studio (€59/mo).
+
+## Example characters
+
+- [Luna](https://vesperer.com/c/luna): Companion — warm, consistent personality with evolving memory.
+- [Einstein](https://vesperer.com/c/einstein): Historical mind — debate and learn with a persistent thinker.
+- [Aiko](https://vesperer.com/c/aiko): Roleplay — interactive fiction with stable character voice.
+- [Stoic Mentor](https://vesperer.com/c/stoic-mentor): Mentor — coaching and reflection that remembers your journey.
+
+## For builders
+
+- [Developers / Technology](https://vesperer.com/technology): Chat API keys, Telegram connectors, peer-isolated memory, human handoff hooks.
+- [Supported formats](https://vesperer.com/bring): Character Card v2, SillyTavern exports, structured Vesperer identity layers.
+- [Sitemap](https://vesperer.com/sitemap.xml): Canonical public URLs for indexing.
+
+## What Vesperer is not
+
+- Not a generic chatbot wrapper — identity and memory are first-class, not bolted-on prompts.
+- Not model-locked — export configuration and move between providers.
+- Not a single-channel toy — same character across supported surfaces with isolated per-user state.
+
+## Optional
+
+- [After Dark (18+)](https://vesperer.com/after-dark): Separate adults-only zone for explicit creator companions — distinct gate and policies.
+- [Terms of Service](https://vesperer.com/legal/terms): Eligibility, acceptable use, operator responsibilities, AI transparency.
+- [Privacy Policy](https://vesperer.com/legal/privacy): Data processed, legal bases, retention, cookies.
+- [Acceptable Use Policy](https://vesperer.com/legal/acceptable-use): Zero tolerance rules for illegal and exploitative content.
+- [Adult Content Notice](https://vesperer.com/legal/adult-content): 18+ access rules for After Dark only.
+- [Report abuse](https://vesperer.com/report): Safety reporting channel.

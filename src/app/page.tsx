@@ -77,6 +77,35 @@ const jsonLd = {
         description: "Free to start creating characters",
       },
     },
+    {
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "What is Vesperer?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Vesperer is an AI character platform with persistent identity, long-term memory, and relationship state that compounds across sessions and channels.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Can I import an existing AI character?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. Import Character Card v2, SillyTavern exports, or your own configuration on vesperer.com/bring.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Do Vesperer characters remember past conversations?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. Vesperer stores people, preferences, promises, and meaningful moments per user so relationships evolve instead of resetting.",
+          },
+        },
+      ],
+    },
   ],
 };
 

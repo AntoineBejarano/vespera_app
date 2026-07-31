@@ -25,6 +25,13 @@ export const metadata: Metadata = {
     description:
       "Speak with persistent characters that remember each user across chat and voice. Creator studios, variants, analytics, handoff, and premium — phone rails optional.",
     url: `${SITE_URL}/voice`,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Voice characters with memory · ${SITE_NAME}`,
+    description:
+      "Spoken AI with persistent identity, per-user memory, and chat↔voice continuity.",
   },
 };
 

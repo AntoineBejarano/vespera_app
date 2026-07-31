@@ -8,6 +8,7 @@ import {
   type LegalSlug,
 } from "@/lib/legal/constants";
 import { getLegalBody } from "@/lib/legal/content";
+import { SITE_URL } from "@/lib/site";
 
 const SLUGS = new Set(LEGAL_PAGES.map((p) => p.slug));
 
@@ -23,9 +24,22 @@ export async function generateMetadata({
   const { slug } = await params;
   const page = LEGAL_PAGES.find((p) => p.slug === slug);
   if (!page) return { title: "Legal — Vesperer" };
+  const url = `${SITE_URL}/legal/${page.slug}`;
   return {
     title: `${page.title} — Vesperer`,
     description: page.description,
+    alternates: { canonical: url },
+    openGraph: {
+      title: `${page.title} — Vesperer`,
+      description: page.description,
+      url,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title: `${page.title} — Vesperer`,
+      description: page.description,
+    },
   };
 }
 

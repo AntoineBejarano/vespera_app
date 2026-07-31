@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { LEGAL_OPERATOR } from "@/lib/legal/constants";
 import { LegalFooter } from "@/components/LegalFooter";
 
@@ -12,9 +13,10 @@ const CATEGORIES = [
   "Other safety concern",
 ] as const;
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Report abuse — Vesperer",
   description: "Report illegal, exploitative, or harmful use of Vesperer.",
+  robots: { index: false, follow: false },
 };
 
 export default function ReportPage() {
