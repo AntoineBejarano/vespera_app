@@ -7,9 +7,10 @@ export const BRAND_SHORT = "vesperer";
 
 export type BrandVariant = "default" | "after-dark";
 
-const LOGO_SRC: Record<BrandVariant, string> = {
-  default: "/brand/logo.png",
-  "after-dark": "/brand/logo-after-dark.png",
+/** Tight crops — full logo.png has too much padding and disappears in the nav. */
+const MARK_SRC: Record<BrandVariant, string> = {
+  default: "/brand/mark.png",
+  "after-dark": "/brand/mark-after-dark.png",
 };
 
 export function BrandMark({
@@ -25,16 +26,12 @@ export function BrandMark({
 }) {
   return (
     <Image
-      src={LOGO_SRC[variant]}
+      src={MARK_SRC[variant]}
       alt=""
       width={size}
       height={size}
       priority={priority}
-      className={cn(
-        "rounded-lg object-cover",
-        variant === "default" && "bg-[#07090d]",
-        className,
-      )}
+      className={cn("shrink-0 object-contain", className)}
     />
   );
 }
@@ -69,6 +66,9 @@ export function BrandLogo({
           ? "text-base"
           : "text-lg sm:text-xl";
 
+  const accentClass =
+    variant === "after-dark" ? "text-[var(--accent)]" : "text-[var(--accent-2)]";
+
   const inner = (
     <>
       <BrandMark
@@ -86,7 +86,7 @@ export function BrandLogo({
             )}
           >
             vesperer
-            <span className="text-[var(--accent-2)]">.com</span>
+            <span className={accentClass}>.com</span>
           </span>
           {subtitle ? (
             <span className="mt-0.5 block text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] sm:text-xs">

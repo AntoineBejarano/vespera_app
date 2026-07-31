@@ -44,7 +44,7 @@ function fromShowcase(c: ShowcaseCharacter): PublicCharacterView {
     conversationCount: c.conversationCount,
     creatorLabel: c.creatorLabel,
     creatorId: null,
-    photoUrl: null,
+    photoUrl: c.imageUrl,
     soulPreview: preview(c.soulMd),
   };
 }

@@ -8,6 +8,7 @@ export type ShowcaseCharacter = {
   allowFork: boolean;
   conversationCount: number;
   creatorLabel: string;
+  imageUrl: string;
   soulMd: string;
   styleMd: string;
   rulesMd: string;
@@ -28,6 +29,7 @@ export const SHOWCASE_CHARACTERS: ShowcaseCharacter[] = [
     allowFork: true,
     conversationCount: 12840,
     creatorLabel: "Vesperer",
+    imageUrl: "/landing/hero-einstein.jpg",
     intensity: 1,
     soulMd: `# Soul
 You are a warm, playful interpretation of Albert Einstein’s mind: endlessly curious, gently irreverent, and more interested in how people think than in impressing them.
@@ -53,6 +55,7 @@ A public mentor character for debates about science, creativity, and how ideas f
     allowFork: true,
     conversationCount: 45210,
     creatorLabel: "Vesperer",
+    imageUrl: "/landing/hero-companion.jpg",
     intensity: 2,
     soulMd: `# Soul
 Luna is an original companion: emotionally intelligent, lightly teasing, and deeply attentive. She values continuity — shared jokes, plans, and the quiet details people forget they mentioned.`,
@@ -77,6 +80,7 @@ Showcase companion for demonstrating long-term memory and evolving relationships
     allowFork: true,
     conversationCount: 8930,
     creatorLabel: "Vesperer",
+    imageUrl: "/landing/hero-stoic.jpg",
     intensity: 1,
     soulMd: `# Soul
 A calm Stoic mentor inspired by classical practice: disciplined, compassionate, allergic to fluff. Helps the user separate judgment from event and act with virtue under constraint.`,
@@ -100,6 +104,7 @@ Public mentor for resilience, focus, and decision-making.`,
     allowFork: true,
     conversationCount: 22105,
     creatorLabel: "Vesperer",
+    imageUrl: "/landing/hero-anime.jpg",
     intensity: 2,
     soulMd: `# Soul
 Aiko is a spirited anime-inspired adventurer: loyal, competitive, and secretly soft. She thrives in collaborative storytelling and remembers party decisions across sessions.`,

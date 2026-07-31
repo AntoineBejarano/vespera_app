@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useHexclaveApp, useUser } from "@hexclave/next";
@@ -13,44 +14,50 @@ import {
   RetroGrid,
   ShimmerButton,
 } from "@/components/magicui/effects";
+import { LANDING_IMAGES } from "@/lib/landing/images";
 
 const CATEGORIES = [
   {
     id: "companions",
     title: "Companions",
     body: "Characters built for connection, intimacy and long-term relationships.",
-    href: "/after-dark",
-    note: "18+",
+    href: "/c/luna",
+    image: LANDING_IMAGES.companion,
   },
   {
     id: "historical",
     title: "Historical Minds",
     body: "Learn and debate with personalities inspired by history’s greatest thinkers.",
     href: "/c/einstein",
+    image: LANDING_IMAGES.einstein,
   },
   {
     id: "roleplay",
     title: "Roleplay & Stories",
     body: "Build characters for worlds, adventures and interactive fiction.",
     href: "/c/aiko",
+    image: LANDING_IMAGES.anime,
   },
   {
     id: "mentors",
     title: "Mentors",
     body: "Create coaches, tutors and guides that understand their users over time.",
     href: "/c/stoic-mentor",
+    image: LANDING_IMAGES.stoic,
   },
   {
     id: "creators",
     title: "Virtual Creators",
     body: "Build original digital personalities for communities and audiences.",
     href: "#creators",
+    image: LANDING_IMAGES.creator,
   },
   {
     id: "original",
     title: "Original Characters",
     body: "Turn any idea, artwork or story into an interactive personality.",
     href: "/c/luna",
+    image: LANDING_IMAGES.fantasy,
   },
 ];
 
@@ -165,11 +172,15 @@ const AUDIENCES = [
 ];
 
 const MOSAIC = [
-  { label: "Companion", tone: "from-[#1a2a3c] to-[#0c121a]" },
-  { label: "Einstein", tone: "from-[#1a2438] to-[#0e141c]" },
-  { label: "Anime", tone: "from-[#182838] to-[#0c1218]" },
-  { label: "Stoic mentor", tone: "from-[#152430] to-[#0c1418]" },
-  { label: "Fantasy", tone: "from-[#1c2838] to-[#10161e]" },
+  { label: "Companion", image: LANDING_IMAGES.companion, href: "/c/luna" },
+  { label: "Einstein", image: LANDING_IMAGES.einstein, href: "/c/einstein" },
+  { label: "Anime", image: LANDING_IMAGES.anime, href: "/c/aiko" },
+  {
+    label: "Stoic mentor",
+    image: LANDING_IMAGES.stoic,
+    href: "/c/stoic-mentor",
+  },
+  { label: "Fantasy", image: LANDING_IMAGES.fantasy, href: "/c/luna" },
 ];
 
 const PRICING = [
@@ -291,23 +302,33 @@ export function LandingPage() {
           <BlurFade delay={0.18} className="relative">
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               {MOSAIC.map((item, i) => (
-                <div
+                <Link
                   key={item.label}
-                  className={`aspect-[3/4] rounded-2xl bg-gradient-to-b ${item.tone} ring-1 ring-white/5 ${
-                    i === 2 ? "col-span-1 row-span-1 translate-y-4" : ""
+                  href={item.href}
+                  className={`group relative aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-white/10 transition duration-500 hover:ring-[var(--accent-2)]/50 ${
+                    i === 2 ? "translate-y-4" : ""
                   } ${i === 1 || i === 4 ? "translate-y-2" : ""}`}
                 >
-                  <div className="flex h-full flex-col justify-end p-3">
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">
+                  <Image
+                    src={item.image.src}
+                    alt={item.image.alt}
+                    fill
+                    sizes="(max-width: 1024px) 30vw, 180px"
+                    priority={i < 3}
+                    className="object-cover transition duration-700 group-hover:scale-[1.04]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-3">
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--accent-2)]">
                       {item.label}
                     </span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
 
-            <div className="absolute inset-x-4 bottom-6 top-1/3 flex items-end sm:inset-x-8">
-              <div className="w-full rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/95 p-4 shadow-[0_20px_80px_rgba(91,173,238,0.12)] backdrop-blur">
+            <div className="pointer-events-none absolute inset-x-3 bottom-4 top-[42%] flex items-end sm:inset-x-6 sm:bottom-6">
+              <div className="pointer-events-auto w-full rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/92 p-4 shadow-[0_20px_80px_rgba(91,173,238,0.18)] backdrop-blur-md">
                 <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
                   Memory · live
                 </p>
@@ -357,25 +378,37 @@ export function LandingPage() {
             <BlurFade key={cat.id} delay={i * 0.05}>
               <a
                 href={cat.href}
-                className="group flex h-full flex-col rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/70 p-5 transition hover:border-[var(--accent)]/40 hover:bg-[var(--bg-elevated)]"
+                className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/70 transition hover:border-[var(--accent)]/40 hover:bg-[var(--bg-elevated)]"
               >
-                <div className="flex items-center justify-between gap-2">
+                <div className="relative aspect-[16/10] overflow-hidden">
+                  <Image
+                    src={cat.image.src}
+                    alt={cat.image.alt}
+                    fill
+                    sizes="(max-width: 1024px) 50vw, 360px"
+                    className="object-cover object-top transition duration-700 group-hover:scale-[1.04]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-elevated)] via-transparent to-transparent" />
+                </div>
+                <div className="flex flex-1 flex-col p-5 pt-3">
                   <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold">
                     {cat.title}
                   </h3>
-                  {cat.note ? (
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--accent)]">
-                      {cat.note}
-                    </span>
-                  ) : null}
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-[var(--muted)]">
+                    {cat.body}
+                  </p>
                 </div>
-                <p className="mt-3 flex-1 text-sm leading-relaxed text-[var(--muted)]">
-                  {cat.body}
-                </p>
               </a>
             </BlurFade>
           ))}
         </div>
+        <p className="mt-6 text-sm text-[var(--muted)]">
+          Private adult companions live separately in{" "}
+          <Link href="/after-dark" className="text-[var(--accent-2)]">
+            Vesperer After Dark
+          </Link>
+          .
+        </p>
       </section>
 
       {/* 3. Problem */}
@@ -707,7 +740,7 @@ export function LandingPage() {
             ))}
           </div>
           <p className="mt-6 text-sm text-[var(--muted)]">
-            Looking for adult creator tooling and agency seats?{" "}
+            Looking for private adult companions and agency seats?{" "}
             <Link href="/after-dark#pricing" className="text-[var(--accent)]">
               See Vesperer After Dark
             </Link>

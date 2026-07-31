@@ -38,11 +38,11 @@ export function Spinner({
           transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
         >
           <Image
-            src="/brand/logo.png"
+            src="/brand/mark.png"
             alt=""
             width={40}
             height={40}
-            className="size-full object-cover"
+            className="size-full object-contain"
           />
         </motion.div>
       </div>

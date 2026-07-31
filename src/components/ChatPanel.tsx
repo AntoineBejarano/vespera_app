@@ -250,7 +250,7 @@ export function ChatPanel({
           size={80}
           duration={9}
           colorFrom="#5badee"
-          colorTo="#ffb4a2"
+          colorTo="#aed4fa"
           borderWidth={1.5}
         />
         <div className="h-full space-y-1 overflow-y-auto px-4 py-5">

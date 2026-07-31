@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -127,14 +128,19 @@ export function PublicCharacterView({
           ) : null}
         </section>
 
-        <section className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/80 p-5 shadow-[0_20px_80px_rgba(0,0,0,0.35)]">
+        <section className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/80 p-5 shadow-[0_20px_80px_rgba(91,173,238,0.1)]">
           {character.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={character.photoUrl}
-              alt=""
-              className="mb-5 aspect-[4/5] w-full rounded-xl object-cover"
-            />
+            <div className="relative mb-5 aspect-[4/5] overflow-hidden rounded-xl">
+              <Image
+                src={character.photoUrl}
+                alt={character.name}
+                fill
+                priority
+                sizes="(max-width: 1024px) 90vw, 420px"
+                className="object-cover object-top"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+            </div>
           ) : (
             <div className="mb-5 flex aspect-[4/5] items-end rounded-xl bg-gradient-to-b from-[#122033] to-[#0a1018] p-5">
               <span className="font-[family-name:var(--font-display)] text-3xl">
