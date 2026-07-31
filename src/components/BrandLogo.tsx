@@ -5,23 +5,36 @@ import { cn } from "@/lib/utils";
 export const BRAND_NAME = "vesperer.com";
 export const BRAND_SHORT = "vesperer";
 
+export type BrandVariant = "default" | "after-dark";
+
+const LOGO_SRC: Record<BrandVariant, string> = {
+  default: "/brand/logo.png",
+  "after-dark": "/brand/logo-after-dark.png",
+};
+
 export function BrandMark({
   size = 36,
   className,
   priority = false,
+  variant = "default",
 }: {
   size?: number;
   className?: string;
   priority?: boolean;
+  variant?: BrandVariant;
 }) {
   return (
     <Image
-      src="/brand/logo.png"
+      src={LOGO_SRC[variant]}
       alt=""
       width={size}
       height={size}
       priority={priority}
-      className={cn("rounded-lg object-cover", className)}
+      className={cn(
+        "rounded-lg object-cover",
+        variant === "default" && "bg-[#07090d]",
+        className,
+      )}
     />
   );
 }
@@ -34,6 +47,7 @@ export function BrandLogo({
   className,
   onClick,
   priority = false,
+  variant = "default",
 }: {
   href?: string;
   size?: "sm" | "md" | "lg" | "hero";
@@ -42,6 +56,7 @@ export function BrandLogo({
   className?: string;
   onClick?: () => void;
   priority?: boolean;
+  variant?: BrandVariant;
 }) {
   const mark =
     size === "hero" ? 56 : size === "lg" ? 44 : size === "sm" ? 28 : 34;
@@ -56,7 +71,12 @@ export function BrandLogo({
 
   const inner = (
     <>
-      <BrandMark size={mark} priority={priority} className="shrink-0" />
+      <BrandMark
+        size={mark}
+        priority={priority}
+        variant={variant}
+        className="shrink-0"
+      />
       {showWordmark ? (
         <span className="min-w-0">
           <span
@@ -66,7 +86,7 @@ export function BrandLogo({
             )}
           >
             vesperer
-            <span className="text-[var(--accent)]">.com</span>
+            <span className="text-[var(--accent-2)]">.com</span>
           </span>
           {subtitle ? (
             <span className="mt-0.5 block text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] sm:text-xs">

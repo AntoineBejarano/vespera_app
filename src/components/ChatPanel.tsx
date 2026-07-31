@@ -249,7 +249,7 @@ export function ChatPanel({
         <BorderBeam
           size={80}
           duration={9}
-          colorFrom="#ff4d6d"
+          colorFrom="#5badee"
           colorTo="#ffb4a2"
           borderWidth={1.5}
         />

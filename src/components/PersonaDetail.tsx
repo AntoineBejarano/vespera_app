@@ -36,6 +36,13 @@ type Persona = {
   bots: Bot[];
   photos: Photo[];
   relationshipCount: number;
+  isPublic: boolean;
+  slug: string | null;
+  tagline: string | null;
+  openingLine: string | null;
+  categories: string[];
+  allowFork: boolean;
+  isAdult: boolean;
 };
 
 const DOC_FIELDS = [
@@ -94,6 +101,16 @@ export function PersonaDetail({
   const [selectedTags, setSelectedTags] = useState<string[]>(["selfie"]);
   const [photos, setPhotos] = useState(persona.photos);
   const [bots, setBots] = useState(persona.bots);
+  const [isPublic, setIsPublic] = useState(persona.isPublic);
+  const [slug, setSlug] = useState(persona.slug ?? "");
+  const [tagline, setTagline] = useState(persona.tagline ?? "");
+  const [openingLine, setOpeningLine] = useState(persona.openingLine ?? "");
+  const [categories, setCategories] = useState(
+    persona.categories.join(", "),
+  );
+  const [allowFork, setAllowFork] = useState(persona.allowFork);
+  const [isAdult, setIsAdult] = useState(persona.isAdult);
+  const [savingPublic, setSavingPublic] = useState(false);
 
   async function revealOrCreateKey() {
     const method = persona.hasApiKey || apiKey ? "GET" : "POST";
@@ -283,6 +300,42 @@ export function PersonaDetail({
     if (res.ok) router.push("/personas");
   }
 
+  async function savePublicProfile(nextPublic?: boolean) {
+    setSavingPublic(true);
+    setMessage(null);
+    const res = await fetch(`/api/characters/${persona.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        isPublic: nextPublic ?? isPublic,
+        slug: slug.trim() || undefined,
+        tagline: tagline.trim() || null,
+        openingLine: openingLine.trim() || null,
+        categories: categories
+          .split(",")
+          .map((c) => c.trim())
+          .filter(Boolean)
+          .slice(0, 8),
+        allowFork,
+        isAdult,
+      }),
+    });
+    const data = await res.json();
+    setSavingPublic(false);
+    if (!res.ok) {
+      setMessage(data.error ?? "Could not update public profile");
+      return;
+    }
+    setIsPublic(Boolean(data.character.isPublic));
+    setSlug(data.character.slug ?? "");
+    setMessage(
+      data.character.isPublic
+        ? `Published at /c/${data.character.slug}`
+        : "Public page unpublished",
+    );
+    router.refresh();
+  }
+
   const curlExample = `curl -X POST ${appUrl || "https://YOUR_APP"}/api/v1/chat \\
   -H "Content-Type: application/json" \\
   -H "X-Api-Key: ${apiKey || "YOUR_KEY"}" \\
@@ -326,6 +379,104 @@ export function PersonaDetail({
       {message ? (
         <p className="text-sm text-[var(--accent)]">{message}</p>
       ) : null}
+
+      <MagicCard>
+        <section className="space-y-4 p-5">
+          <div>
+            <h2 className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+              Public page
+            </h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Share a discoverable profile. Visitors can talk or create their
+              own version when forking is allowed.
+            </p>
+          </div>
+          <label className="block text-sm">
+            <span className="text-[var(--muted)]">Slug</span>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-[var(--muted)]">/c/</span>
+              <input
+                value={slug}
+                onChange={(e) => setSlug(e.target.value.toLowerCase())}
+                placeholder="luna"
+                className="w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+              />
+            </div>
+          </label>
+          <label className="block text-sm">
+            <span className="text-[var(--muted)]">Tagline</span>
+            <input
+              value={tagline}
+              onChange={(e) => setTagline(e.target.value)}
+              className="mt-1 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-[var(--muted)]">Opening line</span>
+            <textarea
+              value={openingLine}
+              onChange={(e) => setOpeningLine(e.target.value)}
+              rows={2}
+              className="mt-1 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-[var(--muted)]">Categories (comma-separated)</span>
+            <input
+              value={categories}
+              onChange={(e) => setCategories(e.target.value)}
+              placeholder="Companions, Mentors"
+              className="mt-1 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+            />
+          </label>
+          <div className="flex flex-col gap-2 text-sm">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={allowFork}
+                onChange={(e) => setAllowFork(e.target.checked)}
+              />
+              Allow “Create your own version”
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={isAdult}
+                onChange={(e) => setIsAdult(e.target.checked)}
+              />
+              Mark as 18+ listing
+            </label>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={savingPublic}
+              onClick={() => void savePublicProfile(true)}
+              className="rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            >
+              {savingPublic ? "Saving…" : isPublic ? "Update public page" : "Publish"}
+            </button>
+            {isPublic ? (
+              <>
+                <Link
+                  href={`/c/${slug || persona.slug}`}
+                  className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm"
+                >
+                  View /c/{slug || persona.slug}
+                </Link>
+                <button
+                  type="button"
+                  disabled={savingPublic}
+                  onClick={() => void savePublicProfile(false)}
+                  className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm"
+                >
+                  Unpublish
+                </button>
+              </>
+            ) : null}
+          </div>
+        </section>
+      </MagicCard>
 
       <MagicCard>
         <section className="space-y-4 p-5">

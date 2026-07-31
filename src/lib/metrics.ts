@@ -1,6 +1,8 @@
 type MetricEvent =
   | "chat_message"
   | "character_created"
+  | "character_imported"
+  | "character_forked"
   | "memory_corrected"
   | "memory_deleted"
   | "daily_limit_hit"

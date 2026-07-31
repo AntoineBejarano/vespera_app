@@ -12,10 +12,10 @@ export function MagicCard({
   children,
   className,
   gradientSize = 220,
-  gradientColor = "rgba(255, 77, 109, 0.12)",
+  gradientColor = "rgba(91, 173, 238, 0.12)",
   gradientOpacity = 0.85,
-  gradientFrom = "#ff4d6d",
-  gradientTo = "#ffb4a2",
+  gradientFrom = "#5badee",
+  gradientTo = "#aed4fa",
 }: {
   children?: React.ReactNode;
   className?: string;

@@ -3,6 +3,8 @@ import { clearHistory } from "@/lib/memory/history";
 import { Prisma } from "@/generated/prisma/client";
 import { z } from "zod";
 import { requireAppUser, getAppUser } from "@/lib/session";
+import { isValidSlug } from "@/lib/characters/slug";
+import { ensureUniqueSlug } from "@/lib/characters/public";
 
 const patchSchema = z.object({
   active: z.boolean().optional(),
@@ -14,6 +16,13 @@ const patchSchema = z.object({
   contextMd: z.string().max(20000).optional(),
   limitsJson: z.record(z.string(), z.unknown()).optional(),
   resetChat: z.boolean().optional(),
+  isPublic: z.boolean().optional(),
+  slug: z.string().min(2).max(64).optional(),
+  tagline: z.string().max(180).nullable().optional(),
+  openingLine: z.string().max(500).nullable().optional(),
+  categories: z.array(z.string().max(40)).max(8).optional(),
+  allowFork: z.boolean().optional(),
+  isAdult: z.boolean().optional(),
 });
 
 type Params = { params: Promise<{ id: string }> };
@@ -69,6 +78,27 @@ export async function PATCH(req: Request, { params }: Params) {
     }
   }
 
+  let nextSlug = character.slug;
+  const publishing = parsed.data.isPublic === true;
+  const unpublishing = parsed.data.isPublic === false;
+
+  if (parsed.data.slug !== undefined) {
+    const candidate = parsed.data.slug.toLowerCase().trim();
+    if (!isValidSlug(candidate)) {
+      return Response.json(
+        { error: "Slug must be lowercase letters, numbers, and hyphens." },
+        { status: 400 },
+      );
+    }
+    nextSlug = await ensureUniqueSlug(candidate, id);
+  } else if (publishing && !character.slug) {
+    nextSlug = await ensureUniqueSlug(parsed.data.name ?? character.name, id);
+  }
+
+  if (unpublishing) {
+    // keep slug reserved for re-publish
+  }
+
   const updated = await prisma.character.update({
     where: { id },
     data: {
@@ -94,10 +124,35 @@ export async function PATCH(req: Request, { params }: Params) {
       limitsJson: (parsed.data.limitsJson ??
         character.limitsJson ??
         undefined) as Prisma.InputJsonValue | undefined,
+      isPublic: parsed.data.isPublic ?? character.isPublic,
+      slug: nextSlug,
+      tagline:
+        parsed.data.tagline !== undefined
+          ? parsed.data.tagline
+          : character.tagline,
+      openingLine:
+        parsed.data.openingLine !== undefined
+          ? parsed.data.openingLine
+          : character.openingLine,
+      categories: parsed.data.categories ?? character.categories,
+      allowFork: parsed.data.allowFork ?? character.allowFork,
+      isAdult: parsed.data.isAdult ?? character.isAdult,
     },
   });
 
-  return Response.json({ character: updated });
+  return Response.json({
+    character: {
+      id: updated.id,
+      name: updated.name,
+      isPublic: updated.isPublic,
+      slug: updated.slug,
+      tagline: updated.tagline,
+      openingLine: updated.openingLine,
+      categories: updated.categories,
+      allowFork: updated.allowFork,
+      isAdult: updated.isAdult,
+    },
+  });
 }
 
 export async function DELETE(_req: Request, { params }: Params) {

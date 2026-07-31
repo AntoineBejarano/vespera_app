@@ -62,6 +62,13 @@ export default async function PersonaPage({ params }: Params) {
             caption: p.caption,
           })),
           relationshipCount: character._count.relationships,
+          isPublic: character.isPublic,
+          slug: character.slug,
+          tagline: character.tagline,
+          openingLine: character.openingLine,
+          categories: character.categories,
+          allowFork: character.allowFork,
+          isAdult: character.isAdult,
         }}
         appUrl={appUrl}
       />

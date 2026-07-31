@@ -2,6 +2,13 @@ import type { Metadata } from "next";
 import { DM_Sans, Syne } from "next/font/google";
 import { HexclaveProvider, HexclaveTheme } from "@hexclave/next";
 import { hexclaveServerApp } from "@/hexclave/server";
+import {
+  SITE_DESCRIPTION,
+  SITE_DOMAIN,
+  SITE_NAME,
+  SITE_TAGLINE,
+  SITE_URL,
+} from "@/lib/site";
 import "./globals.css";
 
 const display = Syne({
@@ -17,10 +24,31 @@ const body = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "vesperer.com — Uncensored AI companions for creators",
-  description:
-    "Connect OnlyFans, Fansly, Fanvue & Telegram to a persistent character engine with memory, LLM, and human handoff.",
-  applicationName: "vesperer.com",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    template: `%s · ${SITE_DOMAIN}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_DOMAIN,
+  keywords: [
+    "AI character creator",
+    "AI characters with memory",
+    "create AI character",
+    "portable AI personality",
+  ],
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: SITE_DOMAIN,
+    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+  },
   icons: {
     icon: [
       { url: "/brand/favicon-32.png", sizes: "32x32", type: "image/png" },

@@ -1,6 +1,29 @@
 @import "tailwindcss";
 
+/* Main / non-XXX brand — icy blue Vesperer */
 :root {
+  --bg: #07090d;
+  --bg-elevated: #10151d;
+  --ink: #eef3f8;
+  --muted: #8a96a8;
+  --line: #243040;
+  /* Logo glow cyan */
+  --accent: #5badee;
+  --accent-2: #aed4fa;
+  --accent-soft: #122033;
+  --accent-ink: #061018;
+  --success: #3dd6c6;
+  --danger: #ff6b6b;
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --color-border: var(--line);
+  --brand-glow: rgba(174, 212, 250, 0.16);
+  --brand-glow-2: rgba(91, 173, 238, 0.1);
+  --grid-line: rgba(174, 212, 250, 0.12);
+}
+
+/* After Dark / adult brand — rose */
+[data-theme="after-dark"] {
   --bg: #0b0a0c;
   --bg-elevated: #16131a;
   --ink: #f4ece8;
@@ -9,11 +32,10 @@
   --accent: #ff4d6d;
   --accent-2: #ffb4a2;
   --accent-soft: #2a1218;
-  --success: #3dd6c6;
-  --danger: #ff6b6b;
-  --background: var(--bg);
-  --foreground: var(--ink);
-  --color-border: var(--line);
+  --accent-ink: #ffffff;
+  --brand-glow: rgba(255, 77, 109, 0.16);
+  --brand-glow-2: rgba(255, 180, 162, 0.08);
+  --grid-line: rgba(255, 77, 109, 0.12);
 }
 
 @theme inline {
@@ -24,9 +46,9 @@
 
 body {
   background:
-    radial-gradient(ellipse 70% 45% at 15% -10%, rgba(255, 77, 109, 0.16), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 90% 0%, rgba(255, 180, 162, 0.08), transparent 50%),
-    linear-gradient(180deg, #0b0a0c 0%, #120e14 100%);
+    radial-gradient(ellipse 70% 45% at 15% -10%, var(--brand-glow), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 90% 0%, var(--brand-glow-2), transparent 50%),
+    linear-gradient(180deg, var(--bg) 0%, color-mix(in oklab, var(--bg) 70%, #0a1420) 100%);
   color: var(--ink);
   min-height: 100vh;
 }

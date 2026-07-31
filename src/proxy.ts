@@ -19,7 +19,18 @@ function isAgeExempt(pathname: string) {
     return true;
   }
 
+  // Public marketing + SEO surfaces (authenticated product routes stay gated).
   if (
+    pathname === "/" ||
+    pathname === "/after-dark" ||
+    pathname === "/bring" ||
+    pathname === "/technology" ||
+    pathname.startsWith("/c/") ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname.startsWith("/sitemap/") ||
+    pathname === "/opengraph-image" ||
+    pathname === "/twitter-image" ||
     pathname === "/age-gate" ||
     pathname === "/underage" ||
     pathname.startsWith("/legal")

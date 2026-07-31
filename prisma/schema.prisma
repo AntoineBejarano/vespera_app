@@ -122,10 +122,22 @@ model Character {
   active       Boolean  @default(false)
   /// Public chat API key for this persona (Bearer / X-Api-Key)
   apiKey       String?  @unique
+  /// Public profile URL: vesperer.com/c/{slug}
+  slug         String?  @unique
+  isPublic     Boolean  @default(false)
+  tagline      String?
+  openingLine  String?  @db.Text
+  categories   String[] @default([])
+  allowFork    Boolean  @default(true)
+  /// Adult-oriented public listing (routes to After Dark discovery)
+  isAdult      Boolean  @default(false)
+  forkedFromId String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  forkedFrom     Character?          @relation("CharacterForks", fields: [forkedFromId], references: [id], onDelete: SetNull)
+  forks          Character[]         @relation("CharacterForks")
   conversations  Conversation[]
   memories       Memory[]
   summaries      Summary[]
@@ -136,6 +148,8 @@ model Character {
   @@index([userId])
   @@index([userId, active])
   @@index([apiKey])
+  @@index([isPublic, updatedAt])
+  @@index([isPublic, isAdult])
 }
 
 model CharacterPhoto {
