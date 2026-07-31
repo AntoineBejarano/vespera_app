@@ -299,15 +299,15 @@ export function LandingPage() {
             </p>
           </div>
 
-          <BlurFade delay={0.18} className="relative">
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <BlurFade delay={0.18} className="relative w-full">
+            <div className="grid grid-cols-3 gap-2 pb-2 sm:gap-3 sm:pb-3">
               {MOSAIC.map((item, i) => (
                 <Link
                   key={item.label}
                   href={item.href}
                   className={`group relative aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-white/10 transition duration-500 hover:ring-[var(--accent-2)]/50 ${
-                    i === 2 ? "translate-y-4" : ""
-                  } ${i === 1 || i === 4 ? "translate-y-2" : ""}`}
+                    i === 2 ? "translate-y-3 sm:translate-y-4" : ""
+                  } ${i === 1 || i === 4 ? "translate-y-1.5 sm:translate-y-2" : ""}`}
                 >
                   <Image
                     src={item.image.src}
@@ -315,10 +315,10 @@ export function LandingPage() {
                     fill
                     sizes="(max-width: 1024px) 30vw, 180px"
                     priority={i < 3}
-                    className="object-cover transition duration-700 group-hover:scale-[1.04]"
+                    className="object-cover object-top transition duration-700 group-hover:scale-[1.04]"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-3">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-3">
                     <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--accent-2)]">
                       {item.label}
                     </span>
@@ -327,23 +327,21 @@ export function LandingPage() {
               ))}
             </div>
 
-            <div className="pointer-events-none absolute inset-x-3 bottom-4 top-[42%] flex items-end sm:inset-x-6 sm:bottom-6">
-              <div className="pointer-events-auto w-full rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/92 p-4 shadow-[0_20px_80px_rgba(91,173,238,0.18)] backdrop-blur-md">
-                <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
-                  Memory · live
+            <div className="relative z-10 mx-auto mt-3 w-[min(100%,22rem)] rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/95 p-3.5 shadow-[0_16px_50px_rgba(91,173,238,0.16)] backdrop-blur-md sm:mt-4 sm:w-[min(100%,24rem)] sm:p-4">
+              <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+                Memory · live
+              </p>
+              <div className="mt-2.5 space-y-2 text-sm">
+                <p className="ml-8 rounded-xl bg-[var(--accent-soft)] px-3 py-2 text-right text-[var(--ink)] sm:ml-10">
+                  You remembered.
                 </p>
-                <div className="mt-3 space-y-2 text-sm">
-                  <p className="ml-10 rounded-xl bg-[var(--accent-soft)] px-3 py-2 text-right text-[var(--ink)]">
-                    You remembered.
-                  </p>
-                  <p className="mr-6 rounded-xl bg-[var(--bg)] px-3 py-2 text-[var(--ink)]">
-                    Of course. You told me before your interview last Thursday.
-                  </p>
-                </div>
-                <p className="mt-3 text-xs text-[var(--accent-2)]">
-                  Your character remembers everything that matters.
+                <p className="mr-4 rounded-xl bg-[var(--bg)] px-3 py-2 text-[var(--ink)] sm:mr-6">
+                  Of course. You told me before your interview last Thursday.
                 </p>
               </div>
+              <p className="mt-2.5 text-xs text-[var(--accent-2)]">
+                Your character remembers everything that matters.
+              </p>
             </div>
           </BlurFade>
         </div>
