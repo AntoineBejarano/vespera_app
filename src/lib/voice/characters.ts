@@ -29,9 +29,9 @@ export const CHARACTER_VOICES: Record<VoiceAgentId, CastVoice> = {
     label: "Stoic Mentor",
   },
   tatiana: {
-    // https://elevenlabs.io/app/voice-library?voiceId=t6lBrEl93uCiLR1Lgm8v
-    voiceId: "t6lBrEl93uCiLR1Lgm8v",
-    fallbackVoiceId: "FGY2WhTYpPnrIDTdsKH5", // premade Laura — free-tier deliverable
+    // Generated voice "Tatiana" — works on current API plan
+    voiceId: "OpQXJBA6OKUsHKGIPpb4",
+    fallbackVoiceId: "FGY2WhTYpPnrIDTdsKH5",
     modelId: "eleven_flash_v2_5",
     label: "Tatiana",
   },
