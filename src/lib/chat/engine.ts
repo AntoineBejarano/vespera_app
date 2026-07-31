@@ -105,6 +105,10 @@ export async function runCharacterReply(params: {
   message: string;
   characterId?: string;
   partner?: ChatPartnerOverride;
+  /** When true, reply is meant to be spoken aloud (Telegram voice note). */
+  voiceMode?: boolean;
+  /** Extra system instructions (e.g. voice-note delivery rules). */
+  systemAddon?: string;
 }): Promise<ChatEngineResult> {
   const text = params.message.trim();
   if (!text) return { ok: false, error: "Empty message", status: 400 };
@@ -183,7 +187,9 @@ export async function runCharacterReply(params: {
     };
   }
 
-  const photo = await pickCharacterPhoto(character.id, text);
+  const photo = params.voiceMode
+    ? null
+    : await pickCharacterPhoto(character.id, text);
 
   const modelId = resolveModel(user.preferredModel);
   const memories = await searchMemories({
@@ -210,7 +216,7 @@ export async function runCharacterReply(params: {
     accountName: user.name,
   });
 
-  const system = assemblePersonaPrompt({
+  const systemBase = assemblePersonaPrompt({
     persona: {
       name: character.name,
       intensity: character.intensity,
@@ -237,8 +243,12 @@ export async function runCharacterReply(params: {
       channel,
       telegramUsername: tgUser,
     },
-    photoHint: photo ? photoVibeHint(photo.label) : false,
+    // Voice notes should not pull a photo into the turn.
+    photoHint: params.voiceMode ? false : photo ? photoVibeHint(photo.label) : false,
   });
+  const system = params.systemAddon
+    ? `${systemBase}\n\n${params.systemAddon}`
+    : systemBase;
 
   await prisma.message.create({
     data: { conversationId: conversation.id, role: "user", content: text },

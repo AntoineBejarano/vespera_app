@@ -23,8 +23,9 @@ import { resolveVoiceForCharacter } from "@/lib/voice/characters";
 import { synthesizeSpeech } from "@/lib/voice/elevenlabs";
 import {
   spokenTextFromBubbles,
+  voiceRequestUserMessage,
+  VOICE_NOTE_SYSTEM_ADDON,
   wantsVoiceMessage,
-  withVoiceNoteCue,
 } from "@/lib/voice/intent";
 
 export const maxDuration = 60;
@@ -178,8 +179,10 @@ export async function POST(req: Request) {
 
     const result = await runCharacterReply({
       userId: peer.userId,
-      message: voiceAsk ? withVoiceNoteCue(text) : text,
+      message: voiceAsk ? voiceRequestUserMessage(text) : text,
       characterId: character.id,
+      voiceMode: voiceAsk,
+      systemAddon: voiceAsk ? VOICE_NOTE_SYSTEM_ADDON : undefined,
       partner: {
         channel: "telegram",
         telegramFirstName: from.first_name ?? null,
@@ -217,6 +220,7 @@ export async function POST(req: Request) {
             text: spoken,
             modelId: cast.modelId,
             outputFormat: "opus_48000_128",
+            speed: 0.82,
           });
           await telegramSendVoice(chatId, audio, token);
           return Response.json({ ok: true });
