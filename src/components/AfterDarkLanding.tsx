@@ -225,11 +225,12 @@ export function AfterDarkLanding() {
               Talk to Tatiana — she remembers what you like.
             </h2>
             <p className="mt-4 max-w-xl text-[var(--muted)]">
-              Fixed cast voice for adult companions. Same memory layer as chat —
-              intimacy that compounds instead of resetting every session.
+              Adult companions with a dedicated voice and the same memory layer
+              as chat — intimacy that compounds instead of resetting every
+              session.
             </p>
             <ul className="mt-6 space-y-2 text-sm text-[var(--muted)]">
-              <li>· Cast: Tatiana Kulenko (ElevenLabs)</li>
+              <li>· Dedicated voice for Tatiana</li>
               <li>· Per-user relationship memory</li>
               <li>· Voice + chat continuity for creator lines</li>
             </ul>

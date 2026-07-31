@@ -137,9 +137,8 @@ export function VoiceAgentWidget({
     });
 
     if (!res.ok) {
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      if (res.status === 404) return;
-      throw new Error(data.error ?? "Voice playback failed");
+      // Text still works; audio is best-effort and never surfaces provider errors.
+      return;
     }
 
     const blob = await res.blob();
@@ -150,7 +149,11 @@ export function VoiceAgentWidget({
     audio.onplay = () => setSpeaking(true);
     audio.onended = () => setSpeaking(false);
     audio.onerror = () => setSpeaking(false);
-    await audio.play();
+    try {
+      await audio.play();
+    } catch {
+      // Autoplay blocked or decode failed — keep the transcript reply.
+    }
   }
 
   async function sendMessage(message: string) {
@@ -292,12 +295,13 @@ export function VoiceAgentWidget({
           Click to speak with {active.name}
         </p>
         <p className="mt-1 max-w-sm text-sm text-[var(--muted)]">
-          {active.blurb}. Memory sticks for you across turns.
+          {active.blurb}
         </p>
-        <p className="mt-2 text-[10px] uppercase tracking-[0.18em] text-[var(--accent-2)]">
-          Fixed cast voice · ElevenLabs
-          {active.isAdult ? " · 18+" : ""}
-        </p>
+        {active.isAdult ? (
+          <p className="mt-2 text-[10px] uppercase tracking-[0.18em] text-[var(--accent-2)]">
+            18+
+          </p>
+        ) : null}
       </div>
 
       {(transcript || reply) && (

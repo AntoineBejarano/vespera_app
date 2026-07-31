@@ -18,7 +18,7 @@ export type VoiceAgentProfile = {
 const TATIANA: VoiceAgentProfile = {
   id: "tatiana",
   name: "Tatiana",
-  blurb: "After Dark companion · fixed cast voice",
+  blurb: "She remembers you — and what you like.",
   image: LANDING_IMAGES.companion.src,
   catalog: "after-dark",
   isAdult: true,
@@ -58,11 +58,14 @@ function fromShowcase(
 }
 
 const AGENTS: Record<VoiceAgentId, VoiceAgentProfile> = {
-  luna: fromShowcase("luna", "Companion · fixed cast voice")!,
-  einstein: fromShowcase("einstein", "Historical mind · fixed cast voice")!,
+  luna: fromShowcase("luna", "A companion who remembers what matters.")!,
+  einstein: fromShowcase(
+    "einstein",
+    "Curiosity that remembers your questions.",
+  )!,
   "stoic-mentor": fromShowcase(
     "stoic-mentor",
-    "Calm guide · fixed cast voice",
+    "Calm guidance that keeps your thread.",
   )!,
   tatiana: TATIANA,
 };

@@ -11,23 +11,18 @@ const bodySchema = z.object({
 
 export async function POST(req: Request) {
   if (!process.env.ELEVENLABS_API_KEY?.trim()) {
-    return Response.json(
-      { error: "ElevenLabs is not configured" },
-      { status: 503 },
-    );
+    return Response.json({ error: "Voice is unavailable" }, { status: 503 });
   }
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) {
-    return Response.json({ error: "Invalid TTS payload" }, { status: 400 });
+    return Response.json({ error: "Invalid voice request" }, { status: 400 });
   }
 
   const voice = getCharacterVoice(parsed.data.agent);
   if (!voice) {
     return Response.json(
-      {
-        error: `No fixed ElevenLabs voice assigned for ${parsed.data.agent} yet.`,
-      },
+      { error: "No voice assigned for this character" },
       { status: 404 },
     );
   }
@@ -48,6 +43,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("[voice/tts]", error);
-    return Response.json({ error: "TTS failed" }, { status: 500 });
+    return Response.json({ error: "Voice failed" }, { status: 500 });
   }
 }
