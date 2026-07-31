@@ -47,7 +47,7 @@ export function LegalFooter({
 
         <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <p>
-            vesperer.com
+            Vesperer
             {variant === "after-dark" ? " · After Dark" : ""}
             {variant === "after-dark" || variant === "default"
               ? " · adults only (18+)"

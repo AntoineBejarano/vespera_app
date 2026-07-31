@@ -22,9 +22,9 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   const page = LEGAL_PAGES.find((p) => p.slug === slug);
-  if (!page) return { title: "Legal — vesperer.com" };
+  if (!page) return { title: "Legal — Vesperer" };
   return {
-    title: `${page.title} — vesperer.com`,
+    title: `${page.title} — Vesperer`,
     description: page.description,
   };
 }

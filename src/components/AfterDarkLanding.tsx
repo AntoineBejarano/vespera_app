@@ -259,7 +259,7 @@ export function AfterDarkLanding() {
             Why uncensored wins
           </h2>
           <p className="mt-3 max-w-2xl text-[var(--muted)]">
-            Filtered models kill the scene mid-sentence. vesperer.com is built
+            Filtered models kill the scene mid-sentence. Vesperer is built
             for adult chemistry that stays explicit, teasing, and human —
             without therapist energy or corporate refusals.
           </p>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/BrandLogo";
 
 export const metadata = {
-  title: "Access denied — vesperer.com",
+  title: "Access denied — Vesperer",
   robots: { index: false, follow: false },
 };
 
@@ -14,7 +14,7 @@ export default function UnderagePage() {
         Access denied
       </h1>
       <p className="mt-4 leading-relaxed text-[var(--muted)]">
-        vesperer.com is restricted to adults 18 years or older. We cannot grant
+        Vesperer is restricted to adults 18 years or older. We cannot grant
         access if you are under 18.
       </p>
       <p className="mt-4 leading-relaxed text-[var(--muted)]">

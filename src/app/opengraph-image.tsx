@@ -64,7 +64,7 @@ export default function Image() {
             letterSpacing: "0.04em",
           }}
         >
-          vesperer.com
+          Vesperer
         </div>
       </div>
     ),

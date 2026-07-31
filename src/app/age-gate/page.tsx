@@ -86,7 +86,7 @@ function AgeGateInner() {
         <BrandMark size={40} priority />
         <div>
           <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
-            vesperer<span className="text-[var(--accent)]">.com</span>
+            Vesper<span className="text-[var(--accent)]">er</span>
           </p>
           <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
             Adults only · 18+
@@ -194,7 +194,7 @@ function AgeGateInner() {
           {loading
             ? "Saving…"
             : user
-              ? "Enter vesperer.com"
+              ? "Enter Vesperer"
               : intent === "signup"
                 ? "Continue to sign up"
                 : intent === "signin"

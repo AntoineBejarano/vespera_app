@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-export const BRAND_NAME = "vesperer.com";
+export const BRAND_NAME = "Vesperer";
 export const BRAND_SHORT = "vesperer";
 
 export type BrandVariant = "default" | "after-dark";
@@ -59,15 +59,17 @@ export function BrandLogo({
     size === "hero" ? 56 : size === "lg" ? 44 : size === "sm" ? 28 : 34;
   const word =
     size === "hero"
-      ? "text-3xl sm:text-5xl"
+      ? "text-3xl tracking-[-0.03em] sm:text-5xl"
       : size === "lg"
-        ? "text-2xl"
+        ? "text-2xl tracking-[-0.02em]"
         : size === "sm"
-          ? "text-base"
-          : "text-lg sm:text-xl";
+          ? "text-base tracking-[-0.01em]"
+          : "text-lg tracking-[-0.02em] sm:text-xl";
 
   const accentClass =
-    variant === "after-dark" ? "text-[var(--accent)]" : "text-[var(--accent-2)]";
+    variant === "after-dark"
+      ? "text-[var(--accent)]"
+      : "text-[var(--accent-2)]";
 
   const inner = (
     <>
@@ -81,12 +83,12 @@ export function BrandLogo({
         <span className="min-w-0">
           <span
             className={cn(
-              "block font-[family-name:var(--font-display)] font-semibold tracking-tight text-[var(--ink)]",
+              "block font-[family-name:var(--font-display)] font-semibold text-[var(--ink)]",
               word,
             )}
           >
-            vesperer
-            <span className={accentClass}>.com</span>
+            Vesper
+            <span className={accentClass}>er</span>
           </span>
           {subtitle ? (
             <span className="mt-0.5 block text-[10px] uppercase tracking-[0.22em] text-[var(--muted)] sm:text-xs">
