@@ -6,10 +6,8 @@ import { useHexclaveApp, useUser } from "@hexclave/next";
 import { SITE_URL } from "@/lib/site";
 
 const MARKETING_LINKS = [
-  { href: "/#create", label: "Create" },
   { href: "/#creators", label: "For Creators" },
   { href: "/#business", label: "For Business" },
-  { href: "/#voice", label: "Voice" },
   { href: "/#cli", label: "Developers" },
   { href: "/#pricing", label: "Pricing" },
 ];

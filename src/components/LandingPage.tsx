@@ -378,8 +378,9 @@ export function LandingPage() {
               mentor, or build an AI employee that remembers every conversation.
             </p>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--muted)] sm:text-base">
-              Every Vesperer persona has a stable identity, long-term memory,
-              evolving relationships and real abilities across chat and voice.
+              Every Vesperer persona has a soul, feelings, long-term memory and
+              a voice — a stable identity and evolving relationships across chat
+              and speech.
             </p>
           </BlurFade>
           <BlurFade
