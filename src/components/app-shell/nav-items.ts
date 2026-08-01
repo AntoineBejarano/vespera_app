@@ -3,6 +3,7 @@ export type NavItem = {
   label: string;
   href?: string;
   soon?: boolean;
+  external?: boolean;
   match?: (pathname: string) => boolean;
 };
 
@@ -44,8 +45,7 @@ export const APP_NAV_GROUPS: NavGroup[] = [
       {
         id: "telegram",
         label: "Telegram",
-        href: "/personas",
-        match: () => false,
+        soon: true,
       },
       {
         id: "discord",
@@ -69,39 +69,17 @@ export const APP_NAV_GROUPS: NavGroup[] = [
         href: "/settings",
         match: (p) => p === "/settings",
       },
-      {
-        id: "api-keys",
-        label: "API keys",
-        href: "/settings#api-keys",
-        match: () => false,
-      },
-      {
-        id: "workspace",
-        label: "Workspace",
-        href: "/settings#workspace",
-        match: () => false,
-      },
     ],
   },
+];
+
+export const APP_RESOURCE_LINKS: NavItem[] = [
+  { id: "help", label: "Help", href: "/help", external: true },
+  { id: "docs", label: "Docs", href: "/docs", external: true },
   {
-    id: "resources",
-    label: "Resources",
-    items: [
-      {
-        id: "help",
-        label: "Help",
-        href: "/help",
-      },
-      {
-        id: "docs",
-        label: "Docs",
-        href: "/docs",
-      },
-      {
-        id: "claude",
-        label: "Claude · vibecode",
-        href: "/integrations/claude",
-      },
-    ],
+    id: "claude",
+    label: "Claude · vibecode",
+    href: "/integrations/claude",
+    external: true,
   },
 ];

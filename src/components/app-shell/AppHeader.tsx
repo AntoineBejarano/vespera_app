@@ -12,7 +12,7 @@ export function AppHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
   const crumbs = getAppBreadcrumbs(pathname);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-white/[0.06] bg-[var(--bg)]/75 px-4 backdrop-blur-xl sm:px-6">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background/75 px-4 backdrop-blur-xl sm:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <Button
           type="button"
@@ -26,7 +26,7 @@ export function AppHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
         </Button>
 
         <nav aria-label="Breadcrumb" className="min-w-0">
-          <ol className="flex min-w-0 flex-wrap items-center gap-1.5 text-[13px] text-[var(--muted)]">
+          <ol className="flex min-w-0 flex-wrap items-center gap-1.5 text-[13px] text-muted-foreground">
             {crumbs.map((crumb, i) => {
               const last = i === crumbs.length - 1;
               return (
@@ -35,7 +35,7 @@ export function AppHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
                   className="flex min-w-0 items-center gap-1.5"
                 >
                   {i > 0 ? (
-                    <span className="text-[var(--muted)]/40" aria-hidden>
+                    <span className="text-muted-foreground/40" aria-hidden>
                       /
                     </span>
                   ) : null}
@@ -43,7 +43,7 @@ export function AppHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
                     <span
                       className={
                         last
-                          ? "truncate font-medium text-[var(--ink)]"
+                          ? "truncate font-medium text-foreground"
                           : "truncate"
                       }
                     >
@@ -52,7 +52,7 @@ export function AppHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
                   ) : (
                     <Link
                       href={crumb.href}
-                      className="truncate transition hover:text-[var(--ink)]"
+                      className="truncate transition hover:text-foreground"
                     >
                       {crumb.label}
                     </Link>

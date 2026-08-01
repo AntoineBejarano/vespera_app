@@ -6,12 +6,12 @@ import {
   BookOpen,
   Bot,
   HelpCircle,
-  KeyRound,
   MessageSquare,
   Settings2,
   Sparkles,
   Users,
   Workflow,
+  X,
 } from "lucide-react";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { DebugRoleSwitcher } from "@/components/DebugRoleSwitcher";
@@ -25,7 +25,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { APP_NAV_GROUPS, type NavItem } from "./nav-items";
+import {
+  APP_NAV_GROUPS,
+  APP_RESOURCE_LINKS,
+  type NavItem,
+} from "./nav-items";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   personas: Users,
@@ -35,8 +39,6 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   discord: Workflow,
   whatsapp: MessageSquare,
   settings: Settings2,
-  "api-keys": KeyRound,
-  workspace: Users,
   help: HelpCircle,
   docs: BookOpen,
   claude: Sparkles,
@@ -64,13 +66,12 @@ export function AppSidebar({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-[17rem] flex-col border-r border-white/[0.06] bg-[var(--sidebar)]/95 backdrop-blur-xl transition-transform lg:static lg:z-0 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-[17rem] flex-col border-r border-border bg-sidebar/95 backdrop-blur-xl transition-transform lg:static lg:z-0 lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="relative overflow-hidden border-b border-white/[0.06] px-4 py-4">
-          <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-[var(--accent)]/15 blur-3xl" />
-          <div className="relative flex items-center justify-between gap-2">
+        <div className="border-b border-border px-4 py-4">
+          <div className="flex items-center justify-between gap-2">
             <Link
               href="/personas"
               onClick={onClose}
@@ -80,7 +81,7 @@ export function AppSidebar({
               <span className="font-[family-name:var(--font-display)] text-[1.15rem] font-semibold tracking-[-0.03em] text-[var(--ink)]">
                 Vesper<span className="text-[var(--accent)]">er</span>
               </span>
-              <span className="mt-0.5 block text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+              <span className="mt-0.5 block text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                 Studio
               </span>
             </Link>
@@ -92,7 +93,7 @@ export function AppSidebar({
               onClick={onClose}
               aria-label="Close menu"
             >
-              ✕
+              <X className="size-4" />
             </Button>
           </div>
         </div>
@@ -105,7 +106,7 @@ export function AppSidebar({
           <nav className="pb-4">
             {APP_NAV_GROUPS.map((group, gi) => (
               <div key={group.id} className={cn(gi > 0 && "mt-5")}>
-                <p className="mb-1.5 px-2 text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--muted)]/70">
+                <p className="mb-1.5 px-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground/70">
                   {group.label}
                 </p>
                 <ul className="space-y-0.5">
@@ -123,13 +124,24 @@ export function AppSidebar({
           </nav>
         </ScrollArea>
 
-        <div className="space-y-3 border-t border-white/[0.06] p-3">
-          <Button asChild className="w-full" size="lg">
-            <Link href="/personas/new" onClick={onClose}>
-              <Sparkles className="size-4" />
-              New persona
-            </Link>
-          </Button>
+        <div className="space-y-3 border-t border-border p-3">
+          <ul className="space-y-0.5">
+            {APP_RESOURCE_LINKS.map((item) => (
+              <li key={item.id}>
+                <Link
+                  href={item.href!}
+                  onClick={onClose}
+                  className="flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[12px] text-muted-foreground transition hover:bg-white/[0.03] hover:text-foreground"
+                >
+                  {(() => {
+                    const Icon = ICONS[item.id] ?? HelpCircle;
+                    return <Icon className="size-3.5 shrink-0 opacity-70" />;
+                  })()}
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
           <DebugRoleSwitcher />
         </div>
       </aside>
@@ -152,7 +164,7 @@ function SidebarItem({
     return (
       <li>
         <Tooltip>
-          <TooltipTrigger className="flex w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-[var(--muted)]/45">
+          <TooltipTrigger className="flex w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-muted-foreground/45">
             <Icon className="size-4 shrink-0 opacity-60" />
             <span className="flex-1 text-left">{item.label}</span>
             <Badge
@@ -176,8 +188,8 @@ function SidebarItem({
         className={cn(
           "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] transition",
           active
-            ? "bg-[var(--sidebar-accent)] font-medium text-[var(--ink)] shadow-[inset_0_0_0_1px_rgba(91,173,238,0.18)]"
-            : "text-[var(--muted)] hover:bg-white/[0.03] hover:text-[var(--ink)]",
+            ? "bg-sidebar-accent font-medium text-foreground"
+            : "text-muted-foreground hover:bg-white/[0.03] hover:text-foreground",
         )}
       >
         <Icon

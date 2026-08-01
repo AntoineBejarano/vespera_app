@@ -29,7 +29,7 @@ export function getAppBreadcrumbs(pathname: string): Crumb[] {
     let label = SEGMENT_LABELS[seg];
     if (!label) {
       if (prev === "personas" && seg !== "new") {
-        label = "Detail";
+        label = "Persona";
       } else if (prev === "invites") {
         label = "Accept";
       } else {

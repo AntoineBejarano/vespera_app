@@ -1,7 +1,15 @@
 "use client";
 
 import { PHOTO_TAG_OPTIONS } from "@/lib/chat/photos";
-import { MagicCard } from "@/components/magicui/magic-card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import type { PersonaPhoto } from "./types";
 
 export function PersonaPhotosTab({
@@ -27,19 +35,17 @@ export function PersonaPhotosTab({
 }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
-      <MagicCard className="h-fit">
-        <section className="space-y-3 p-5">
-          <h2 className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
-            Add photo
-          </h2>
-          <input
-            className="w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+      <Card className="h-fit shadow-none">
+        <CardHeader>
+          <CardTitle>Add photo</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Input
             value={photoUrl}
             onChange={(e) => onPhotoUrlChange(e.target.value)}
             placeholder="https://…/photo.jpg"
           />
-          <input
-            className="w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+          <Input
             value={photoCaption}
             onChange={(e) => onPhotoCaptionChange(e.target.value)}
             placeholder="Optional caption"
@@ -52,32 +58,23 @@ export function PersonaPhotosTab({
                   key={t.id}
                   type="button"
                   onClick={() => onToggleTag(t.id)}
-                  className={
-                    on
-                      ? "rounded-lg border border-[var(--accent)] bg-[var(--accent-soft)] px-2 py-1 text-xs"
-                      : "rounded-lg border border-[var(--line)] px-2 py-1 text-xs text-[var(--muted)]"
-                  }
                 >
-                  {t.label}
+                  <Badge variant={on ? "default" : "outline"}>{t.label}</Badge>
                 </button>
               );
             })}
           </div>
-          <button
-            type="button"
-            onClick={onAdd}
-            className="w-full rounded-xl bg-[var(--accent)] px-4 py-2 font-medium text-[var(--accent-ink)]"
-          >
+          <Button type="button" className="w-full" onClick={onAdd}>
             Add photo
-          </button>
-        </section>
-      </MagicCard>
+          </Button>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {photos.map((p) => (
           <div
             key={p.id}
-            className="group relative overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]"
+            className="group relative overflow-hidden rounded-xl border border-border bg-card"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -94,18 +91,20 @@ export function PersonaPhotosTab({
                   {p.caption}
                 </p>
               ) : null}
-              <button
+              <Button
                 type="button"
-                className="mt-2 text-xs text-red-300 hover:text-red-200"
+                variant="link"
+                size="sm"
+                className="mt-1 h-auto px-0 text-red-300 hover:text-red-200"
                 onClick={() => onRemove(p.id)}
               >
                 Remove
-              </button>
+              </Button>
             </div>
           </div>
         ))}
         {!photos.length ? (
-          <p className="col-span-full rounded-2xl border border-dashed border-[var(--line)] p-10 text-center text-sm text-[var(--muted)]">
+          <p className="col-span-full rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
             No photos yet — add a cover image to make the profile feel alive.
           </p>
         ) : null}

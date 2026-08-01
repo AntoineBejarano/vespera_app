@@ -19,23 +19,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     publicChars = [];
   }
 
-  const showcaseEntries = SHOWCASE_CHARACTERS.filter((c) => !c.isAdult).map(
+  const showcaseChatEntries = SHOWCASE_CHARACTERS.filter((c) => !c.isAdult).map(
     (c) => ({
       url: `${SITE_URL}/c/${c.slug}`,
       lastModified: now,
       changeFrequency: "weekly" as const,
-      priority: 0.8,
+      priority: 0.75,
     }),
   );
 
-  const dbEntries = publicChars
+  const showcaseRegistryEntries = SHOWCASE_CHARACTERS.filter(
+    (c) => !c.isAdult,
+  ).map((c) => ({
+    url: `${SITE_URL}/p/${c.slug}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.85,
+  }));
+
+  const dbChatEntries = publicChars
     .filter((c): c is { slug: string; updatedAt: Date } => Boolean(c.slug))
     .filter((c) => !SHOWCASE_CHARACTERS.some((s) => s.slug === c.slug))
     .map((c) => ({
       url: `${SITE_URL}/c/${c.slug}`,
       lastModified: c.updatedAt,
       changeFrequency: "weekly" as const,
-      priority: 0.75,
+      priority: 0.7,
+    }));
+
+  const dbRegistryEntries = publicChars
+    .filter((c): c is { slug: string; updatedAt: Date } => Boolean(c.slug))
+    .filter((c) => !SHOWCASE_CHARACTERS.some((s) => s.slug === c.slug))
+    .map((c) => ({
+      url: `${SITE_URL}/p/${c.slug}`,
+      lastModified: c.updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
     }));
 
   return [
@@ -106,6 +125,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.95,
     },
     {
+      url: `${SITE_URL}/registry`,
+      lastModified: now,
+      changeFrequency: "daily",
+      priority: 0.95,
+    },
+    {
+      url: `${SITE_URL}/chai-character-creator`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.92,
+    },
+    {
+      url: `${SITE_URL}/chai-character-backup`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    },
+    {
       url: AFTER_DARK_URL,
       lastModified: now,
       changeFrequency: "weekly",
@@ -117,8 +154,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.85,
     })),
-    ...showcaseEntries,
-    ...dbEntries,
+    ...showcaseRegistryEntries,
+    ...dbRegistryEntries,
+    ...showcaseChatEntries,
+    ...dbChatEntries,
     ...LEGAL_PAGES.map((page) => ({
       url: `${SITE_URL}/legal/${page.slug}`,
       lastModified: now,

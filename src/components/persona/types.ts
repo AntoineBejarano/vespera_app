@@ -36,6 +36,9 @@ export type PersonaProfile = {
   categories: string[];
   allowFork: boolean;
   isAdult: boolean;
+  license: string;
+  channels: string[];
+  version: string;
   coverUrl: string | null;
 };
 

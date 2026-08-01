@@ -1,9 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MagicCard } from "@/components/magicui/magic-card";
-import { BorderBeam } from "@/components/magicui/border-beam";
 import { PlatformOperatorAck } from "@/components/PlatformOperatorAck";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import type { PersonaBot } from "./types";
 
 export function PersonaConnectionsTab({
@@ -62,38 +70,36 @@ export function PersonaConnectionsTab({
 
   return (
     <div className="space-y-5">
-      <p className="max-w-2xl text-sm text-[var(--muted)]">
+      <p className="max-w-2xl text-sm text-muted-foreground">
         Every channel she lives on. Connect Telegram, wire the Chat API, or hand
         Claude a prompt so it installs itself via the Vesperer CLI.
       </p>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        {/* Telegram */}
-        <MagicCard>
-          <section className="space-y-3 p-5">
+        <Card className="shadow-none">
+          <CardHeader>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="font-medium text-[var(--ink)]">Telegram</h2>
-                <p className="mt-1 text-sm text-[var(--muted)]">
+                <CardTitle>Telegram</CardTitle>
+                <CardDescription>
                   Link N BotFather tokens. Each peer gets isolated memory.
-                </p>
+                </CardDescription>
               </div>
               <StatusDot on={bots.some((b) => b.active)} />
             </div>
-            <input
-              className="w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-sm"
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Input
               value={botToken}
               onChange={(e) => onBotTokenChange(e.target.value)}
               placeholder="Bot token"
             />
-            <input
-              className="w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-sm"
+            <Input
               value={botUsername}
               onChange={(e) => onBotUsernameChange(e.target.value)}
               placeholder="Username (without @)"
             />
-            <input
-              className="w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-sm"
+            <Input
               value={botLabel}
               onChange={(e) => onBotLabelChange(e.target.value)}
               placeholder="Label (optional)"
@@ -105,18 +111,14 @@ export function PersonaConnectionsTab({
                 compact
               />
             ) : null}
-            <button
-              type="button"
-              onClick={onAddBot}
-              className="rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-ink)]"
-            >
+            <Button type="button" onClick={onAddBot}>
               Add bot + webhook
-            </button>
+            </Button>
             <ul className="space-y-2 text-sm">
               {bots.map((b) => (
                 <li
                   key={b.id}
-                  className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--bg)]/60 p-3"
+                  className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-background/60 p-3"
                 >
                   <a
                     className="text-[var(--accent)]"
@@ -126,41 +128,44 @@ export function PersonaConnectionsTab({
                   >
                     @{b.username}
                   </a>
-                  <span className="text-[var(--muted)]">
+                  <span className="text-muted-foreground">
                     {b.peerCount} peers
                     {b.label ? ` · ${b.label}` : ""}
                     {!b.active ? " · OFF" : ""}
                   </span>
-                  <button
+                  <Button
                     type="button"
-                    className="ml-auto text-xs text-red-400"
+                    variant="link"
+                    size="sm"
+                    className="ml-auto h-auto px-0 text-destructive"
                     onClick={() => onRemoveBot(b.id)}
                   >
                     Remove
-                  </button>
+                  </Button>
                 </li>
               ))}
               {!bots.length ? (
-                <li className="text-[var(--muted)]">No bots linked yet.</li>
+                <li className="text-muted-foreground">No bots linked yet.</li>
               ) : null}
             </ul>
-          </section>
-        </MagicCard>
+          </CardContent>
+        </Card>
 
-        {/* Chat API / CLI */}
-        <MagicCard>
-          <section className="space-y-3 p-5">
+        <Card className="shadow-none">
+          <CardHeader>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="font-medium text-[var(--ink)]">Chat API / CLI</h2>
-                <p className="mt-1 text-sm text-[var(--muted)]">
+                <CardTitle>Chat API / CLI</CardTitle>
+                <CardDescription>
                   Talk from any app. Stable{" "}
-                  <code className="text-[var(--ink)]">peerId</code> = isolated
+                  <code className="text-foreground">peerId</code> = isolated
                   memory.
-                </p>
+                </CardDescription>
               </div>
               <StatusDot on={hasApiKey || Boolean(apiKey)} />
             </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
             {showOperatorAck ? (
               <PlatformOperatorAck
                 checked={operatorAck}
@@ -169,66 +174,55 @@ export function PersonaConnectionsTab({
               />
             ) : null}
             <div className="flex flex-wrap gap-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={onRevealOrCreateKey}
-                className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm"
               >
                 {hasApiKey || apiKey ? "Show API key" : "Create API key"}
-              </button>
-              <button
-                type="button"
-                onClick={onRotateKey}
-                className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm"
-              >
+              </Button>
+              <Button type="button" variant="outline" onClick={onRotateKey}>
                 Rotate key
-              </button>
+              </Button>
             </div>
             {apiKey ? (
-              <p className="break-all rounded-xl border border-[var(--line)] bg-[var(--bg)] p-3 font-mono text-xs text-[var(--ink)]">
+              <p className="break-all rounded-lg border border-border bg-background p-3 font-mono text-xs text-foreground">
                 {apiKey}
               </p>
             ) : null}
-            <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl border border-[var(--line)] bg-[var(--bg)] p-3 text-xs text-[var(--muted)]">
+            <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg border border-border bg-background p-3 text-xs text-muted-foreground">
               {curlExample}
             </pre>
-
             <ClaudePromptBlock prompt={claudePrompt} />
-          </section>
-        </MagicCard>
+          </CardContent>
+        </Card>
 
         <ObsidianConnectCard
           personaId={personaId}
           onSynced={(msg) => {
-            /* parent message surface via window event for PersonaDetail */
             window.dispatchEvent(
               new CustomEvent("persona-message", { detail: msg }),
             );
           }}
         />
 
-        {/* Coming soon */}
         {COMING_SOON.map((item) => (
-          <div
+          <Card
             key={item.name}
-            className="relative overflow-hidden rounded-2xl border border-dashed border-[var(--line)] bg-[var(--bg-elevated)]/40 p-5 opacity-80"
+            className="border-dashed bg-card/50 opacity-80 shadow-none"
           >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="font-medium text-[var(--ink)]">{item.name}</h2>
-                <p className="mt-1 text-sm text-[var(--muted)]">{item.blurb}</p>
+            <CardHeader>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <CardTitle>{item.name}</CardTitle>
+                  <CardDescription>{item.blurb}</CardDescription>
+                </div>
+                <Badge variant="outline" className="uppercase">
+                  Soon
+                </Badge>
               </div>
-              <span className="shrink-0 rounded-full border border-[var(--line)] px-2 py-0.5 text-[10px] uppercase tracking-wider text-[var(--muted)]">
-                Soon
-              </span>
-            </div>
-            <BorderBeam
-              size={60}
-              duration={10}
-              colorFrom="var(--accent)"
-              colorTo="transparent"
-            />
-          </div>
+            </CardHeader>
+          </Card>
         ))}
       </div>
     </div>
@@ -340,30 +334,32 @@ function ObsidianConnectCard({
     }, {}) ?? null;
 
   return (
-    <MagicCard className="lg:col-span-2">
-      <section className="space-y-3 p-5">
+    <Card className="shadow-none lg:col-span-2">
+      <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="font-medium text-[var(--ink)]">
-              Connect Obsidian
-            </h2>
-            <p className="mt-1 text-sm text-[var(--muted)]">
+            <CardTitle>Connect Obsidian</CardTitle>
+            <CardDescription>
               Your notes become memories, beliefs and connections — not just
-              context. Upload a vault <code className="text-[var(--ink)]">.zip</code>{" "}
-              or <code className="text-[var(--ink)]">.md</code> files; we classify
+              context. Upload a vault <code className="text-foreground">.zip</code>{" "}
+              or <code className="text-foreground">.md</code> files; we classify
               before wiring the mind.
-            </p>
+            </CardDescription>
           </div>
           <StatusDot on={Boolean(noteCount)} />
         </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
         {noteCount != null ? (
-          <p className="text-xs text-[var(--muted)]">{noteCount} notes in mind</p>
+          <p className="text-xs text-muted-foreground">
+            {noteCount} notes in mind
+          </p>
         ) : null}
-        <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[var(--line)] bg-[var(--bg)]/60 px-4 py-8 text-center transition hover:border-[var(--accent)]">
-          <span className="text-sm text-[var(--ink)]">
+        <label className="flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-border bg-background/60 px-4 py-8 text-center transition hover:border-[var(--accent)]">
+          <span className="text-sm text-foreground">
             {busy ? "Working…" : "Drop vault .zip / .md files"}
           </span>
-          <span className="mt-1 max-w-md text-xs text-[var(--muted)]">
+          <span className="mt-1 max-w-md text-xs text-muted-foreground">
             Phase 1: zip import. Phase 2 (soon): official “Vesperer for Obsidian”
             plugin with incremental sync.
           </span>
@@ -380,32 +376,29 @@ function ObsidianConnectCard({
         {typeCounts ? (
           <div className="flex flex-wrap gap-1.5 text-[11px]">
             {Object.entries(typeCounts).map(([t, n]) => (
-              <span
-                key={t}
-                className="rounded-full border border-[var(--line)] px-2 py-0.5 text-[var(--muted)]"
-              >
+              <Badge key={t} variant="outline">
                 {t}: {n}
-              </span>
+              </Badge>
             ))}
           </div>
         ) : null}
 
         {preview?.length ? (
-          <div className="max-h-56 space-y-2 overflow-auto rounded-xl border border-[var(--line)] bg-[var(--bg)]/50 p-2">
+          <div className="max-h-56 space-y-2 overflow-auto rounded-lg border border-border bg-background/50 p-2">
             {preview.slice(0, 40).map((p) => (
               <div
                 key={p.path}
-                className="rounded-lg border border-[var(--line)] px-3 py-2 text-xs"
+                className="rounded-lg border border-border px-3 py-2 text-xs"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-medium text-[var(--ink)]">{p.title}</span>
+                  <span className="font-medium text-foreground">{p.title}</span>
                   <span className="uppercase tracking-wider text-[var(--accent)]">
                     {p.type}
                     {p.private ? " · private" : ""}
                   </span>
                 </div>
-                <p className="mt-0.5 text-[var(--muted)]">{p.reason}</p>
-                <p className="mt-0.5 text-[10px] text-[var(--muted)]">
+                <p className="mt-0.5 text-muted-foreground">{p.reason}</p>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">
                   {p.path} · {p.wikilinkCount} wikilinks ·{" "}
                   {Math.round(p.confidence * 100)}% confidence
                 </p>
@@ -416,33 +409,32 @@ function ObsidianConnectCard({
 
         {pendingNotes ? (
           <div className="flex flex-wrap gap-2">
-            <button
+            <Button
               type="button"
               disabled={busy}
               onClick={() => void confirmImport()}
-              className="rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-ink)] disabled:opacity-50"
             >
               Import into mind
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
               disabled={busy}
               onClick={() => {
                 setPendingNotes(null);
                 setPreview(null);
               }}
-              className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         ) : null}
 
         {localMsg ? (
           <p className="text-xs text-[var(--accent)]">{localMsg}</p>
         ) : null}
-      </section>
-    </MagicCard>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -451,8 +443,8 @@ function StatusDot({ on }: { on: boolean }) {
     <span
       className={
         on
-          ? "mt-1 inline-block h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.7)]"
-          : "mt-1 inline-block h-2.5 w-2.5 rounded-full bg-[var(--muted)]/40"
+          ? "mt-1 inline-block h-2.5 w-2.5 rounded-full bg-emerald-400"
+          : "mt-1 inline-block h-2.5 w-2.5 rounded-full bg-muted-foreground/40"
       }
       title={on ? "Connected" : "Not connected"}
     />
@@ -473,24 +465,20 @@ function ClaudePromptBlock({ prompt }: { prompt: string }) {
   }
 
   return (
-    <div className="mt-2 space-y-2 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent-soft)]/40 p-3">
+    <div className="mt-2 space-y-2 rounded-lg border border-[var(--accent)]/30 bg-[var(--accent-soft)]/40 p-3">
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--accent)]">
           Install with Claude
         </h3>
-        <button
-          type="button"
-          onClick={() => void copy()}
-          className="rounded-lg border border-[var(--line)] bg-[var(--bg)] px-2.5 py-1 text-xs hover:border-[var(--accent)]"
-        >
+        <Button type="button" variant="outline" size="sm" onClick={() => void copy()}>
           {copied ? "Copied" : "Copy prompt"}
-        </button>
+        </Button>
       </div>
-      <p className="text-xs text-[var(--muted)]">
+      <p className="text-xs text-muted-foreground">
         Paste into Claude Code — it will wire this persona using the Vesperer
         CLI.
       </p>
-      <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-lg border border-[var(--line)] bg-[var(--bg)] p-2.5 font-mono text-[11px] leading-relaxed text-[var(--ink)]">
+      <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded-lg border border-border bg-background p-2.5 font-mono text-[11px] leading-relaxed text-foreground">
         {prompt}
       </pre>
     </div>

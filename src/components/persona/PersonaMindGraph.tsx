@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import type { MindGraphData } from "@/lib/persona/mind-graph";
 
 const ObsidianMindGraph = dynamic(
@@ -13,8 +14,8 @@ const ObsidianMindGraph = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[520px] items-center justify-center rounded-2xl border border-[var(--line)] bg-[#0b0d10]">
-        <p className="text-sm text-[var(--muted)]">Loading mind graph…</p>
+      <div className="flex h-[520px] items-center justify-center rounded-xl border border-border bg-card">
+        <p className="text-sm text-muted-foreground">Loading mind graph…</p>
       </div>
     ),
   },
@@ -69,16 +70,16 @@ export function PersonaMindGraph({ personaId }: { personaId: string }) {
 
   if (loading) {
     return (
-      <div className="flex h-[520px] items-center justify-center rounded-2xl border border-[var(--line)] bg-[#0b0d10]">
-        <p className="text-sm text-[var(--muted)]">Opening her mind…</p>
+      <div className="flex h-[520px] items-center justify-center rounded-xl border border-border bg-card">
+        <p className="text-sm text-muted-foreground">Opening her mind…</p>
       </div>
     );
   }
 
   if (ready.error) {
     return (
-      <div className="flex h-[320px] items-center justify-center rounded-2xl border border-[var(--line)]">
-        <p className="text-sm text-[var(--danger)]">{ready.error}</p>
+      <div className="flex h-[320px] items-center justify-center rounded-xl border border-border">
+        <p className="text-sm text-destructive">{ready.error}</p>
       </div>
     );
   }
@@ -89,16 +90,16 @@ export function PersonaMindGraph({ personaId }: { personaId: string }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+          <h2 className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
             Mind graph
           </h2>
-          <p className="mt-1 text-sm text-[var(--muted)]">
+          <p className="mt-1 text-sm text-muted-foreground">
             Sigma + ForceAtlas2 map of soul, knowledge, beliefs and channels —
             built from real mind documents and vault structure.
           </p>
         </div>
         {ready.stats ? (
-          <p className="text-xs text-[var(--muted)]">
+          <p className="text-xs text-muted-foreground">
             {ready.stats.nodeCount} nodes · {ready.stats.linkCount} links ·{" "}
             {ready.stats.obsidianNotes} Obsidian notes ·{" "}
             {ready.stats.memoryTotal} memories
@@ -107,21 +108,18 @@ export function PersonaMindGraph({ personaId }: { personaId: string }) {
       </div>
 
       {sparse ? (
-        <div className="rounded-2xl border border-dashed border-[var(--line)] bg-[var(--bg-elevated)]/40 px-6 py-8 text-center">
-          <p className="font-[family-name:var(--font-display)] text-xl text-[var(--ink)]">
+        <div className="rounded-xl border border-dashed border-border bg-card/50 px-6 py-8 text-center">
+          <p className="font-[family-name:var(--font-display)] text-xl text-foreground">
             Her mind is still waking up
           </p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-[var(--muted)]">
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
             Fill Soul / Style / Rules / Context, connect Obsidian, or start
             chatting — the graph grows from real content.
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <Link
-              href={`/chat?characterId=${personaId}`}
-              className="rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-ink)]"
-            >
-              Test chat
-            </Link>
+            <Button asChild>
+              <Link href={`/chat?characterId=${personaId}`}>Chat</Link>
+            </Button>
           </div>
         </div>
       ) : null}

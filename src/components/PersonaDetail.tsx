@@ -13,6 +13,7 @@ import type {
   PersonaProfile,
   PersonaTab,
 } from "@/components/persona/types";
+import type { PersonaLicense } from "@/lib/personas/license";
 
 export function PersonaDetail({
   persona,
@@ -59,6 +60,9 @@ export function PersonaDetail({
   const [categories, setCategories] = useState(persona.categories.join(", "));
   const [allowFork, setAllowFork] = useState(persona.allowFork);
   const [isAdult, setIsAdult] = useState(persona.isAdult);
+  const [license, setLicense] = useState(persona.license);
+  const [changelog, setChangelog] = useState("");
+  const [version, setVersion] = useState(persona.version);
   const [savingPublic, setSavingPublic] = useState(false);
 
   const telegramPeerCount = bots.reduce((n, b) => n + b.peerCount, 0);
@@ -172,8 +176,20 @@ export function PersonaDetail({
       setMessage(data.error ?? "Could not save definition");
       return;
     }
+    if (
+      data.character?.versionMajor !== undefined &&
+      data.character?.versionMinor !== undefined
+    ) {
+      setVersion(
+        `${data.character.versionMajor}.${data.character.versionMinor}`,
+      );
+    }
     setEditingDocs(false);
-    setMessage("Persona definition saved");
+    setMessage(
+      data.character?.versionMinor !== undefined
+        ? `Saved as v${data.character.versionMajor}.${data.character.versionMinor}`
+        : "Persona definition saved",
+    );
     router.refresh();
   }
 
@@ -314,6 +330,9 @@ export function PersonaDetail({
           .slice(0, 8),
         allowFork,
         isAdult,
+        license,
+        changelog: changelog.trim() || null,
+        channels: ["vesperer", "web", "chai", "sillytavern", "character_card"],
         ...(publishing ? operatorPayload() : {}),
       }),
     });
@@ -326,12 +345,35 @@ export function PersonaDetail({
     if (publishing) setOperatorAttested(true);
     setIsPublic(Boolean(data.character.isPublic));
     setSlug(data.character.slug ?? "");
+    if (data.character.license) setLicense(data.character.license);
+    if (
+      data.character.versionMajor !== undefined &&
+      data.character.versionMinor !== undefined
+    ) {
+      setVersion(
+        `${data.character.versionMajor}.${data.character.versionMinor}`,
+      );
+    }
+    setChangelog("");
     setMessage(
       data.character.isPublic
-        ? `Published at /c/${data.character.slug}`
-        : "Public page unpublished",
+        ? `Published at /p/${data.character.slug}`
+        : "Registry page unpublished",
     );
     router.refresh();
+  }
+
+  async function exportChai() {
+    setMessage(null);
+    const res = await fetch(`/api/characters/${persona.id}/export?format=chai`);
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data.error ?? "Export failed");
+      return;
+    }
+    const text = JSON.stringify(data, null, 2);
+    await navigator.clipboard.writeText(text);
+    setMessage("Chai-ready export copied to clipboard");
   }
 
   const shellPersona: PersonaProfile = {
@@ -424,6 +466,9 @@ export function PersonaDetail({
           allowFork={allowFork}
           isAdult={isAdult}
           isPublic={isPublic}
+          license={license}
+          changelog={changelog}
+          version={version}
           savingPublic={savingPublic}
           showOperatorAck={showOperatorAck}
           operatorAck={operatorAck}
@@ -433,8 +478,11 @@ export function PersonaDetail({
           onCategoriesChange={setCategories}
           onAllowForkChange={setAllowFork}
           onIsAdultChange={setIsAdult}
+          onLicenseChange={(v: PersonaLicense) => setLicense(v)}
+          onChangelogChange={setChangelog}
           onOperatorAckChange={setOperatorAck}
           onSave={(next) => void savePublicProfile(next)}
+          onExportChai={() => void exportChai()}
         />
       ) : null}
     </PersonaProfileShell>

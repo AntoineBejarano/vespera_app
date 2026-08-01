@@ -12,6 +12,15 @@ import {
   hasWorkspacePermission,
   requireWorkspacePermission,
 } from "@/lib/workspace/permissions";
+import {
+  PERSONA_LICENSES,
+  REGISTRY_CHANNELS,
+  personaLicenseSchema,
+} from "@/lib/personas/license";
+import {
+  layersChanged,
+  snapshotAndBumpVersion,
+} from "@/lib/personas/versions";
 
 export const personaPatchSchema = z.object({
   active: z.boolean().optional(),
@@ -36,6 +45,10 @@ export const personaPatchSchema = z.object({
   categories: z.array(z.string().max(40)).max(8).optional(),
   allowFork: z.boolean().optional(),
   isAdult: z.boolean().optional(),
+  license: personaLicenseSchema.optional(),
+  channels: z.array(z.enum(REGISTRY_CHANNELS)).max(12).optional(),
+  changelog: z.string().max(280).nullable().optional(),
+  bumpMajor: z.boolean().optional(),
   platformOperatorAccepted: z.boolean().optional(),
 });
 
@@ -56,6 +69,10 @@ export type PersonaUpdateResult =
         isAdult: boolean;
         active: boolean;
         intensity: number;
+        license: string;
+        channels: string[];
+        versionMajor: number;
+        versionMinor: number;
       };
     }
   | { ok: false; status: number; error: string; code?: string };
@@ -106,7 +123,9 @@ export async function updateOwnedPersona(params: {
   if (
     data.isPublic !== undefined ||
     data.allowFork !== undefined ||
-    data.slug !== undefined
+    data.slug !== undefined ||
+    data.license !== undefined ||
+    data.channels !== undefined
   ) {
     const canPublish = await hasWorkspacePermission(
       params.user.id,
@@ -121,6 +140,10 @@ export async function updateOwnedPersona(params: {
         code: "MISSING_CAPABILITY",
       };
     }
+  }
+
+  if (data.license !== undefined && !PERSONA_LICENSES.includes(data.license)) {
+    return { ok: false, status: 400, error: "Invalid license." };
   }
 
   if (data.isAdult !== undefined) {
@@ -221,28 +244,63 @@ export async function updateOwnedPersona(params: {
     } as Prisma.InputJsonValue;
   }
 
+  const nextLayers = {
+    name: data.name ?? character.name,
+    tagline: data.tagline !== undefined ? data.tagline : character.tagline,
+    openingLine:
+      data.openingLine !== undefined
+        ? data.openingLine
+        : character.openingLine,
+    soulMd: soulMd !== undefined ? soulMd : character.soulMd,
+    styleMd: styleMd !== undefined ? styleMd : character.styleMd,
+    rulesMd: rulesMd !== undefined ? rulesMd : character.rulesMd,
+    contextMd: contextMd !== undefined ? contextMd : character.contextMd,
+  };
+
+  const shouldVersion = layersChanged(character, nextLayers);
+  let versionMajor = character.versionMajor;
+  let versionMinor = character.versionMinor;
+
+  if (shouldVersion) {
+    const bumped = await snapshotAndBumpVersion({
+      character,
+      userId: params.user.id,
+      changelog: data.changelog,
+      bump: data.bumpMajor ? "major" : "minor",
+    });
+    versionMajor = bumped.versionMajor;
+    versionMinor = bumped.versionMinor;
+  }
+
+  const nextLicense =
+    data.license ??
+    (data.allowFork === false && character.license === "fork_allowed"
+      ? "public"
+      : character.license);
+
   const updated = await prisma.character.update({
     where: { id: params.characterId },
     data: {
       updatedByUserId: params.user.id,
       active: data.active ?? character.active,
       intensity: data.intensity ?? character.intensity,
-      name: data.name ?? character.name,
-      soulMd: soulMd !== undefined ? soulMd : character.soulMd,
-      styleMd: styleMd !== undefined ? styleMd : character.styleMd,
-      rulesMd: rulesMd !== undefined ? rulesMd : character.rulesMd,
-      contextMd: contextMd !== undefined ? contextMd : character.contextMd,
+      name: nextLayers.name,
+      soulMd: nextLayers.soulMd,
+      styleMd: nextLayers.styleMd,
+      rulesMd: nextLayers.rulesMd,
+      contextMd: nextLayers.contextMd,
       limitsJson,
       isPublic: data.isPublic ?? character.isPublic,
       slug: nextSlug,
-      tagline: data.tagline !== undefined ? data.tagline : character.tagline,
-      openingLine:
-        data.openingLine !== undefined
-          ? data.openingLine
-          : character.openingLine,
+      tagline: nextLayers.tagline,
+      openingLine: nextLayers.openingLine,
       categories: data.categories ?? character.categories,
       allowFork: data.allowFork ?? character.allowFork,
       isAdult: data.isAdult ?? character.isAdult,
+      license: nextLicense,
+      channels: data.channels ?? character.channels,
+      versionMajor,
+      versionMinor,
     },
   });
 
@@ -260,6 +318,10 @@ export async function updateOwnedPersona(params: {
       isAdult: updated.isAdult,
       active: updated.active,
       intensity: updated.intensity,
+      license: updated.license,
+      channels: updated.channels,
+      versionMajor: updated.versionMajor,
+      versionMinor: updated.versionMinor,
     },
   };
 }

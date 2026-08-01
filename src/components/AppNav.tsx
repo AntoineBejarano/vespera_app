@@ -6,6 +6,7 @@ import { useHexclaveApp, useUser, UserButton } from "@hexclave/next";
 import { SITE_URL } from "@/lib/site";
 
 const MARKETING_LINKS = [
+  { href: "/registry", label: "Registry" },
   { href: "/#live-personas", label: "Live Personas" },
   { href: "/#creators", label: "For Creators" },
   { href: "/business", label: "For Business" },
@@ -13,11 +14,13 @@ const MARKETING_LINKS = [
 ];
 
 const EXPLORE_LINKS = [
+  { href: "/registry", label: "Persona Registry" },
   { href: "/explore", label: "All paths" },
   { href: "/explore?filter=meet", label: "Great minds" },
   { href: "/explore?filter=learn", label: "Learn" },
   { href: "/explore?filter=hire", label: "AI employees" },
   { href: "/explore?filter=create", label: "Create" },
+  { href: "/chai-character-creator", label: "Chai-ready creator" },
   { href: "/bring", label: "Bring a character" },
   { href: "/integrations/claude", label: "Claude · vibecode" },
   { href: "/#cli", label: "CLI for agents" },

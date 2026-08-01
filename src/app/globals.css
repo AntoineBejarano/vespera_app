@@ -52,7 +52,6 @@
   --sidebar-accent-foreground: var(--ink);
   --sidebar-border: color-mix(in oklab, var(--line) 80%, transparent);
   --sidebar-ring: var(--ring);
-  --color-border: var(--line);
 }
 
 /* After Dark / adult brand — rose */
@@ -218,5 +217,8 @@ button {
   }
   html {
     @apply font-sans;
+  }
+  body {
+    @apply text-foreground;
   }
 }

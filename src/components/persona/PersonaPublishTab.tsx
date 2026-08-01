@@ -1,8 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { MagicCard } from "@/components/magicui/magic-card";
 import { PlatformOperatorAck } from "@/components/PlatformOperatorAck";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  PERSONA_LICENSES,
+  PERSONA_LICENSE_LABELS,
+  type PersonaLicense,
+} from "@/lib/personas/license";
 
 export function PersonaPublishTab({
   slug,
@@ -12,6 +25,9 @@ export function PersonaPublishTab({
   allowFork,
   isAdult,
   isPublic,
+  license,
+  changelog,
+  version,
   savingPublic,
   showOperatorAck,
   operatorAck,
@@ -21,8 +37,11 @@ export function PersonaPublishTab({
   onCategoriesChange,
   onAllowForkChange,
   onIsAdultChange,
+  onLicenseChange,
+  onChangelogChange,
   onOperatorAckChange,
   onSave,
+  onExportChai,
 }: {
   slug: string;
   tagline: string;
@@ -31,6 +50,9 @@ export function PersonaPublishTab({
   allowFork: boolean;
   isAdult: boolean;
   isPublic: boolean;
+  license: string;
+  changelog: string;
+  version: string;
   savingPublic: boolean;
   showOperatorAck: boolean;
   operatorAck: boolean;
@@ -40,57 +62,87 @@ export function PersonaPublishTab({
   onCategoriesChange: (v: string) => void;
   onAllowForkChange: (v: boolean) => void;
   onIsAdultChange: (v: boolean) => void;
+  onLicenseChange: (v: PersonaLicense) => void;
+  onChangelogChange: (v: string) => void;
   onOperatorAckChange: (v: boolean) => void;
   onSave: (nextPublic?: boolean) => void;
+  onExportChai: () => void;
 }) {
   return (
-    <MagicCard>
-      <section className="mx-auto max-w-2xl space-y-4 p-5 sm:p-7">
-        <div>
-          <h2 className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
-            Public page
-          </h2>
-          <p className="mt-1 text-sm text-[var(--muted)]">
-            Share a discoverable profile. Visitors can talk or create their own
-            version when forking is allowed.
-          </p>
-        </div>
-        <label className="block text-sm">
-          <span className="text-[var(--muted)]">Slug</span>
-          <div className="mt-1 flex items-center gap-2">
-            <span className="text-[var(--muted)]">/c/</span>
-            <input
+    <Card className="mx-auto max-w-2xl shadow-none">
+      <CardHeader>
+        <CardTitle>Persona Registry</CardTitle>
+        <CardDescription>
+          Publish a canonical identity page at{" "}
+          <span className="text-foreground">/p/{slug || "slug"}</span>. Visitors
+          can talk, fork, or export — keep the master here.
+        </CardDescription>
+        <p className="text-xs text-muted-foreground">
+          Current version {version}
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <label className="block space-y-1.5 text-sm">
+          <span className="text-muted-foreground">Slug</span>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">/p/</span>
+            <Input
               value={slug}
               onChange={(e) => onSlugChange(e.target.value.toLowerCase())}
               placeholder="luna"
-              className="w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
             />
           </div>
         </label>
-        <label className="block text-sm">
-          <span className="text-[var(--muted)]">Tagline</span>
-          <input
+        <label className="block space-y-1.5 text-sm">
+          <span className="text-muted-foreground">Tagline</span>
+          <Input
             value={tagline}
             onChange={(e) => onTaglineChange(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
           />
         </label>
-        <label className="block text-sm">
-          <span className="text-[var(--muted)]">Opening line</span>
+        <label className="block space-y-1.5 text-sm">
+          <span className="text-muted-foreground">Opening line</span>
           <textarea
             value={openingLine}
             onChange={(e) => onOpeningLineChange(e.target.value)}
             rows={2}
-            className="mt-1 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+            className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           />
         </label>
-        <label className="block text-sm">
-          <span className="text-[var(--muted)]">Categories (comma-separated)</span>
-          <input
+        <label className="block space-y-1.5 text-sm">
+          <span className="text-muted-foreground">
+            Categories (comma-separated)
+          </span>
+          <Input
             value={categories}
             onChange={(e) => onCategoriesChange(e.target.value)}
             placeholder="Companions, Mentors"
-            className="mt-1 w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+          />
+        </label>
+        <label className="block space-y-1.5 text-sm">
+          <span className="text-muted-foreground">License</span>
+          <select
+            value={license}
+            onChange={(e) =>
+              onLicenseChange(e.target.value as PersonaLicense)
+            }
+            className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm"
+          >
+            {PERSONA_LICENSES.filter((l) => l !== "private").map((l) => (
+              <option key={l} value={l}>
+                {PERSONA_LICENSE_LABELS[l]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block space-y-1.5 text-sm">
+          <span className="text-muted-foreground">
+            Changelog (optional — saved on next version bump)
+          </span>
+          <Input
+            value={changelog}
+            onChange={(e) => onChangelogChange(e.target.value)}
+            placeholder="+ Warmer conversational style"
           />
         </label>
         <div className="flex flex-col gap-2 text-sm">
@@ -100,7 +152,7 @@ export function PersonaPublishTab({
               checked={allowFork}
               onChange={(e) => onAllowForkChange(e.target.checked)}
             />
-            Allow “Create your own version”
+            Allow forks
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -119,34 +171,40 @@ export function PersonaPublishTab({
           />
         ) : null}
         <div className="flex flex-wrap gap-2">
-          <button
+          <Button
             type="button"
             disabled={savingPublic}
             onClick={() => onSave(true)}
-            className="rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-ink)] disabled:opacity-50"
           >
-            {savingPublic ? "Saving…" : isPublic ? "Update public page" : "Publish"}
-          </button>
+            {savingPublic
+              ? "Saving…"
+              : isPublic
+                ? "Update registry page"
+                : "Publish to registry"}
+          </Button>
           {isPublic ? (
             <>
-              <Link
-                href={`/c/${slug}`}
-                className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm"
-              >
-                View /c/{slug}
-              </Link>
-              <button
+              <Button asChild variant="outline">
+                <Link href={`/p/${slug}`}>View /p/{slug}</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={`/c/${slug}`}>Talk /c/{slug}</Link>
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
                 disabled={savingPublic}
                 onClick={() => onSave(false)}
-                className="rounded-xl border border-[var(--line)] px-4 py-2 text-sm"
               >
                 Unpublish
-              </button>
+              </Button>
             </>
           ) : null}
+          <Button type="button" variant="outline" onClick={onExportChai}>
+            Export for Chai
+          </Button>
         </div>
-      </section>
-    </MagicCard>
+      </CardContent>
+    </Card>
   );
 }

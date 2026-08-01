@@ -46,7 +46,7 @@ export function WorkspaceSwitcher() {
 
   if (workspaces.length === 0) {
     return (
-      <div className="rounded-lg border border-white/[0.06] px-2.5 py-2 text-[12px] text-[var(--muted)]">
+      <div className="rounded-lg border border-border px-2.5 py-2 text-[12px] text-muted-foreground">
         Workspace
       </div>
     );
@@ -54,11 +54,11 @@ export function WorkspaceSwitcher() {
 
   if (workspaces.length === 1) {
     return (
-      <div className="rounded-lg border border-white/[0.06] px-2.5 py-2">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]/70">
+      <div className="rounded-lg border border-border px-2.5 py-2">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">
           Workspace
         </p>
-        <p className="mt-0.5 truncate text-[13px] font-medium text-[var(--ink)]">
+        <p className="mt-0.5 truncate text-[13px] font-medium text-foreground">
           {active?.name ?? "Personal"}
         </p>
       </div>
@@ -67,11 +67,11 @@ export function WorkspaceSwitcher() {
 
   return (
     <label className="block min-w-0">
-      <span className="mb-1 block text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]/70">
+      <span className="mb-1 block text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">
         Workspace
       </span>
       <select
-        className="w-full truncate rounded-lg border border-white/[0.08] bg-[var(--bg)] px-2.5 py-2 text-[13px] text-[var(--ink)]"
+        className="w-full truncate rounded-lg border border-input bg-background px-2.5 py-2 text-[13px] text-foreground"
         value={activeId ?? ""}
         disabled={busy}
         onChange={(e) => void onChange(e.target.value)}

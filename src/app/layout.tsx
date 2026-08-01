@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { DM_Sans, Syne, Geist } from "next/font/google";
+import { DM_Sans, Syne } from "next/font/google";
 import { HexclaveProvider, HexclaveTheme } from "@hexclave/next";
 import { hexclaveServerApp } from "@/hexclave/server";
 import {
@@ -11,8 +11,6 @@ import {
 } from "@/lib/site";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const display = Syne({
   variable: "--font-display",
@@ -73,7 +71,11 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("h-full", "antialiased", display.variable, body.variable, "font-sans", geist.variable)}
+      className={cn(
+        "h-full font-sans antialiased",
+        display.variable,
+        body.variable,
+      )}
     >
       <body className="min-h-full font-[family-name:var(--font-body)]">
         <Script

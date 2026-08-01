@@ -125,6 +125,12 @@ export function PublicCharacterView({
                   <span className="text-xs text-[var(--muted)]">
                     by {character.creatorLabel}
                   </span>
+                  <Link
+                    href={`/p/${character.slug}`}
+                    className="text-xs text-[var(--accent)] underline-offset-2 hover:underline"
+                  >
+                    Registry page
+                  </Link>
                 </div>
                 <h1 className="mt-1 font-[family-name:var(--font-display)] text-4xl font-semibold tracking-tight text-[var(--ink)] sm:text-5xl md:text-6xl">
                   {character.name}

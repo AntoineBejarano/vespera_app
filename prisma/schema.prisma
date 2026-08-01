@@ -264,6 +264,14 @@ model Character {
   allowFork    Boolean  @default(true)
   /// Adult-oriented public listing (routes to After Dark discovery)
   isAdult      Boolean  @default(false)
+  /// Registry semver: major.minor (e.g. 2.4)
+  versionMajor Int      @default(1)
+  versionMinor Int      @default(0)
+  /// Creator license declaration for the registry page
+  /// private | public | fork_allowed | non_commercial | commercial
+  license      String   @default("fork_allowed")
+  /// Declared distribution targets (vesperer, telegram, web, chai, sillytavern, api…)
+  channels     String[] @default([])
   forkedFromId String?
   archivedAt   DateTime?
   archivedByUserId String?
@@ -274,6 +282,7 @@ model Character {
   user           User                @relation("CharacterCreator", fields: [userId], references: [id], onDelete: Cascade)
   forkedFrom     Character?          @relation("CharacterForks", fields: [forkedFromId], references: [id], onDelete: SetNull)
   forks          Character[]         @relation("CharacterForks")
+  versions       CharacterVersion[]
   conversations   Conversation[]
   memories        Memory[]
   summaries       Summary[]
@@ -292,6 +301,32 @@ model Character {
   @@index([isPublic, updatedAt])
   @@index([isPublic, isAdult])
   @@index([workspaceId, archivedAt])
+  @@index([isPublic, license])
+}
+
+/// Immutable snapshot of a persona for the Persona Registry version history.
+model CharacterVersion {
+  id              String   @id @default(cuid())
+  characterId     String
+  versionMajor    Int
+  versionMinor    Int
+  changelog       String?
+  name            String
+  tagline         String?
+  openingLine     String?  @db.Text
+  soulMd          String?  @db.Text
+  styleMd         String?  @db.Text
+  rulesMd         String?  @db.Text
+  contextMd       String?  @db.Text
+  metaJson        Json?
+  license         String
+  createdByUserId String?
+  createdAt       DateTime @default(now())
+
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([characterId, versionMajor, versionMinor])
+  @@index([characterId, createdAt])
 }
 
 model CharacterPhoto {

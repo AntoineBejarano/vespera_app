@@ -2,6 +2,7 @@ import { getAppUser } from "@/lib/session";
 import { hasPlatformOperatorAttestation } from "@/lib/legal/operator";
 import { prisma } from "@/lib/db";
 import { PersonaDetail } from "@/components/PersonaDetail";
+import { formatPersonaVersion } from "@/lib/personas/license";
 import { redirect, notFound } from "next/navigation";
 
 type Params = { params: Promise<{ id: string }> };
@@ -73,6 +74,12 @@ export default async function PersonaPage({ params }: Params) {
         categories: character.categories,
         allowFork: character.allowFork,
         isAdult: character.isAdult,
+        license: character.license,
+        channels: character.channels,
+        version: formatPersonaVersion(
+          character.versionMajor,
+          character.versionMinor,
+        ),
         coverUrl,
       }}
       appUrl={appUrl}
