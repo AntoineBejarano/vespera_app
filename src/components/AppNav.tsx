@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useHexclaveApp, useUser } from "@hexclave/next";
 import { SITE_URL } from "@/lib/site";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
+import { DebugRoleSwitcher } from "@/components/DebugRoleSwitcher";
 
 const MARKETING_LINKS = [
   { href: "/#live-personas", label: "Live Personas" },
@@ -120,6 +121,7 @@ export function AppNav({
         >
           {user ? (
             <>
+              <DebugRoleSwitcher />
               <WorkspaceSwitcher />
               <Link href="/personas" className={linkClass}>
                 Personas
@@ -250,6 +252,9 @@ export function AppNav({
           <div className="flex flex-col gap-1 text-[15px] text-[var(--muted)]">
             {user ? (
               <>
+                <div className="py-2">
+                  <DebugRoleSwitcher />
+                </div>
                 <Link
                   href="/personas"
                   className="py-2.5 hover:text-[var(--ink)]"
