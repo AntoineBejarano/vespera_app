@@ -9,26 +9,27 @@ const MARKETING_COLUMNS: {
   {
     title: "Explore",
     links: [
-      { href: "/c/luna", label: "Characters" },
-      { href: "/c/einstein", label: "Historical minds" },
-      { href: "/c/stoic-mentor", label: "Mentors" },
+      { href: "/explore", label: "Explore all" },
+      { href: "/explore?filter=meet", label: "Great minds" },
+      { href: "/explore?filter=learn", label: "Mentors & tutors" },
       { href: "/#voice", label: "Voice" },
     ],
   },
   {
     title: "Create",
     links: [
-      { href: "/#create", label: "Create a persona" },
+      { href: "/create/ai-character", label: "Create a persona" },
       { href: "/bring", label: "Bring a character" },
+      { href: "/explore?filter=hire", label: "For business" },
       { href: "/#creators", label: "For creators" },
-      { href: "/#business", label: "For business" },
     ],
   },
   {
     title: "Developers",
     links: [
       { href: "/docs", label: "API documentation" },
-      { href: "/docs#cli", label: "CLI" },
+      { href: "/#cli", label: "CLI for agents" },
+      { href: "/docs#cli", label: "CLI docs" },
       { href: "/technology", label: "Technology" },
       { href: "/help", label: "Help" },
     ],

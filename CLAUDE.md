@@ -75,6 +75,12 @@ npm run db:migrate
 npm run vesperer     # CLI personas / API keys
 ```
 
+## SEO Explore (growth)
+
+Taxonomía canónica: `/explore`, `/meet/[slug]`, `/learn/[slug]`, `/hire/[slug]`, `/create/[slug]`.
+Catálogo editorial en `src/lib/seo/catalog/` (no thin pages). Aliases 308: `/characters/*`, `/historical-figures/*` → meet; `/use-cases/*` → hire/learn/create.
+Chat demo real: `/c/[slug]` (showcase en `src/lib/characters/showcase.ts`). Adulto fuera del apex.
+
 ## Al tocar After Dark / XXX
 
 1. Links públicos → `AFTER_DARK_URL`, no hardcodear path en el apex para SEO.

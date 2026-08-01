@@ -30,21 +30,21 @@ const PATHS = [
     title: "Learn from one",
     body: "Tutors, mentors and historical minds that remember your progress, questions and ideas.",
     cta: "Start learning",
-    href: "/c/stoic-mentor",
+    href: "/explore?filter=learn",
   },
   {
     id: "hire",
     title: "Hire one",
     body: "Receptionists, sales agents and support specialists that know your offer and remember every returning person.",
     cta: "Build an AI employee",
-    href: "/#business",
+    href: "/explore?filter=hire",
   },
   {
     id: "create",
     title: "Create one",
     body: "Turn an idea, story, artwork or existing character into a personality people can return to.",
     cta: "Create a persona",
-    href: "/#create",
+    href: "/create/ai-character",
   },
 ];
 
@@ -194,9 +194,9 @@ const OWNERSHIP = [
 
 const HERO_PERSONAS = [
   { name: "Luna", role: "Virtual Companion", href: "/c/luna" },
-  { name: "Plato", role: "Historical Mind", href: "/c/einstein" },
-  { name: "Aria", role: "AI Receptionist", href: "/#business" },
-  { name: "Kai", role: "Personal Mentor", href: "/c/stoic-mentor" },
+  { name: "Plato", role: "Historical Mind", href: "/meet/plato" },
+  { name: "Aria", role: "AI Receptionist", href: "/hire/ai-receptionist" },
+  { name: "Kai", role: "Personal Mentor", href: "/learn/stoic-mentor" },
 ];
 
 const PRICING = [
@@ -389,7 +389,7 @@ export function LandingPage() {
             <ShimmerButton
               className="w-full sm:w-auto"
               onClick={() => {
-                window.location.href = "/c/luna";
+                window.location.href = "/explore";
               }}
             >
               Meet a persona
@@ -778,24 +778,25 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Developers — near the end */}
+      {/* CLI for AI agents — keep near the end, but prominent */}
       <section
-        id="developers"
-        className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/35 py-16 sm:py-24"
+        id="cli"
+        className="scroll-mt-24 border-y border-[var(--line)] bg-[var(--bg-elevated)]/35 py-16 sm:py-24"
       >
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <BlurFade>
               <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
-                For builders
+                Built for AI agents
               </p>
               <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-                Built by people—or by agents.
+                Let your AI create the persona.
               </h2>
               <p className="mt-4 max-w-xl text-[var(--muted)]">
-                Create, configure and deploy personas through the dashboard, CLI
-                or API. Give Cursor, Claude, or any agent an account key when
-                you want automation instead of click-ops.
+                Give Cursor, Claude, or any agent an account API key. It can
+                create personas with identity and memory layers — then hand you
+                a chat key to put in front of users. Dashboard, CLI, or API —
+                no click-ops required.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -823,6 +824,7 @@ export function LandingPage() {
 {`npm run vesperer -- login --key vsk_…
 npm run vesperer -- personas create --from persona.json
 
+# persona.json
 # soul / style / rules / context
 # = identity + memory that persists`}
               </pre>
@@ -910,7 +912,7 @@ npm run vesperer -- personas create --from persona.json
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
             <ShimmerButton
               onClick={() => {
-                window.location.href = "/c/luna";
+                window.location.href = "/explore";
               }}
             >
               Meet a persona

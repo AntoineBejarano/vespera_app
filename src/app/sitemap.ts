@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { LEGAL_PAGES } from "@/lib/legal/constants";
 import { SHOWCASE_CHARACTERS } from "@/lib/characters/showcase";
+import { listAllForSitemap } from "@/lib/seo/catalog";
 import { AFTER_DARK_URL, SITE_URL } from "@/lib/site";
 import { prisma } from "@/lib/db";
 
@@ -75,11 +76,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
+      url: `${SITE_URL}/explore`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
+    {
       url: AFTER_DARK_URL,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    ...listAllForSitemap().map(({ path }) => ({
+      url: `${SITE_URL}${path}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.85,
+    })),
     ...showcaseEntries,
     ...dbEntries,
     ...LEGAL_PAGES.map((page) => ({

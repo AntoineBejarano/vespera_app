@@ -170,10 +170,10 @@ export function PublicCharacterView({
 
       <div className="mx-auto max-w-6xl px-4 pb-10 sm:px-6">
         <Link
-          href="/#explore"
+          href="/explore"
           className="text-sm text-[var(--muted)] hover:text-[var(--ink)]"
         >
-          ← Explore more characters
+          ← Explore more
         </Link>
       </div>
       <LegalFooter variant="marketing" />

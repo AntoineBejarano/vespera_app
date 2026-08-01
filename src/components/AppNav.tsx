@@ -10,17 +10,18 @@ const MARKETING_LINKS = [
   { href: "/#creators", label: "For Creators" },
   { href: "/#business", label: "For Business" },
   { href: "/#voice", label: "Voice" },
-  { href: "/#developers", label: "Developers" },
+  { href: "/#cli", label: "Developers" },
   { href: "/#pricing", label: "Pricing" },
 ];
 
 const EXPLORE_LINKS = [
-  { href: "/c/luna", label: "Characters" },
-  { href: "/c/einstein", label: "Historical minds" },
-  { href: "/c/stoic-mentor", label: "Mentors" },
-  { href: "/#voice", label: "Voice" },
-  { href: "/#explore", label: "All paths" },
+  { href: "/explore", label: "All paths" },
+  { href: "/explore?filter=meet", label: "Great minds" },
+  { href: "/explore?filter=learn", label: "Learn" },
+  { href: "/explore?filter=hire", label: "AI employees" },
+  { href: "/explore?filter=create", label: "Create" },
   { href: "/bring", label: "Bring a character" },
+  { href: "/#cli", label: "CLI for agents" },
 ];
 
 /** Hash-only so section links work on xxx home (/) and localhost (/after-dark). */
@@ -147,13 +148,13 @@ export function AppNav({
                   onMouseEnter={() => setExploreOpen(true)}
                   onMouseLeave={() => setExploreOpen(false)}
                 >
-                  <button
-                    type="button"
+                  <Link
+                    href="/explore"
                     className={linkClass}
                     aria-expanded={exploreOpen}
                   >
                     Explore
-                  </button>
+                  </Link>
                   {exploreOpen ? (
                     <div className="absolute left-0 top-full z-50 min-w-[11.5rem] pt-3">
                       <div className="border border-white/[0.08] bg-[var(--bg-elevated)]/95 py-2 shadow-2xl backdrop-blur-xl">

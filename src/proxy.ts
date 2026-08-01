@@ -32,6 +32,14 @@ function isAgeExempt(pathname: string) {
     pathname === "/bring" ||
     pathname === "/technology" ||
     pathname === "/voice" ||
+    pathname === "/explore" ||
+    pathname.startsWith("/meet/") ||
+    pathname.startsWith("/learn/") ||
+    pathname.startsWith("/hire/") ||
+    pathname.startsWith("/create/") ||
+    pathname.startsWith("/characters/") ||
+    pathname.startsWith("/historical-figures/") ||
+    pathname.startsWith("/use-cases/") ||
     pathname.startsWith("/c/") ||
     pathname === "/robots.txt" ||
     pathname === "/sitemap.xml" ||
