@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ExploreHub } from "@/components/seo/ExploreHub";
+import { PageSpinner } from "@/components/Spinner";
 import { listAllSeoPages } from "@/lib/seo/catalog";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -28,13 +29,7 @@ async function ExploreInner({ searchParams }: Props) {
 
 export default function ExplorePage(props: Props) {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center text-[var(--muted)]">
-          Loading…
-        </div>
-      }
-    >
+    <Suspense fallback={<PageSpinner />}>
       <ExploreInner {...props} />
     </Suspense>
   );

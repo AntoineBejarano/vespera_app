@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { LandingPage } from "@/components/LandingPage";
+import { PageSpinner } from "@/components/Spinner";
 import {
   SITE_DESCRIPTION,
   SITE_DOMAIN,
@@ -118,13 +119,7 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Suspense
-        fallback={
-          <div className="flex min-h-screen items-center justify-center text-[var(--muted)]">
-            Loading…
-          </div>
-        }
-      >
+      <Suspense fallback={<PageSpinner />}>
         <LandingPage />
       </Suspense>
     </>

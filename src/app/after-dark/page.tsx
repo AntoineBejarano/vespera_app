@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AfterDarkLanding } from "@/components/AfterDarkLanding";
+import { PageSpinner } from "@/components/Spinner";
 import { AFTER_DARK_KEYWORDS } from "@/lib/seo/keywords";
 import { AFTER_DARK_URL, SITE_NAME } from "@/lib/site";
 
@@ -31,13 +32,7 @@ export const metadata: Metadata = {
 
 export default function AfterDarkPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center text-[var(--muted)]">
-          Loading…
-        </div>
-      }
-    >
+    <Suspense fallback={<PageSpinner variant="after-dark" />}>
       <AfterDarkLanding />
     </Suspense>
   );

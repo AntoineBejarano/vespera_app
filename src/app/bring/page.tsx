@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BringCharacterFlow } from "@/components/BringCharacterFlow";
+import { PageSpinner } from "@/components/Spinner";
 import { breadcrumbJsonLd } from "@/lib/seo/breadcrumbs";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -96,13 +97,7 @@ export default function BringPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Suspense
-        fallback={
-          <div className="flex min-h-screen items-center justify-center text-[var(--muted)]">
-            Loading…
-          </div>
-        }
-      >
+      <Suspense fallback={<PageSpinner />}>
         <BringCharacterFlow />
       </Suspense>
     </>
