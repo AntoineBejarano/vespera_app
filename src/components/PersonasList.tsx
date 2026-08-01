@@ -1,6 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowUpRight, MessageSquare, Plus, Sparkles } from "lucide-react";
+import { MagicCard } from "@/components/magicui/magic-card";
+import { BlurFade } from "@/components/magicui/effects";
+import { PageHeader } from "@/components/app-shell/PageHeader";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { NumberTicker } from "@/components/ui/number-ticker";
+import { ShineBorder } from "@/components/ui/shine-border";
 
 type Bot = {
   id: string;
@@ -24,111 +34,152 @@ type Persona = {
 };
 
 export function PersonasList({ initial }: { initial: Persona[] }) {
+  const liveCount = initial.filter((p) => p.active).length;
+
   return (
     <div className="px-4 py-6 sm:px-6 sm:py-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--ink)] sm:text-3xl">
-            Personas
-          </h1>
-          <p className="mt-1 max-w-xl text-sm text-[var(--muted)]">
-            Identity, memory, bots and API — one roster for every channel.
-          </p>
-        </div>
-        <Link
-          href="/personas/new"
-          className="rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
-        >
-          New persona
-        </Link>
-      </div>
+      <PageHeader
+        title="Personas"
+        description="Identity, memory, bots and API — one roster for every channel."
+        actions={
+          <Button asChild size="lg">
+            <Link href="/personas/new">
+              <Plus className="size-4" />
+              New persona
+            </Link>
+          </Button>
+        }
+      />
+
+      {initial.length > 0 ? (
+        <BlurFade delay={0.05}>
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <StatCard label="Personas" value={initial.length} />
+            <StatCard label="Live" value={liveCount} />
+            <StatCard
+              label="Telegram peers"
+              value={initial.reduce((n, p) => n + p.peerCount, 0)}
+            />
+          </div>
+        </BlurFade>
+      ) : null}
 
       {initial.length === 0 ? (
-        <div className="mt-16 rounded-xl border border-dashed border-white/[0.1] px-6 py-16 text-center">
-          <p className="text-[var(--muted)]">No personas yet.</p>
-          <Link
-            href="/personas/new"
-            className="mt-4 inline-block rounded-lg border border-[var(--line)] px-4 py-2.5 text-sm"
-          >
-            Create your first
-          </Link>
-        </div>
+        <BlurFade delay={0.08}>
+          <Card className="relative mt-10 overflow-hidden border-dashed bg-card/40 py-0">
+            <ShineBorder
+              shineColor={["#5badee", "#aed4fa", "#5badee"]}
+              borderWidth={1}
+              duration={12}
+            />
+            <CardContent className="flex flex-col items-center px-6 py-16 text-center">
+              <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                <Sparkles className="size-5" />
+              </div>
+              <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+                Create your first persona
+              </h2>
+              <p className="mt-2 max-w-md text-sm text-[var(--muted)]">
+                Give her a mind, connect Telegram, and ship chat across channels.
+              </p>
+              <Button asChild className="mt-6" size="lg">
+                <Link href="/personas/new">
+                  <Plus className="size-4" />
+                  Get started
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </BlurFade>
       ) : (
-        <ul className="mt-6 divide-y divide-white/[0.06] rounded-xl border border-white/[0.06] bg-[var(--bg-elevated)]/40">
-          {initial.map((p) => {
+        <ul className="mt-6 grid gap-3 lg:grid-cols-2">
+          {initial.map((p, i) => {
             const initialLetter = (p.name.trim()[0] || "?").toUpperCase();
             return (
-              <li key={p.id}>
-                <div className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
-                  <Link
-                    href={`/personas/${p.id}`}
-                    className="flex min-w-0 flex-1 items-center gap-3"
-                  >
-                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-white/[0.08] bg-[var(--accent-soft)]">
-                      {p.coverUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={p.coverUrl}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center text-sm font-medium text-[var(--accent)]">
-                          {initialLetter}
+              <BlurFade key={p.id} delay={0.04 + i * 0.03}>
+                <li>
+                  <MagicCard className="h-full rounded-2xl">
+                    <div className="flex h-full flex-col gap-4 p-4 sm:p-5">
+                      <Link
+                        href={`/personas/${p.id}`}
+                        className="flex min-w-0 items-start gap-3"
+                      >
+                        <Avatar className="size-12 rounded-xl">
+                          {p.coverUrl ? (
+                            <AvatarImage src={p.coverUrl} alt="" />
+                          ) : null}
+                          <AvatarFallback className="rounded-xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                            {initialLetter}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h2 className="truncate font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--ink)]">
+                              {p.name}
+                            </h2>
+                            {p.active ? (
+                              <Badge className="bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/15">
+                                Live
+                              </Badge>
+                            ) : null}
+                            {p.hasApiKey ? (
+                              <Badge variant="outline">API</Badge>
+                            ) : null}
+                          </div>
+                          <p className="mt-1 truncate text-xs text-[var(--muted)]">
+                            Intensity {p.intensity}/5
+                            {p.bots.length
+                              ? ` · ${p.bots.map((b) => `@${b.username}`).join(", ")}`
+                              : " · No bots yet"}
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            <Badge variant="secondary">
+                              {p.peerCount} peers
+                            </Badge>
+                            <Badge variant="secondary">
+                              {p.photoCount} photos
+                            </Badge>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="truncate font-medium text-[var(--ink)]">
-                          {p.name}
-                        </h2>
-                        {p.active ? (
-                          <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-emerald-300">
-                            Live
-                          </span>
-                        ) : null}
-                        {p.hasApiKey ? (
-                          <span className="rounded border border-[var(--accent)]/30 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-[var(--accent-2)]">
-                            API
-                          </span>
-                        ) : null}
+                        <ArrowUpRight className="mt-1 size-4 shrink-0 text-[var(--muted)]" />
+                      </Link>
+                      <div className="flex gap-2 border-t border-white/[0.06] pt-3">
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/chat?characterId=${p.id}`}>
+                            <MessageSquare className="size-3.5" />
+                            Chat
+                          </Link>
+                        </Button>
+                        <Button asChild variant="ghost" size="sm">
+                          <Link href={`/personas/${p.id}/memory`}>Memory</Link>
+                        </Button>
+                        <Button asChild variant="ghost" size="sm" className="ml-auto">
+                          <Link href={`/personas/${p.id}`}>Open</Link>
+                        </Button>
                       </div>
-                      <p className="mt-0.5 truncate text-xs text-[var(--muted)]">
-                        Intensity {p.intensity}/5
-                        {p.bots.length
-                          ? ` · ${p.bots.map((b) => `@${b.username}`).join(", ")}`
-                          : " · No bots"}
-                        {` · ${p.peerCount} peers · ${p.photoCount} photos`}
-                      </p>
                     </div>
-                  </Link>
-                  <div className="flex shrink-0 items-center gap-3 pl-[3.25rem] text-sm sm:pl-0">
-                    <Link
-                      href={`/chat?characterId=${p.id}`}
-                      className="text-[var(--muted)] transition hover:text-[var(--ink)]"
-                    >
-                      Chat
-                    </Link>
-                    <Link
-                      href={`/personas/${p.id}/memory`}
-                      className="text-[var(--muted)] transition hover:text-[var(--ink)]"
-                    >
-                      Memory
-                    </Link>
-                    <Link
-                      href={`/personas/${p.id}`}
-                      className="rounded-lg border border-white/[0.08] px-3 py-1.5 text-[var(--ink)] transition hover:border-[var(--accent)]/40"
-                    >
-                      Open
-                    </Link>
-                  </div>
-                </div>
-              </li>
+                  </MagicCard>
+                </li>
+              </BlurFade>
             );
           })}
         </ul>
       )}
     </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: number }) {
+  return (
+    <Card className="border-white/[0.06] bg-card/50 py-0 shadow-none">
+      <CardContent className="px-4 py-3.5">
+        <p className="text-[11px] uppercase tracking-[0.16em] text-[var(--muted)]">
+          {label}
+        </p>
+        <p className="mt-1 font-[family-name:var(--font-display)] text-2xl font-semibold tabular-nums text-[var(--ink)]">
+          <NumberTicker value={value} />
+        </p>
+      </CardContent>
+    </Card>
   );
 }

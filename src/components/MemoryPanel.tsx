@@ -1,7 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MagicCard } from "@/components/magicui/magic-card";
+import { PageHeader } from "@/components/app-shell/PageHeader";
+import { Button } from "@/components/ui/button";
 
 type MemoryRow = {
   id: string;
@@ -69,12 +72,15 @@ export function MemoryPanel({
 
   return (
     <div className="px-4 py-6 sm:px-6 sm:py-8">
-      <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--ink)] sm:text-3xl">
-        Memory · {characterName}
-      </h1>
-      <p className="mt-1 text-sm text-[var(--muted)]">
-        What this persona remembers across test chat and Telegram peers.
-      </p>
+      <PageHeader
+        title={`Memory · ${characterName}`}
+        description="What this persona remembers across test chat and Telegram peers."
+        actions={
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/personas/${characterId}`}>Open persona</Link>
+          </Button>
+        }
+      />
       {error ? <p className="mt-4 text-sm text-[var(--danger)]">{error}</p> : null}
       <ul className="mt-8 space-y-3">
         {memories.length === 0 ? (

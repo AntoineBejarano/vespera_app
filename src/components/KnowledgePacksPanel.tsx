@@ -382,7 +382,7 @@ export function KnowledgePacksPanel({
           <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--ink)] sm:text-3xl">
             Sources
           </h1>
-          <p className="mt-1 max-w-2xl text-sm text-[var(--muted)]">
+          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">
             Snapshot and index approved material so chat retrieves evidence —
             never by re-fetching remotes at conversation time.
           </p>
@@ -390,7 +390,7 @@ export function KnowledgePacksPanel({
         {characterId ? (
           <Link
             href={`/personas/${characterId}`}
-            className="text-sm text-[var(--muted)] hover:text-[var(--ink)]"
+            className="rounded-lg border border-white/[0.08] px-3 py-2 text-sm text-[var(--muted)] transition hover:border-[var(--accent)]/40 hover:text-[var(--ink)]"
           >
             ← Back to persona
           </Link>

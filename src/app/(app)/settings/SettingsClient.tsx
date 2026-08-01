@@ -5,6 +5,18 @@ import { useEffect, useState } from "react";
 import { useHexclaveApp } from "@hexclave/next";
 import { ALLOWED_MODELS, MODEL_LABELS } from "@/lib/ai/models";
 import { WorkspaceMembersPanel } from "@/components/WorkspaceMembersPanel";
+import { PageHeader } from "@/components/app-shell/PageHeader";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 
 type ApiKeyRow = {
   id: string;
@@ -107,171 +119,160 @@ export default function SettingsClient() {
   }
 
   return (
-    <div className="max-w-2xl space-y-8 px-4 py-6 sm:px-6 sm:py-8">
-      <div>
-        <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight sm:text-3xl">
-          Settings
-        </h1>
-        <p className="mt-2 text-[var(--muted)]">
-          Personas, bots, photos and chat keys live under{" "}
-          <Link href="/personas" className="text-[var(--accent)]">
-            Personas
-          </Link>
-          . Need a hand?{" "}
-          <Link href="/help" className="text-[var(--accent)]">
-            Help
-          </Link>{" "}
-          ·{" "}
-          <Link href="/docs" className="text-[var(--accent)]">
-            API docs
-          </Link>
-          . Plan: {plan}.{" "}
-          {usage
-            ? `Today: ${usage.used}/${usage.limit} (${usage.remaining} left).`
-            : null}
-        </p>
-      </div>
+    <div className="mx-auto max-w-2xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
+      <PageHeader
+        title="Settings"
+        description={
+          <>
+            Plan <Badge variant="secondary">{plan}</Badge>
+            {usage
+              ? ` · Today ${usage.used}/${usage.limit} (${usage.remaining} left)`
+              : null}
+            . Personas live under{" "}
+            <Link href="/personas" className="text-[var(--accent)] hover:underline">
+              Personas
+            </Link>
+            .
+          </>
+        }
+      />
 
       <div id="workspace" className="scroll-mt-20">
         <WorkspaceMembersPanel />
       </div>
 
-      <section
-        id="api-keys"
-        className="scroll-mt-20 space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4"
-      >
-        <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
-          Account API keys (CLI / AI agents)
-        </h2>
-        <p className="text-sm text-[var(--muted)]">
-          Keys starting with <code className="text-[var(--ink)]">vsk_</code> let
-          agents create personas via the CLI or{" "}
-          <code className="text-[var(--ink)]">POST /api/v1/personas</code>. Chat
-          keys (<code className="text-[var(--ink)]">vesp_</code>) stay on each
-          persona.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <input
-            className="min-w-[8rem] flex-1 border border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-sm"
-            value={keyName}
-            onChange={(e) => setKeyName(e.target.value)}
-            placeholder="Label (e.g. cursor)"
-          />
-          <button
-            type="button"
-            onClick={createKey}
-            className="bg-[var(--accent)] px-4 py-2 text-sm text-[var(--accent-ink)]"
-          >
-            Create key
-          </button>
-        </div>
-        {newSecret ? (
-          <div className="rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)] p-3 text-sm">
-            <p className="text-xs uppercase tracking-wider text-[var(--muted)]">
-              Copy now
-            </p>
-            <code className="mt-2 block break-all text-[var(--ink)]">
-              {newSecret}
-            </code>
-            <pre className="mt-3 overflow-x-auto text-xs text-[var(--muted)]">
-{`npm run vesperer -- login --key ${newSecret}`}
-            </pre>
+      <Card id="api-keys" className="scroll-mt-20 border-white/[0.06] bg-card/50">
+        <CardHeader>
+          <CardTitle>Account API keys</CardTitle>
+          <CardDescription>
+            Keys starting with <code className="text-[var(--ink)]">vsk_</code>{" "}
+            let agents create personas via CLI or{" "}
+            <code className="text-[var(--ink)]">POST /api/v1/personas</code>.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <Input
+              className="min-w-[8rem] flex-1"
+              value={keyName}
+              onChange={(e) => setKeyName(e.target.value)}
+              placeholder="Label (e.g. cursor)"
+            />
+            <Button type="button" onClick={() => void createKey()}>
+              Create key
+            </Button>
           </div>
-        ) : null}
-        <ul className="space-y-2 text-sm">
-          {keys.map((k) => (
-            <li
-              key={k.id}
-              className="flex items-center justify-between gap-3 border border-[var(--line)] px-3 py-2"
-            >
-              <div>
-                <p className="text-[var(--ink)]">
-                  {k.name} ·{" "}
-                  <code>
-                    {k.keyPrefix}…{k.lastFour ?? ""}
-                  </code>
-                </p>
-                <p className="text-xs text-[var(--muted)]">
-                  Created {new Date(k.createdAt).toLocaleDateString()}
-                  {k.lastUsedAt
-                    ? ` · last used ${new Date(k.lastUsedAt).toLocaleDateString()}`
-                    : ""}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => revokeKey(k.id)}
-                className="text-xs text-red-400"
-              >
-                Revoke
-              </button>
-            </li>
-          ))}
-          {keys.length === 0 ? (
-            <li className="text-sm text-[var(--muted)]">No active keys yet.</li>
+          {newSecret ? (
+            <div className="rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)] p-3 text-sm">
+              <p className="text-xs uppercase tracking-wider text-[var(--muted)]">
+                Copy now
+              </p>
+              <code className="mt-2 block break-all text-[var(--ink)]">
+                {newSecret}
+              </code>
+              <pre className="mt-3 overflow-x-auto text-xs text-[var(--muted)]">
+                {`npm run vesperer -- login --key ${newSecret}`}
+              </pre>
+            </div>
           ) : null}
-        </ul>
-        <Link href="/docs#cli" className="text-sm text-[var(--accent)]">
-          CLI docs →
-        </Link>
-      </section>
+          <ul className="space-y-2">
+            {keys.map((k) => (
+              <li
+                key={k.id}
+                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] px-3 py-2.5"
+              >
+                <div>
+                  <p className="text-sm text-[var(--ink)]">
+                    {k.name} ·{" "}
+                    <code>
+                      {k.keyPrefix}…{k.lastFour ?? ""}
+                    </code>
+                  </p>
+                  <p className="text-xs text-[var(--muted)]">
+                    Created {new Date(k.createdAt).toLocaleDateString()}
+                    {k.lastUsedAt
+                      ? ` · last used ${new Date(k.lastUsedAt).toLocaleDateString()}`
+                      : ""}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive"
+                  onClick={() => void revokeKey(k.id)}
+                >
+                  Revoke
+                </Button>
+              </li>
+            ))}
+            {keys.length === 0 ? (
+              <li className="text-sm text-[var(--muted)]">No active keys yet.</li>
+            ) : null}
+          </ul>
+          <Button asChild variant="link" className="h-auto px-0">
+            <Link href="/docs#cli">CLI docs →</Link>
+          </Button>
+        </CardContent>
+      </Card>
 
-      <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
-        <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
-          OpenRouter model
-        </h2>
-        <select
-          className="w-full border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-        >
-          {(ALLOWED_MODELS.length
-            ? ALLOWED_MODELS
-            : Object.keys(MODEL_LABELS)
-          ).map((id) => (
-            <option key={id} value={id}>
-              {MODEL_LABELS[id] ?? id}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={saveModel}
-          className="bg-[var(--accent)] px-4 py-2 text-[var(--bg)]"
-        >
-          Save model
-        </button>
-      </section>
+      <Card className="border-white/[0.06] bg-card/50">
+        <CardHeader>
+          <CardTitle>OpenRouter model</CardTitle>
+          <CardDescription>Default model for persona generation and chat.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <select
+            className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+          >
+            {(ALLOWED_MODELS.length
+              ? ALLOWED_MODELS
+              : Object.keys(MODEL_LABELS)
+            ).map((id) => (
+              <option key={id} value={id}>
+                {MODEL_LABELS[id] ?? id}
+              </option>
+            ))}
+          </select>
+          <Button type="button" onClick={() => void saveModel()}>
+            Save model
+          </Button>
+        </CardContent>
+      </Card>
 
-      <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
-        <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
-          Privacy
-        </h2>
-        <button
-          type="button"
-          onClick={exportData}
-          className="mr-3 border border-[var(--line)] px-4 py-2"
-        >
-          Export data
-        </button>
-        <button
-          type="button"
-          onClick={deleteAccount}
-          className="border border-red-500/40 px-4 py-2 text-red-400"
-        >
-          Delete account
-        </button>
-      </section>
+      <Card className="border-white/[0.06] bg-card/50">
+        <CardHeader>
+          <CardTitle>Privacy</CardTitle>
+          <CardDescription>Export or permanently delete your account.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" onClick={() => void exportData()}>
+            Export data
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => void deleteAccount()}
+          >
+            Delete account
+          </Button>
+        </CardContent>
+      </Card>
 
       {message ? <p className="text-sm text-[var(--accent)]">{message}</p> : null}
 
-      <button
+      <Separator />
+
+      <Button
         type="button"
-        className="text-sm text-[var(--muted)] underline"
+        variant="ghost"
+        className="text-[var(--muted)]"
         onClick={() => app.redirectToSignOut()}
       >
         Sign out
-      </button>
+      </Button>
     </div>
   );
 }
