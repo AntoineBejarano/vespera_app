@@ -25,7 +25,7 @@ export default async function PersonaPage({ params }: Params) {
         orderBy: { createdAt: "desc" },
       },
       photos: { orderBy: { createdAt: "desc" } },
-      _count: { select: { relationships: true } },
+      _count: { select: { relationships: true, memories: true } },
     },
   });
 
@@ -35,6 +35,12 @@ export default async function PersonaPage({ params }: Params) {
     process.env.APP_URL?.replace(/\/$/, "") ||
     process.env.AUTH_URL?.replace(/\/$/, "") ||
     "";
+
+  const coverUrl =
+    character.photos.find((p) => p.kind === "selfie" || p.kind === "face")
+      ?.url ??
+    character.photos[0]?.url ??
+    null;
 
   return (
     <>
@@ -46,7 +52,7 @@ export default async function PersonaPage({ params }: Params) {
           name: character.name,
           intensity: character.intensity,
           active: character.active,
-          hasApiKey: Boolean(character.apiKey),
+          hasApiKey: Boolean(character.apiKey || character.apiKeyHash),
           soulMd: character.soulMd ?? "",
           styleMd: character.styleMd ?? "",
           rulesMd: character.rulesMd ?? "",
@@ -67,6 +73,7 @@ export default async function PersonaPage({ params }: Params) {
             caption: p.caption,
           })),
           relationshipCount: character._count.relationships,
+          memoryCount: character._count.memories,
           isPublic: character.isPublic,
           slug: character.slug,
           tagline: character.tagline,
@@ -74,6 +81,7 @@ export default async function PersonaPage({ params }: Params) {
           categories: character.categories,
           allowFork: character.allowFork,
           isAdult: character.isAdult,
+          coverUrl,
         }}
         appUrl={appUrl}
       />
