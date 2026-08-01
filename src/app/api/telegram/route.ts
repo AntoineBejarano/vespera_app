@@ -220,7 +220,7 @@ export async function POST(req: Request) {
             text: spoken,
             modelId: cast.modelId,
             outputFormat: "opus_48000_128",
-            speed: 0.82,
+            speed: cast.speed ?? 1.0,
           });
           await telegramSendVoice(chatId, audio, token);
           return Response.json({ ok: true });

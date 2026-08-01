@@ -5,6 +5,11 @@ export const SITE_URL =
   process.env.NEXTAUTH_URL?.replace(/\/$/, "") ||
   "https://vesperer.com";
 
+export {
+  AFTER_DARK_HOST,
+  AFTER_DARK_URL,
+} from "@/lib/hosts";
+
 export const SITE_TAGLINE =
   "Answer every client with all your knowledge — and build the connection that keeps them.";
 
@@ -15,5 +20,5 @@ export const SITE_DESCRIPTION =
 export const BRAND_ACCENT = "#5badee";
 export const BRAND_ACCENT_GLOW = "#aed4fa";
 
-/** After Dark brand — rose */
+/** After Dark (XXX) brand — rose */
 export const BRAND_AFTER_DARK_ACCENT = "#ff4d6d";

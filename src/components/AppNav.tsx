@@ -3,20 +3,31 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useHexclaveApp, useUser } from "@hexclave/next";
+import { SITE_URL } from "@/lib/site";
 
 const MARKETING_LINKS = [
   { href: "/#create", label: "Create" },
   { href: "/voice", label: "Voice" },
-  { href: "/docs", label: "Docs" },
-  { href: "/help", label: "Help" },
+  { href: "/bring", label: "Bring" },
   { href: "/#pricing", label: "Pricing" },
+  { href: "/help", label: "Help" },
 ];
 
+const EXPLORE_LINKS = [
+  { href: "/c/luna", label: "Companions" },
+  { href: "/c/einstein", label: "Historical minds" },
+  { href: "/c/aiko", label: "Roleplay" },
+  { href: "/c/stoic-mentor", label: "Mentors" },
+  { href: "/bring", label: "Bring a character" },
+  { href: "/#cli", label: "CLI for agents" },
+];
+
+/** Hash-only so section links work on xxx home (/) and localhost (/after-dark). */
 const AFTER_DARK_LINKS = [
-  { href: "/after-dark#voice", label: "Voice" },
-  { href: "/after-dark#compete", label: "Compete" },
-  { href: "/after-dark#pipeline", label: "How it works" },
-  { href: "/after-dark#pricing", label: "Pricing" },
+  { href: "#voice", label: "Voice" },
+  { href: "#compete", label: "Compete" },
+  { href: "#pipeline", label: "How it works" },
+  { href: "#pricing", label: "Pricing" },
 ];
 
 function Wordmark({
@@ -79,6 +90,8 @@ export function AppNav({
       ? "/after-dark"
       : "/";
 
+  const mainSiteHref = SITE_URL;
+
   const accentClass =
     variant === "after-dark"
       ? "text-[var(--accent)]"
@@ -139,17 +152,15 @@ export function AppNav({
                   {exploreOpen ? (
                     <div className="absolute left-0 top-full z-50 min-w-[11.5rem] pt-3">
                       <div className="border border-white/[0.08] bg-[var(--bg-elevated)]/95 py-2 shadow-2xl backdrop-blur-xl">
-                        {[
-                          { href: "/#explore", label: "Use cases" },
-                          { href: "/#cli", label: "CLI for AIs" },
-                          { href: "/docs#cli", label: "API & CLI docs" },
-                          { href: "/bring", label: "Bring a character" },
-                          { href: "/help", label: "Help & FAQ" },
-                        ].map((item) => (
+                        {EXPLORE_LINKS.map((item, i) => (
                           <Link
                             key={item.label}
                             href={item.href}
-                            className="block px-4 py-2 text-[13px] text-[var(--muted)] transition hover:bg-white/[0.03] hover:text-[var(--ink)]"
+                            className={`block px-4 py-2 text-[13px] transition hover:bg-white/[0.03] hover:text-[var(--ink)] ${
+                              i === EXPLORE_LINKS.length - 1
+                                ? "mt-1 border-t border-white/[0.06] pt-3 text-[var(--muted)]/80"
+                                : "text-[var(--muted)]"
+                            }`}
                           >
                             {item.label}
                           </Link>
@@ -171,9 +182,9 @@ export function AppNav({
               ))}
 
               {variant === "after-dark" ? (
-                <Link href="/" className={linkClass}>
+                <a href={mainSiteHref} className={linkClass}>
                   Main site
-                </Link>
+                </a>
               ) : null}
 
               <button
@@ -271,13 +282,18 @@ export function AppNav({
             ) : (
               <>
                 {variant === "marketing" ? (
-                  <Link
-                    href="/#explore"
-                    className="py-2.5 hover:text-[var(--ink)]"
-                    onClick={() => setOpen(false)}
-                  >
-                    Explore
-                  </Link>
+                  <>
+                    {EXPLORE_LINKS.map((item) => (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        className="py-2.5 hover:text-[var(--ink)]"
+                        onClick={() => setOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </>
                 ) : null}
                 {guestLinks.map((link) => (
                   <Link
@@ -290,13 +306,13 @@ export function AppNav({
                   </Link>
                 ))}
                 {variant === "after-dark" ? (
-                  <Link
-                    href="/"
+                  <a
+                    href={mainSiteHref}
                     className="py-2.5 hover:text-[var(--ink)]"
                     onClick={() => setOpen(false)}
                   >
                     Main site
-                  </Link>
+                  </a>
                 ) : null}
                 <button
                   type="button"

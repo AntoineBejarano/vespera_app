@@ -7,6 +7,7 @@ import { useHexclaveApp, useUser } from "@hexclave/next";
 import { BrandMark } from "@/components/BrandLogo";
 import { LEGAL_VERSION } from "@/lib/legal/constants";
 import { PageSpinner } from "@/components/Spinner";
+import { AFTER_DARK_URL } from "@/lib/site";
 
 function AgeGateInner() {
   const router = useRouter();
@@ -81,6 +82,7 @@ function AgeGateInner() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "Failed");
+        // /after-dark → XXX home via proxy (or stays on localhost for local dev)
         router.replace(nextPath || (isAdult ? "/after-dark" : "/personas"));
         router.refresh();
         return;
@@ -136,9 +138,9 @@ function AgeGateInner() {
             messaging. We disclose this in line with transparency expectations
             under the EU AI Act and similar rules. This gate does not cover
             adult content — that lives only in{" "}
-            <Link href="/after-dark" className="text-[var(--accent)] underline">
+            <a href={AFTER_DARK_URL} className="text-[var(--accent)] underline">
               After Dark
-            </Link>
+            </a>
             .
           </>
         )}

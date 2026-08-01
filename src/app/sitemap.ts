@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { LEGAL_PAGES } from "@/lib/legal/constants";
 import { SHOWCASE_CHARACTERS } from "@/lib/characters/showcase";
-import { SITE_URL } from "@/lib/site";
+import { AFTER_DARK_URL, SITE_URL } from "@/lib/site";
 import { prisma } from "@/lib/db";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -75,7 +75,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${SITE_URL}/after-dark`,
+      url: AFTER_DARK_URL,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.7,

@@ -6,6 +6,8 @@ export type CastVoice = {
   label: string;
   /** Used if the primary voiceId is blocked (e.g. free plan + library voice). */
   fallbackVoiceId?: string;
+  /** ElevenLabs speed; 1.0 = natural. Lower = slower. */
+  speed?: number;
 };
 
 /**
@@ -34,6 +36,8 @@ export const CHARACTER_VOICES: Record<VoiceAgentId, CastVoice> = {
     fallbackVoiceId: "FGY2WhTYpPnrIDTdsKH5",
     modelId: "eleven_flash_v2_5",
     label: "Tatiana",
+    // Was ~0.82 on Telegram — felt too slow; keep natural/slightly brisk.
+    speed: 1.05,
   },
 };
 

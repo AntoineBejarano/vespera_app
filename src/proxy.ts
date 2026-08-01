@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { ADULT_COOKIE, LEGAL_VERSION } from "@/lib/legal/constants";
+import {
+  AFTER_DARK_URL,
+  isAfterDarkHost,
+  isMainSiteHost,
+  normalizeHost,
+} from "@/lib/hosts";
 
 function hasValidAdultCookie(request: NextRequest) {
   return request.cookies.get(ADULT_COOKIE)?.value === LEGAL_VERSION;
@@ -43,12 +49,23 @@ function isAgeExempt(pathname: string) {
   return false;
 }
 
+function afterDarkPublicUrl(pathname: string, search: string) {
+  // Canonical XXX home is `/` (internally rewritten to /after-dark).
+  const path =
+    pathname === "/after-dark" || pathname.startsWith("/after-dark/")
+      ? pathname.replace(/^\/after-dark/, "") || "/"
+      : pathname;
+  return `${AFTER_DARK_URL}${path}${search}`;
+}
+
 /**
  * Soft auth redirects + hard adult access wall (cookie = current legal version).
+ * Host routing: xxx.vesperer.com serves After Dark; apex redirects /after-dark → XXX.
  * Page/API layers still call getAppUser / ageVerifiedAt for account-level gates.
  */
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
+  const host = normalizeHost(request.headers.get("host"));
 
   // Legacy auth routes → same-domain Hexclave handler pages
   if (pathname === "/login" || pathname === "/register") {
@@ -57,6 +74,29 @@ export async function proxy(request: NextRequest) {
       pathname === "/register" ? "/handler/sign-up" : "/handler/sign-in";
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  // Main site → permanent redirect After Dark path to XXX subdomain
+  if (
+    isMainSiteHost(host) &&
+    (pathname === "/after-dark" || pathname.startsWith("/after-dark/"))
+  ) {
+    return NextResponse.redirect(afterDarkPublicUrl(pathname, search), 308);
+  }
+
+  // XXX subdomain: canonicalize /after-dark → /, rewrite / → /after-dark
+  if (isAfterDarkHost(host)) {
+    if (pathname === "/after-dark" || pathname.startsWith("/after-dark/")) {
+      const url = request.nextUrl.clone();
+      url.pathname = pathname.replace(/^\/after-dark/, "") || "/";
+      return NextResponse.redirect(url, 308);
+    }
+
+    if (pathname === "/") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/after-dark";
+      return NextResponse.rewrite(url);
+    }
   }
 
   if (!isAgeExempt(pathname) && !hasValidAdultCookie(request)) {

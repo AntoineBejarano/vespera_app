@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LEGAL_PAGES } from "@/lib/legal/constants";
+import { AFTER_DARK_URL, SITE_URL } from "@/lib/site";
 
 const MARKETING_LINKS = [
   { href: "/docs", label: "API docs" },
@@ -26,22 +27,36 @@ export function LegalFooter({
           <nav className="flex flex-wrap gap-x-5 gap-y-2">
             {(variant === "after-dark"
               ? [
-                  { href: "/", label: "Vesperer" },
-                  { href: "/after-dark#pipeline", label: "How it works" },
-                  { href: "/after-dark#pricing", label: "Pricing" },
-                  { href: "/#ownership", label: "Ownership" },
+                  { href: SITE_URL, label: "Vesperer", external: true },
+                  { href: "#pipeline", label: "How it works" },
+                  { href: "#pricing", label: "Pricing" },
+                  {
+                    href: `${SITE_URL}/#ownership`,
+                    label: "Ownership",
+                    external: true,
+                  },
                   { href: "/legal/acceptable-use", label: "Safety" },
                 ]
-              : MARKETING_LINKS
-            ).map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="hover:text-[var(--ink)]"
-              >
-                {link.label}
-              </Link>
-            ))}
+              : MARKETING_LINKS.map((l) => ({ ...l, external: false }))
+            ).map((link) =>
+              "external" in link && link.external ? (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="hover:text-[var(--ink)]"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="hover:text-[var(--ink)]"
+                >
+                  {link.label}
+                </Link>
+              ),
+            )}
           </nav>
         ) : null}
 
@@ -65,18 +80,21 @@ export function LegalFooter({
               Report abuse
             </Link>
             {variant === "marketing" ? (
-              <Link href="/after-dark" className="hover:text-[var(--ink)]">
+              <a
+                href={AFTER_DARK_URL}
+                className="hover:text-[var(--ink)]"
+              >
                 After Dark (18+)
-              </Link>
+              </a>
             ) : null}
           </nav>
         </div>
 
         <p className="text-xs leading-relaxed text-[var(--muted)]/80">
           {variant === "after-dark"
-            ? "After Dark is an adults-only zone. Sexual content involving minors is strictly prohibited."
+            ? "After Dark is an adults-only zone on xxx.vesperer.com. Sexual content involving minors is strictly prohibited."
             : variant === "marketing"
-              ? "Vesperer provides AI character infrastructure with identity, memory, and automated-interaction disclosures (EU AI Act transparency). Adult content is only in After Dark, a separate 18+ zone."
+              ? "Vesperer provides AI character infrastructure with identity, memory, and automated-interaction disclosures (EU AI Act transparency). Adult content is only in After Dark (xxx.vesperer.com), a separate 18+ zone."
               : "Automated AI interactions are disclosed per our Terms and Privacy Policy. Illegal and exploitative content is prohibited."}
         </p>
       </div>

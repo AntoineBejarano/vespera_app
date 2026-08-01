@@ -53,8 +53,8 @@ const CHANNELS = [
   { name: "Web", status: "live" },
   { name: "Telegram", status: "live" },
   { name: "Chat API", status: "live" },
-  { name: "CLI for AIs", status: "live" },
   { name: "Voice", status: "live" },
+  { name: "CLI", status: "live" },
 ];
 
 const STEPS = [
@@ -77,6 +77,33 @@ const STEPS = [
     n: "4",
     t: "Let relationships grow",
     d: "Memory compounds per customer — so every return visit feels like continuity, not a reset.",
+  },
+];
+
+const CATEGORIES = [
+  {
+    id: "companions",
+    title: "Companions",
+    body: "Characters built for connection, memory, and long-term relationships.",
+    href: "/c/luna",
+  },
+  {
+    id: "historical",
+    title: "Historical minds",
+    body: "Learn and debate with personalities inspired by history’s greatest thinkers.",
+    href: "/c/einstein",
+  },
+  {
+    id: "roleplay",
+    title: "Roleplay & stories",
+    body: "Build characters for worlds, adventures, and interactive fiction.",
+    href: "/c/aiko",
+  },
+  {
+    id: "mentors",
+    title: "Mentors",
+    body: "Coaches, tutors, and guides that understand their users over time.",
+    href: "/c/stoic-mentor",
   },
 ];
 
@@ -315,12 +342,12 @@ export function LandingPage() {
             >
               Start answering clients
             </ShimmerButton>
-            <Link
-              href="/docs"
-              className="inline-flex w-full items-center justify-center rounded-xl border border-[var(--line)] px-6 py-3.5 text-center sm:w-auto"
-            >
-              Read the API docs
-            </Link>
+              <Link
+                href="/c/luna"
+                className="inline-flex w-full items-center justify-center rounded-xl border border-[var(--line)] px-6 py-3.5 text-center sm:w-auto"
+              >
+                Try a companion demo
+              </Link>
           </BlurFade>
           <p className="mt-4 text-xs text-[var(--muted)]">
             Free to start · Web, Telegram, voice & API · No sales call required
@@ -331,33 +358,65 @@ export function LandingPage() {
         </BlurFade>
       </section>
 
-      {/* Use cases — no AI portraits */}
+      {/* Explore characters */}
       <section
         id="explore"
         className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
       >
         <BlurFade>
           <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            Where connections grow your business
+            Who do you want to bring to life?
           </h2>
           <p className="mt-3 max-w-2xl text-[var(--muted)]">
-            Same engine — different jobs. Support, sales, teaching, community:
-            the AI speaks with your knowledge and remembers each person.
+            Try a live demo — same identity and memory engine whether you build
+            a companion, a mentor, or a voice for your business.
           </p>
         </BlurFade>
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          {USE_CASES.map((item, i) => (
-            <BlurFade key={item.t} delay={i * 0.05}>
-              <div className="h-full border-l-2 border-[var(--accent)]/50 pl-5">
-                <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold">
-                  {item.t}
+          {CATEGORIES.map((cat, i) => (
+            <BlurFade key={cat.id} delay={i * 0.05}>
+              <a
+                href={cat.href}
+                className="group flex h-full flex-col border-l-2 border-[var(--accent)]/50 pl-5 transition hover:border-[var(--accent)]"
+              >
+                <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold group-hover:text-[var(--accent-2)]">
+                  {cat.title}
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-                  {item.d}
+                  {cat.body}
                 </p>
-              </div>
+              </a>
             </BlurFade>
           ))}
+        </div>
+      </section>
+
+      {/* Business use cases */}
+      <section className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/25 py-16 sm:py-20">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <BlurFade>
+            <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
+              Where connections grow your business
+            </h2>
+            <p className="mt-3 max-w-2xl text-[var(--muted)]">
+              Support, sales, teaching, community — the AI speaks with your
+              knowledge and remembers each person.
+            </p>
+          </BlurFade>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2">
+            {USE_CASES.map((item, i) => (
+              <BlurFade key={item.t} delay={i * 0.05}>
+                <div className="h-full rounded-2xl border border-[var(--line)] p-5">
+                  <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+                    {item.t}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+                    {item.d}
+                  </p>
+                </div>
+              </BlurFade>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -496,9 +555,9 @@ export function LandingPage() {
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/docs#cli"
-                  className="inline-flex rounded-xl bg-[var(--accent)] px-6 py-3.5 font-medium text-[var(--accent-ink)]"
+                  className="inline-flex rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
                 >
-                  CLI & API docs
+                  CLI docs
                 </Link>
                 <Link
                   href="/settings"

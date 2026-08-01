@@ -40,6 +40,7 @@ export async function POST(req: Request) {
       fallbackVoiceId: voice.fallbackVoiceId,
       text: parsed.data.text,
       modelId: voice.modelId,
+      speed: voice.speed ?? 1.0,
     });
 
     return new Response(new Uint8Array(audio), {

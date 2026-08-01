@@ -46,8 +46,8 @@ async function convertOnce(params: {
     modelId: params.modelId,
     outputFormat: params.outputFormat,
     voiceSettings: {
-      // < 1.0 slows speech — voice notes should feel intimate, not rushed.
-      speed: params.speed ?? 0.85,
+      // 1.0 = natural; < 1 slows, > 1 speeds up (ElevenLabs ~0.7–1.2).
+      speed: params.speed ?? 1.0,
       stability: 0.45,
       similarityBoost: 0.75,
     },
@@ -65,12 +65,12 @@ export async function synthesizeSpeech(params: {
   fallbackVoiceId?: string;
   /** Telegram voice notes prefer OGG/OPUS. */
   outputFormat?: "mp3_44100_128" | "opus_48000_128";
-  /** 1.0 = default; lower = slower (e.g. 0.8–0.9 for voice notes). */
+  /** 1.0 = natural; lower = slower, higher = faster. */
   speed?: number;
 }): Promise<Buffer> {
   const modelId = params.modelId ?? "eleven_flash_v2_5";
   const outputFormat = params.outputFormat ?? "mp3_44100_128";
-  const speed = params.speed ?? 0.85;
+  const speed = params.speed ?? 1.0;
 
   try {
     return await convertOnce({
