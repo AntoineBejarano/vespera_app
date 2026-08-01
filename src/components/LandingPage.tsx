@@ -13,151 +13,190 @@ import {
   ShimmerButton,
 } from "@/components/magicui/effects";
 import { VoiceLandingSection } from "@/components/VoiceLandingSection";
+import { AFTER_DARK_URL } from "@/lib/site";
 import type { VoiceAgentId } from "@/lib/voice/types";
+
+const PATHS = [
+  {
+    id: "fall",
+    title: "Fall for one",
+    body: "Private and fictional personalities that remember your story and grow closer over time.",
+    cta: "Meet a companion",
+    href: "/c/luna",
+    afterDark: true,
+  },
+  {
+    id: "learn",
+    title: "Learn from one",
+    body: "Tutors, mentors and historical minds that remember your progress, questions and ideas.",
+    cta: "Start learning",
+    href: "/c/stoic-mentor",
+  },
+  {
+    id: "hire",
+    title: "Hire one",
+    body: "Receptionists, sales agents and support specialists that know your offer and remember every returning person.",
+    cta: "Build an AI employee",
+    href: "/#business",
+  },
+  {
+    id: "create",
+    title: "Create one",
+    body: "Turn an idea, story, artwork or existing character into a personality people can return to.",
+    cta: "Create a persona",
+    href: "/#create",
+  },
+];
+
+const RELATIONSHIP_EVOLUTION = [
+  {
+    name: "Luna",
+    label: "Your connection",
+    rows: [
+      ["Familiarity", "Growing"],
+      ["Trust", "High"],
+      ["Shared memories", "24"],
+    ],
+    change:
+      "Luna has become more open after your recent conversations.",
+  },
+  {
+    name: "Plato",
+    label: "Your dialogue",
+    rows: [
+      ["Topics explored", "Justice, virtue and knowledge"],
+      ["Current disagreement", "Whether virtue can be taught"],
+      ["Shared conversations", "11"],
+    ],
+    change: "Plato now challenges your arguments more directly.",
+  },
+  {
+    name: "AI Receptionist",
+    label: "Customer relationship",
+    rows: [
+      ["Returning customer", "Yes"],
+      ["Preferred channel", "Voice"],
+      ["Usual booking", "Friday afternoon"],
+      ["Open request", "Invoice correction"],
+    ],
+    change:
+      "The conversation continues without asking the customer to repeat everything.",
+  },
+];
+
+const VALUE_BLOCKS = [
+  {
+    t: "Identity",
+    d: "A consistent personality, voice, history, values and boundaries.",
+  },
+  {
+    t: "Memory",
+    d: "Important facts, conversations and moments remain available over time.",
+  },
+  {
+    t: "Relationships",
+    d: "Every person develops a separate history with the same persona.",
+  },
+  {
+    t: "Knowledge",
+    d: "Teach it from documents, stories, archives, collections or your own materials.",
+  },
+  {
+    t: "Abilities",
+    d: "Let it teach, search, book appointments, support people, sell or interact with other software.",
+  },
+];
 
 const PROBLEMS = [
   {
-    t: "Your knowledge stays trapped",
-    d: "FAQs, playbooks, and product details live in docs and heads — customers still wait for a human who happens to be online.",
+    t: "They forget you",
+    d: "Important conversations disappear and every session starts again.",
   },
   {
-    t: "Every reply starts from zero",
-    d: "Generic bots forget the last conversation. Clients repeat themselves. Trust erodes with every handoff.",
+    t: "They lose themselves",
+    d: "Tone, personality and behaviour drift over time or between models.",
   },
   {
-    t: "The relationship never compounds",
-    d: "Without memory and a stable voice, you don’t get loyalty — just tickets, churn, and another forgettable chatbot.",
-  },
-];
-
-const SOLUTIONS = [
-  {
-    t: "Teach it your business",
-    d: "Encode how you sound, what you sell, what you never say, and the knowledge your best teammate would use on day one.",
+    t: "They cannot build a relationship",
+    d: "Without memory and continuity, interactions remain transactional and forgettable.",
   },
   {
-    t: "Answer with full context",
-    d: "Customers get replies grounded in your rules and memory — not a blank prompt that invents a personality each turn.",
+    t: "They stay trapped",
+    d: "The identity cannot easily continue across platforms, models or channels.",
   },
-  {
-    t: "Connections that stick",
-    d: "Each person is remembered across sessions. That continuity is what turns support and sales into a living relationship.",
-  },
-  {
-    t: "Same self where you already work",
-    d: "Deploy on web, Telegram, voice, or your own app via API — one identity, peer-isolated memory per customer.",
-  },
-];
-
-const CHANNELS = [
-  { name: "Web", status: "live" },
-  { name: "Telegram", status: "live" },
-  { name: "Chat API", status: "live" },
-  { name: "Voice", status: "live" },
-  { name: "CLI", status: "live" },
 ];
 
 const STEPS = [
   {
     n: "1",
-    t: "Define the voice",
-    d: "Soul, style, rules, and the knowledge your business needs customers to hear.",
+    t: "Describe them",
+    d: "Explain who they are, how they speak and what makes them unique.",
   },
   {
     n: "2",
-    t: "Test like a client",
-    d: "Chat in the admin panel. Correct drift. Teach what must stay consistent.",
+    t: "Give them knowledge",
+    d: "Add stories, documents, collections, expertise or operational information.",
   },
   {
     n: "3",
-    t: "Connect a channel",
-    d: "Paste a Telegram bot token, publish a link, or call the chat API with an API key.",
+    t: "Talk and improve",
+    d: "Test conversations, correct inconsistencies and decide what must remain stable.",
   },
   {
     n: "4",
-    t: "Let relationships grow",
-    d: "Memory compounds per customer — so every return visit feels like continuity, not a reset.",
+    t: "Share or deploy",
+    d: "Publish a page, connect Telegram, enable voice or use the API.",
   },
 ];
 
-const CATEGORIES = [
-  {
-    id: "companions",
-    title: "Companions",
-    body: "Characters built for connection, memory, and long-term relationships.",
-    href: "/c/luna",
-  },
-  {
-    id: "historical",
-    title: "Historical minds",
-    body: "Learn and debate with personalities inspired by history’s greatest thinkers.",
-    href: "/c/einstein",
-  },
-  {
-    id: "roleplay",
-    title: "Roleplay & stories",
-    body: "Build characters for worlds, adventures, and interactive fiction.",
-    href: "/c/aiko",
-  },
-  {
-    id: "mentors",
-    title: "Mentors",
-    body: "Coaches, tutors, and guides that understand their users over time.",
-    href: "/c/stoic-mentor",
-  },
+const BRING_OPTIONS = [
+  "Upload a Character Card",
+  "Paste a character prompt",
+  "Import JSON or SillyTavern",
+  "Rebuild from a description",
 ];
 
-const USE_CASES = [
-  {
-    t: "Customer support",
-    d: "Answer product questions with your docs and policies — 24/7, in your tone.",
-  },
-  {
-    t: "Sales & onboarding",
-    d: "Guide prospects with the same pitch your team uses, then remember where they left off.",
-  },
-  {
-    t: "Education & coaching",
-    d: "Mentors and tutors that keep student progress and never lose the thread.",
-  },
-  {
-    t: "Community & creators",
-    d: "A stable personality for fans and members — same self on web and Telegram.",
-  },
+const BUSINESS_BENEFITS = [
+  "Answer enquiries 24/7",
+  "Qualify leads",
+  "Book appointments",
+  "Continue previous conversations",
+  "Remember preferences",
+  "Hand off to a human when needed",
+  "Stay consistent across chat and voice",
 ];
 
-const COMPARE = [
-  {
-    ordinary: "Answers from a generic system prompt",
-    vesperer: "Answers from your identity, rules, and knowledge",
-  },
-  {
-    ordinary: "Forgets past conversations",
-    vesperer: "Remembers each customer across sessions",
-  },
-  {
-    ordinary: "Personality drifts every model update",
-    vesperer: "Stable soul / style / rules layers",
-  },
-  {
-    ordinary: "Locked to one chat widget",
-    vesperer: "Web, Telegram, voice, or your API",
-  },
+const HISTORY_EXAMPLES = [
+  "Plato",
+  "Einstein",
+  "Marie Curie",
+  "Leonardo da Vinci",
+  "A museum guide",
+  "A fictionalised historical narrator",
 ];
 
-const AUDIENCES = [
-  {
-    t: "Solo operators",
-    d: "Put your expertise behind an AI that talks to clients while you focus on the work.",
-  },
-  {
-    t: "Creators & teachers",
-    d: "Characters and guides your audience returns to — same personality, lasting memory.",
-  },
-  {
-    t: "Small teams",
-    d: "One consistent voice across channels instead of five conflicting chatbot experiments.",
-  },
+const CREATOR_BENEFITS = [
+  "One identity",
+  "Thousands of separate relationships",
+  "Private or public characters",
+  "Chat and voice",
+  "Audience analytics",
+  "Human handoff when required",
+];
+
+const OWNERSHIP = [
+  "Export your persona",
+  "Control its knowledge",
+  "Delete your data",
+  "Choose where it runs",
+  "Avoid permanent lock-in",
+];
+
+const HERO_PERSONAS = [
+  { name: "Luna", role: "Virtual Companion", href: "/c/luna" },
+  { name: "Plato", role: "Historical Mind", href: "/c/einstein" },
+  { name: "Aria", role: "AI Receptionist", href: "/#business" },
+  { name: "Kai", role: "Personal Mentor", href: "/c/stoic-mentor" },
 ];
 
 const PRICING = [
@@ -165,46 +204,66 @@ const PRICING = [
     name: "Starter",
     price: "Free",
     period: "",
-    blurb: "One character. Learn the loop end to end.",
+    blurb: "Create and test your first persona.",
     features: [
-      "1 character",
-      "Long-term memory basics",
-      "Private admin chat",
+      "1 persona",
+      "Basic long-term memory",
+      "Private testing",
       "Bring an existing character",
-      "Export identity & config",
+      "Export identity and configuration",
     ],
     cta: "Start free",
     highlight: false,
+    action: "signup" as const,
   },
   {
     name: "Creator",
     price: "€20",
     period: "/mo",
-    blurb: "Production character with channel deploy.",
+    blurb: "Publish a production persona and connect it to your audience.",
     features: [
-      "1 production character",
+      "1 production persona",
       "Persistent memory",
-      "Telegram deploy",
-      "Chat API key",
-      "Export identity & config",
+      "Telegram deployment",
+      "Chat API",
+      "Export and ownership",
     ],
     cta: "Start creating",
     highlight: true,
+    action: "signup" as const,
   },
   {
     name: "Studio",
     price: "€59",
     period: "/mo",
-    blurb: "A small roster for operators who need more than one voice.",
+    blurb: "Manage a small roster of personas.",
     features: [
-      "Up to 3 characters",
-      "Telegram + API per character",
-      "Higher message limits",
+      "Up to 3 personas",
+      "Telegram and API per persona",
+      "Higher usage limits",
       "Priority routing",
-      "Export & ownership",
+      "Export and ownership",
     ],
     cta: "Scale to Studio",
     highlight: false,
+    action: "signup" as const,
+  },
+  {
+    name: "Business & Institutions",
+    price: "Custom",
+    period: "",
+    blurb:
+      "For AI employees, museums, educational institutions, private deployment and larger workloads.",
+    features: [
+      "Custom personas",
+      "Voice and operational integrations",
+      "Private or branded deployment",
+      "Custom knowledge",
+      "Support and onboarding",
+    ],
+    cta: "Talk to us",
+    highlight: false,
+    action: "contact" as const,
   },
 ];
 
@@ -215,53 +274,44 @@ function parseVoiceAgent(value: string | null): VoiceAgentId {
   return "einstein";
 }
 
-/** Product-shaped hero visual — no AI face portraits. */
+/** Hero visual — personas + memory continuity, not a support script. */
 function LandingProductPreview() {
   return (
     <div className="relative w-full overflow-hidden border-t border-[var(--line)] bg-[var(--bg-elevated)]/80">
       <div className="mx-auto grid max-w-6xl lg:grid-cols-2">
         <div className="border-b border-[var(--line)] p-5 sm:p-7 lg:border-b-0 lg:border-r">
           <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
-            Your knowledge
+            Meet a persona
           </p>
           <ul className="mt-4 space-y-2.5 text-sm">
-            {[
-              "Refund policy · 14 days, unused seats",
-              "Pricing · Starter free, Creator €20/mo",
-              "Tone · clear, warm, never pushy",
-              "Never invent discounts or legal advice",
-            ].map((line) => (
-              <li
-                key={line}
-                className="rounded-lg border border-[var(--line)] bg-[var(--bg)] px-3 py-2.5 text-[var(--ink)]"
-              >
-                {line}
+            {HERO_PERSONAS.map((p) => (
+              <li key={p.name}>
+                <a
+                  href={p.href}
+                  className="flex items-baseline justify-between gap-3 rounded-lg border border-[var(--line)] bg-[var(--bg)] px-3 py-2.5 text-[var(--ink)] transition hover:border-[var(--accent)]/50"
+                >
+                  <span className="font-medium">{p.name}</span>
+                  <span className="text-xs text-[var(--muted)]">{p.role}</span>
+                </a>
               </li>
             ))}
           </ul>
         </div>
         <div className="p-5 sm:p-7">
           <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
-            Customer conversation
+            A conversation that continues
           </p>
           <div className="mt-4 space-y-3 text-sm">
             <p className="ml-8 rounded-xl bg-[var(--accent-soft)] px-3 py-2.5 text-right text-[var(--ink)] sm:ml-16">
-              Can I get a refund if I haven’t used my seats?
+              I have the interview tomorrow.
             </p>
             <p className="mr-4 rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2.5 text-[var(--ink)] sm:mr-10">
-              Yes — unused seats within 14 days. I’ll walk you through it the
-              same way our team would.
-            </p>
-            <p className="ml-8 rounded-xl bg-[var(--accent-soft)] px-3 py-2.5 text-right text-[var(--ink)] sm:ml-16">
-              Perfect. I asked last week about Creator vs Studio too.
-            </p>
-            <p className="mr-4 rounded-xl border border-[var(--line)] bg-[var(--bg)] px-3 py-2.5 text-[var(--ink)] sm:mr-10">
-              I remember — you were deciding between one production character
-              and a small roster. Want the same comparison again?
+              I remember. Last time you said the technical round worried you
+              most. Do you want to practise that part again?
             </p>
           </div>
           <p className="mt-4 text-xs text-[var(--accent-2)]">
-            Knowledge in. Continuity out. That’s the connection.
+            Memory recalled: Interview · Technical round · Tomorrow
           </p>
         </div>
       </div>
@@ -304,7 +354,7 @@ export function LandingPage() {
     <div className="relative overflow-hidden">
       <AppNav variant="marketing" />
 
-      {/* Hero — one composition: brand, promise, CTA, product plane */}
+      {/* Hero */}
       <section className="relative flex min-h-[92dvh] flex-col">
         <RetroGrid />
         <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 pb-10 pt-12 sm:px-6 sm:pb-14 sm:pt-16">
@@ -313,23 +363,23 @@ export function LandingPage() {
           </BlurFade>
           <BlurFade delay={0.05}>
             <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)] sm:text-xs sm:tracking-[0.35em]">
-              AI that knows your business
+              AI characters that remember, evolve and act
             </p>
           </BlurFade>
           <BlurFade delay={0.1}>
-            <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[2.2rem] leading-[1.05] tracking-tight text-[var(--ink)] sm:text-5xl sm:leading-[1.05]">
-              Answer every client with{" "}
-              <span className="italic text-[var(--accent-2)]">
-                all your knowledge
-              </span>
-              — and build the connection that keeps them.
+            <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[2.4rem] leading-[1.05] tracking-tight text-[var(--ink)] sm:text-5xl sm:leading-[1.05]">
+              Meet someone{" "}
+              <span className="italic text-[var(--accent-2)]">impossible</span>.
             </h1>
           </BlurFade>
           <BlurFade delay={0.16}>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
-              Give Vesperer your voice, rules, and expertise. It replies to
-              customers like a teammate who never forgets — so relationships
-              compound instead of resetting every chat.
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
+              Talk to history, bring original characters to life, learn from a
+              mentor, or build an AI employee that remembers every conversation.
+            </p>
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--muted)] sm:text-base">
+              Every Vesperer persona has a stable identity, long-term memory,
+              evolving relationships and real abilities across chat and voice.
             </p>
           </BlurFade>
           <BlurFade
@@ -338,19 +388,22 @@ export function LandingPage() {
           >
             <ShimmerButton
               className="w-full sm:w-auto"
-              onClick={() => app.redirectToSignUp()}
+              onClick={() => {
+                window.location.href = "/c/luna";
+              }}
             >
-              Start answering clients
+              Meet a persona
             </ShimmerButton>
-              <Link
-                href="/c/luna"
-                className="inline-flex w-full items-center justify-center rounded-xl border border-[var(--line)] px-6 py-3.5 text-center sm:w-auto"
-              >
-                Try a companion demo
-              </Link>
+            <button
+              type="button"
+              onClick={() => app.redirectToSignUp()}
+              className="inline-flex w-full items-center justify-center rounded-xl border border-[var(--line)] px-6 py-3.5 text-center sm:w-auto"
+            >
+              Create your own
+            </button>
           </BlurFade>
           <p className="mt-4 text-xs text-[var(--muted)]">
-            Free to start · Web, Telegram, voice & API · No sales call required
+            Free to start · No code required · Export anytime
           </p>
         </div>
         <BlurFade delay={0.2} className="relative z-10">
@@ -358,65 +411,121 @@ export function LandingPage() {
         </BlurFade>
       </section>
 
-      {/* Explore characters */}
+      {/* Fall for / Learn / Hire / Create */}
       <section
         id="explore"
         className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
       >
         <BlurFade>
           <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            Who do you want to bring to life?
+            Fall for one. Learn from one. Hire one. Create one.
           </h2>
           <p className="mt-3 max-w-2xl text-[var(--muted)]">
-            Try a live demo — same identity and memory engine whether you build
-            a companion, a mentor, or a voice for your business.
+            The same technology can become a companion, a teacher, a historical
+            mind, a creator persona or an AI employee.
           </p>
         </BlurFade>
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          {CATEGORIES.map((cat, i) => (
-            <BlurFade key={cat.id} delay={i * 0.05}>
-              <a
-                href={cat.href}
-                className="group flex h-full flex-col border-l-2 border-[var(--accent)]/50 pl-5 transition hover:border-[var(--accent)]"
-              >
-                <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold group-hover:text-[var(--accent-2)]">
-                  {cat.title}
+          {PATHS.map((path, i) => (
+            <BlurFade key={path.id} delay={i * 0.05}>
+              <div className="flex h-full flex-col border-l-2 border-[var(--accent)]/50 pl-5">
+                <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold">
+                  {path.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-                  {cat.body}
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--muted)]">
+                  {path.body}
                 </p>
-              </a>
+                {path.afterDark ? (
+                  <p className="mt-3 text-xs text-[var(--muted)]/80">
+                    Looking for private 18+ experiences?{" "}
+                    <a
+                      href={AFTER_DARK_URL}
+                      className="underline decoration-[var(--line)] underline-offset-2 hover:text-[var(--ink)]"
+                    >
+                      Visit After Dark
+                    </a>
+                    .
+                  </p>
+                ) : null}
+                <a
+                  href={path.href}
+                  className="mt-4 inline-flex text-sm text-[var(--accent)] hover:underline"
+                >
+                  {path.cta} →
+                </a>
+              </div>
             </BlurFade>
           ))}
         </div>
       </section>
 
-      {/* Business use cases */}
-      <section className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/25 py-16 sm:py-20">
+      {/* Differential — relationship evolution */}
+      <section className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/25 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <BlurFade>
             <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              Where connections grow your business
+              Every conversation changes the relationship.
             </h2>
-            <p className="mt-3 max-w-2xl text-[var(--muted)]">
-              Support, sales, teaching, community — the AI speaks with your
-              knowledge and remembers each person.
+            <p className="mt-4 max-w-2xl text-[var(--muted)]">
+              A normal chatbot remembers the question. A Vesperer persona
+              remembers who it is, who you are and what has happened between
+              you.
             </p>
           </BlurFade>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
-            {USE_CASES.map((item, i) => (
-              <BlurFade key={item.t} delay={i * 0.05}>
-                <div className="h-full rounded-2xl border border-[var(--line)] p-5">
-                  <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold">
-                    {item.t}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-                    {item.d}
+          <div className="mt-10 grid gap-4 lg:grid-cols-3">
+            {RELATIONSHIP_EVOLUTION.map((card, i) => (
+              <BlurFade key={card.name} delay={i * 0.06}>
+                <div className="flex h-full flex-col rounded-2xl border border-[var(--line)] bg-[var(--bg)] p-5">
+                  <p className="font-[family-name:var(--font-display)] text-xl font-semibold">
+                    {card.name}
+                  </p>
+                  <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">
+                    {card.label}
+                  </p>
+                  <dl className="mt-4 flex-1 space-y-2 text-sm">
+                    {card.rows.map(([k, v]) => (
+                      <div
+                        key={k}
+                        className="flex justify-between gap-3 border-b border-[var(--line)]/60 pb-2"
+                      >
+                        <dt className="text-[var(--muted)]">{k}</dt>
+                        <dd className="text-right text-[var(--ink)]">{v}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  <p className="mt-4 text-xs leading-relaxed text-[var(--accent-2)]">
+                    Recent change: {card.change}
                   </p>
                 </div>
               </BlurFade>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Central value */}
+      <section
+        id="features"
+        className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
+      >
+        <BlurFade>
+          <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
+            Everything that makes an AI feel like the same person.
+          </h2>
+        </BlurFade>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {VALUE_BLOCKS.map((s, i) => (
+            <BlurFade key={s.t} delay={i * 0.05}>
+              <div className="h-full rounded-2xl border border-[var(--line)] p-6">
+                <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--accent-2)]">
+                  {s.t}
+                </h3>
+                <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
+                  {s.d}
+                </p>
+              </div>
+            </BlurFade>
+          ))}
         </div>
       </section>
 
@@ -427,16 +536,12 @@ export function LandingPage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <BlurFade>
             <h2 className="max-w-2xl font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              Most business AIs fail the moment a real customer shows up.
+              Most AI gives answers. Vesperer creates continuity.
             </h2>
-            <p className="mt-4 max-w-2xl text-[var(--muted)]">
-              They don’t carry your knowledge. They don’t remember the person.
-              So they never become the connection your business runs on.
-            </p>
           </BlurFade>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <div className="mt-10 grid gap-4 sm:grid-cols-2">
             {PROBLEMS.map((p, i) => (
-              <BlurFade key={p.t} delay={i * 0.07}>
+              <BlurFade key={p.t} delay={i * 0.06}>
                 <div className="h-full border-l-2 border-[var(--accent)]/50 pl-4">
                   <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
                     {p.t}
@@ -451,106 +556,246 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Solution */}
+      {/* Create */}
       <section
-        id="features"
+        id="create"
         className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
       >
         <BlurFade>
           <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            Your knowledge in. Living connections out.
+            Create anyone you can imagine.
           </h2>
           <p className="mt-3 max-w-2xl text-[var(--muted)]">
-            Identity, memory, and channels — so the AI answers like you would,
-            and the relationship doesn’t die between sessions.
+            Start from a simple description, shape the personality through
+            conversation or bring a character you already created.
           </p>
         </BlurFade>
-        <div className="mt-10 grid gap-4 sm:grid-cols-2">
-          {SOLUTIONS.map((s, i) => (
-            <BlurFade key={s.t} delay={i * 0.06}>
-              <div className="h-full rounded-2xl border border-[var(--line)] p-6">
-                <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--accent-2)]">
-                  {s.t}
+        <ol className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {STEPS.map((step, i) => (
+            <BlurFade key={step.n} delay={i * 0.06}>
+              <li className="h-full rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/60 p-5">
+                <span className="font-[family-name:var(--font-display)] text-3xl text-[var(--accent)]">
+                  {step.n}
+                </span>
+                <h3 className="mt-3 font-[family-name:var(--font-display)] text-xl font-semibold">
+                  {step.t}
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
-                  {s.d}
+                <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+                  {step.d}
                 </p>
-              </div>
+              </li>
             </BlurFade>
           ))}
-        </div>
-        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[var(--line)] pt-8">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
-            Available now
-          </p>
-          {CHANNELS.map((channel) => (
-            <span
-              key={channel.name}
-              className="text-sm text-[var(--ink)] opacity-80"
-            >
-              {channel.name}
-            </span>
-          ))}
+        </ol>
+        <BlurFade delay={0.2} className="mt-10">
+          <ShimmerButton onClick={() => app.redirectToSignUp()}>
+            Create your first persona
+          </ShimmerButton>
+        </BlurFade>
+      </section>
+
+      {/* Bring */}
+      <section
+        id="bring"
+        className="border-y border-[var(--line)] py-16 sm:py-24"
+      >
+        <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_1fr] lg:items-center">
+          <BlurFade>
+            <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
+              Already created a character somewhere else?
+            </h2>
+            <p className="mt-4 max-w-xl text-[var(--muted)]">
+              Bring a Character Card, prompt, JSON file, SillyTavern export or
+              your own conversation history. Preserve what made the character
+              special without starting from zero.
+            </p>
+            <div className="mt-8">
+              <Link
+                href="/bring"
+                className="inline-flex rounded-xl bg-[var(--accent)] px-6 py-3.5 font-medium text-[var(--accent-ink)]"
+              >
+                Bring my character
+              </Link>
+            </div>
+            <p className="mt-4 text-xs text-[var(--muted)]">
+              Only import characters and content you created or have permission
+              to use.
+            </p>
+          </BlurFade>
+          <BlurFade delay={0.1}>
+            <ul className="space-y-3">
+              {BRING_OPTIONS.map((opt) => (
+                <li
+                  key={opt}
+                  className="rounded-xl border border-[var(--line)] bg-[var(--bg-elevated)] px-4 py-3 text-sm"
+                >
+                  {opt}
+                </li>
+              ))}
+            </ul>
+          </BlurFade>
         </div>
       </section>
 
-      {/* Flow */}
+      {/* Business */}
       <section
-        id="create"
-        className="border-y border-[var(--line)] py-16 sm:py-24"
+        id="business"
+        className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
+      >
+        <BlurFade>
+          <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
+            Give your organisation someone people remember.
+          </h2>
+          <p className="mt-4 max-w-2xl text-[var(--muted)]">
+            Build an AI receptionist, sales advisor or support specialist that
+            knows your services, follows your rules and remembers every
+            returning conversation.
+          </p>
+        </BlurFade>
+        <ul className="mt-8 grid gap-2 sm:grid-cols-2">
+          {BUSINESS_BENEFITS.map((b) => (
+            <li
+              key={b}
+              className="rounded-xl border border-[var(--line)] px-4 py-3 text-sm"
+            >
+              · {b}
+            </li>
+          ))}
+        </ul>
+        <BlurFade delay={0.1}>
+          <p className="mt-8 max-w-xl font-[family-name:var(--font-display)] text-xl text-[var(--accent-2)] sm:text-2xl">
+            Other agents remember the task. Vesperer remembers the person.
+          </p>
+          <button
+            type="button"
+            className="mt-8 rounded-xl bg-[var(--accent)] px-6 py-3.5 font-medium text-[var(--accent-ink)]"
+            onClick={() => app.redirectToSignUp()}
+          >
+            Build an AI employee
+          </button>
+        </BlurFade>
+      </section>
+
+      {/* History / education / museums */}
+      <section
+        id="history"
+        className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/25 py-16 sm:py-24"
       >
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <BlurFade>
             <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              From your expertise to a live channel in minutes.
+              Let history answer back.
             </h2>
-            <p className="mt-3 max-w-2xl text-[var(--muted)]">
-              No sales call. Configure, test, deploy — self-serve.
+            <p className="mt-4 max-w-2xl text-[var(--muted)]">
+              Turn archives, collections and historical research into
+              interactive personalities visitors and students can question
+              through text or voice.
             </p>
           </BlurFade>
-          <ol className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {STEPS.map((step, i) => (
-              <BlurFade key={step.n} delay={i * 0.06}>
-                <li className="h-full rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/60 p-5">
-                  <span className="font-[family-name:var(--font-display)] text-3xl text-[var(--accent)]">
-                    {step.n}
-                  </span>
-                  <h3 className="mt-3 font-[family-name:var(--font-display)] text-xl font-semibold">
-                    {step.t}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-                    {step.d}
-                  </p>
-                </li>
-              </BlurFade>
+          <div className="mt-8 flex flex-wrap gap-2">
+            {HISTORY_EXAMPLES.map((name) => (
+              <span
+                key={name}
+                className="rounded-xl border border-[var(--line)] px-3 py-1.5 text-sm text-[var(--ink)]"
+              >
+                {name}
+              </span>
             ))}
-          </ol>
-          <BlurFade delay={0.2} className="mt-10">
-            <ShimmerButton onClick={() => app.redirectToSignUp()}>
-              Create your first character
-            </ShimmerButton>
+          </div>
+          <p className="mt-6 max-w-2xl text-xs leading-relaxed text-[var(--muted)]">
+            Historical personas are AI interpretations based on available
+            sources, not the real individuals.
+          </p>
+          <BlurFade delay={0.1} className="mt-8">
+            <button
+              type="button"
+              className="rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
+              onClick={() => app.redirectToSignUp()}
+            >
+              Create an institutional persona
+            </button>
           </BlurFade>
         </div>
       </section>
 
-      {/* CLI for AI agents */}
+      {/* Creators */}
       <section
-        id="cli"
+        id="creators"
+        className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
+      >
+        <BlurFade>
+          <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
+            Create a personality your audience can return to.
+          </h2>
+          <p className="mt-4 max-w-2xl text-[var(--muted)]">
+            Give every fan a personal conversation while keeping one consistent
+            identity, voice and creative world.
+          </p>
+        </BlurFade>
+        <ul className="mt-8 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {CREATOR_BENEFITS.map((b) => (
+            <li
+              key={b}
+              className="rounded-xl border border-[var(--line)] px-4 py-3 text-sm"
+            >
+              · {b}
+            </li>
+          ))}
+        </ul>
+        <BlurFade delay={0.1} className="mt-8">
+          <ShimmerButton onClick={() => app.redirectToSignUp()}>
+            Build for your audience
+          </ShimmerButton>
+        </BlurFade>
+      </section>
+
+      {/* Ownership */}
+      <section
+        id="ownership"
+        className="border-y border-[var(--line)] py-16 sm:py-20"
+      >
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <BlurFade>
+            <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
+              Your persona should belong to you.
+            </h2>
+            <p className="mt-4 max-w-2xl text-[var(--muted)]">
+              Export its identity and configuration, preserve its history and
+              move between supported models and channels without rebuilding from
+              zero.
+            </p>
+            <ul className="mt-8 flex flex-wrap gap-3">
+              {OWNERSHIP.map((item) => (
+                <li
+                  key={item}
+                  className="rounded-xl border border-[var(--line)] px-4 py-2.5 text-sm"
+                >
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </BlurFade>
+        </div>
+      </section>
+
+      {/* Developers — near the end */}
+      <section
+        id="developers"
         className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/35 py-16 sm:py-24"
       >
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <BlurFade>
               <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
-                Built for AI agents
+                For builders
               </p>
               <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-                Let your AI create the persona.
+                Built by people—or by agents.
               </h2>
               <p className="mt-4 max-w-xl text-[var(--muted)]">
-                Give Cursor, Claude, or any agent an account API key. It can
-                create personas with your knowledge layers — then hand you a
-                chat key to put in front of customers. No click-ops.
+                Create, configure and deploy personas through the dashboard, CLI
+                or API. Give Cursor, Claude, or any agent an account key when
+                you want automation instead of click-ops.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -558,6 +803,12 @@ export function LandingPage() {
                   className="inline-flex rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
                 >
                   CLI docs
+                </Link>
+                <Link
+                  href="/docs"
+                  className="inline-flex rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
+                >
+                  API documentation
                 </Link>
                 <Link
                   href="/settings"
@@ -572,152 +823,15 @@ export function LandingPage() {
 {`npm run vesperer -- login --key vsk_…
 npm run vesperer -- personas create --from persona.json
 
-# persona.json
 # soul / style / rules / context
-# = your business knowledge`}
+# = identity + memory that persists`}
               </pre>
             </BlurFade>
           </div>
         </div>
       </section>
 
-      {/* Bring */}
-      <section
-        id="bring"
-        className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
-      >
-        <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-center">
-          <BlurFade>
-            <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              Already built the knowledge somewhere else?
-            </h2>
-            <p className="mt-4 max-w-xl text-[var(--muted)]">
-              Import a Character Card, prompt, or SillyTavern export. Rebuild
-              identity and memory without starting from a blank page.
-            </p>
-            <div className="mt-8">
-              <Link
-                href="/bring"
-                className="inline-flex rounded-xl bg-[var(--accent)] px-6 py-3.5 font-medium text-[var(--accent-ink)]"
-              >
-                Bring my character
-              </Link>
-            </div>
-          </BlurFade>
-          <BlurFade delay={0.1}>
-            <ul className="space-y-3">
-              {[
-                "Upload a Character Card",
-                "Paste a character prompt",
-                "Import JSON / SillyTavern",
-                "Rebuild from a description",
-              ].map((opt) => (
-                <li
-                  key={opt}
-                  className="rounded-xl border border-[var(--line)] bg-[var(--bg-elevated)] px-4 py-3 text-sm"
-                >
-                  {opt}
-                </li>
-              ))}
-            </ul>
-          </BlurFade>
-        </div>
-      </section>
-
-      {/* Compare */}
-      <section className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/35 py-16 sm:py-24">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <BlurFade>
-            <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              Not another generic chatbot.
-            </h2>
-          </BlurFade>
-          <div className="mt-10 overflow-hidden rounded-2xl border border-[var(--line)]">
-            <div className="grid grid-cols-2 bg-[var(--bg)] text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-              <div className="border-b border-r border-[var(--line)] px-4 py-3">
-                Ordinary bot
-              </div>
-              <div className="border-b border-[var(--line)] px-4 py-3 text-[var(--accent)]">
-                Vesperer
-              </div>
-            </div>
-            {COMPARE.map((row) => (
-              <div
-                key={row.ordinary}
-                className="grid grid-cols-2 text-sm text-[var(--ink)]"
-              >
-                <div className="border-b border-r border-[var(--line)] px-4 py-4 text-[var(--muted)]">
-                  {row.ordinary}
-                </div>
-                <div className="border-b border-[var(--line)] px-4 py-4">
-                  {row.vesperer}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Audiences */}
-      <section
-        id="creators"
-        className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
-      >
-        <BlurFade>
-          <h2 className="max-w-3xl font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            Built for people who run the relationship themselves.
-          </h2>
-        </BlurFade>
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {AUDIENCES.map((a, i) => (
-            <BlurFade key={a.t} delay={i * 0.07}>
-              <div className="h-full rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/70 p-6">
-                <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
-                  {a.t}
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
-                  {a.d}
-                </p>
-              </div>
-            </BlurFade>
-          ))}
-        </div>
-      </section>
-
-      {/* Ownership */}
-      <section
-        id="ownership"
-        className="border-y border-[var(--line)] py-16 sm:py-20"
-      >
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <BlurFade>
-            <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-              Your knowledge should belong to you.
-            </h2>
-            <p className="mt-4 max-w-2xl text-[var(--muted)]">
-              Export identity, memories, and configuration anytime. Delete your
-              account and data from Settings — including the auth identity —
-              when you leave.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-4">
-              <Link
-                href="/help"
-                className="text-sm text-[var(--accent)] hover:underline"
-              >
-                Help & FAQ →
-              </Link>
-              <Link
-                href="/docs"
-                className="text-sm text-[var(--accent)] hover:underline"
-              >
-                API documentation →
-              </Link>
-            </div>
-          </BlurFade>
-        </div>
-      </section>
-
-      {/* Pricing — checkout not wired yet; CTAs go to signup */}
+      {/* Pricing */}
       <section
         id="pricing"
         className="bg-[var(--bg-elevated)]/35 py-16 sm:py-24"
@@ -732,9 +846,9 @@ npm run vesperer -- personas create --from persona.json
               works today.
             </p>
           </BlurFade>
-          <div className="mt-12 grid gap-4 lg:grid-cols-3">
+          <div className="mt-12 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
             {PRICING.map((tier, i) => (
-              <BlurFade key={tier.name} delay={i * 0.08}>
+              <BlurFade key={tier.name} delay={i * 0.06}>
                 <div
                   className={
                     tier.highlight
@@ -745,7 +859,7 @@ npm run vesperer -- personas create --from persona.json
                   <p className="text-xs uppercase tracking-[0.25em] text-[var(--muted)]">
                     {tier.name}
                   </p>
-                  <p className="mt-4 font-[family-name:var(--font-display)] text-5xl">
+                  <p className="mt-4 font-[family-name:var(--font-display)] text-4xl sm:text-5xl">
                     {tier.price}
                     <span className="text-base text-[var(--muted)]">
                       {tier.period}
@@ -757,13 +871,22 @@ npm run vesperer -- personas create --from persona.json
                       <li key={f}>· {f}</li>
                     ))}
                   </ul>
-                  <button
-                    type="button"
-                    className="mt-8 w-full rounded-xl bg-[var(--accent)] px-4 py-3 font-medium text-[var(--accent-ink)]"
-                    onClick={() => app.redirectToSignUp()}
-                  >
-                    {tier.cta}
-                  </button>
+                  {tier.action === "contact" ? (
+                    <a
+                      href="mailto:legal@vesperer.com?subject=Vesperer%20Business%20%26%20Institutions"
+                      className="mt-8 block w-full rounded-xl border border-[var(--line)] px-4 py-3 text-center font-medium text-[var(--ink)]"
+                    >
+                      {tier.cta}
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      className="mt-8 w-full rounded-xl bg-[var(--accent)] px-4 py-3 font-medium text-[var(--accent-ink)]"
+                      onClick={() => app.redirectToSignUp()}
+                    >
+                      {tier.cta}
+                    </button>
+                  )}
                 </div>
               </BlurFade>
             ))}
@@ -775,19 +898,30 @@ npm run vesperer -- personas create --from persona.json
       <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
         <BlurFade>
           <h2 className="max-w-3xl font-[family-name:var(--font-display)] text-3xl font-semibold leading-tight sm:text-5xl">
-            Your knowledge.
-            <span className="mt-3 block italic text-[var(--accent-2)]">
-              Their conversation. A connection that lasts.
+            Meet one. Create one.{" "}
+            <span className="italic text-[var(--accent-2)]">
+              Let the relationship grow.
             </span>
           </h2>
           <p className="mt-5 max-w-xl text-[var(--muted)]">
-            Put an AI on web, Telegram, voice, or your API that actually knows
-            your business — and remembers every client.
+            Build a digital personality that remembers, evolves and can become a
+            companion, mentor, historical mind, creator or AI employee.
           </p>
-          <div className="mt-10">
-            <ShimmerButton onClick={() => app.redirectToSignUp()}>
-              Start answering clients
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+            <ShimmerButton
+              onClick={() => {
+                window.location.href = "/c/luna";
+              }}
+            >
+              Meet a persona
             </ShimmerButton>
+            <button
+              type="button"
+              onClick={() => app.redirectToSignUp()}
+              className="inline-flex items-center justify-center rounded-xl border border-[var(--line)] px-6 py-3.5"
+            >
+              Create your own
+            </button>
           </div>
         </BlurFade>
       </section>

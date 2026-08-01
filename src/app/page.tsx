@@ -15,16 +15,16 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   keywords: [
-    "AI that knows your business",
-    "AI customer support with memory",
+    "AI characters that remember",
+    "AI personas with memory",
     "AI character creator",
-    "AI for client conversations",
-    "Telegram AI bot with memory",
-    "business knowledge AI",
+    "historical AI personalities",
+    "AI mentor tutor",
+    "AI employee receptionist",
     "character card import",
-    "portable AI character",
     "SillyTavern character",
     "Chat API AI persona",
+    "AI voice characters",
   ],
   alternates: {
     canonical: SITE_URL,
@@ -84,7 +84,7 @@ const jsonLd = {
           name: "What is Vesperer?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Vesperer is an AI character platform with persistent identity, long-term memory, and relationship state that compounds across sessions and channels.",
+            text: "Vesperer is a platform for AI personas that remember, evolve and act — with stable identity, long-term memory, and relationships that continue across chat, voice and channels.",
           },
         },
         {

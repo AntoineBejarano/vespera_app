@@ -7,19 +7,20 @@ import { SITE_URL } from "@/lib/site";
 
 const MARKETING_LINKS = [
   { href: "/#create", label: "Create" },
-  { href: "/voice", label: "Voice" },
-  { href: "/bring", label: "Bring" },
+  { href: "/#creators", label: "For Creators" },
+  { href: "/#business", label: "For Business" },
+  { href: "/#voice", label: "Voice" },
+  { href: "/#developers", label: "Developers" },
   { href: "/#pricing", label: "Pricing" },
-  { href: "/help", label: "Help" },
 ];
 
 const EXPLORE_LINKS = [
-  { href: "/c/luna", label: "Companions" },
+  { href: "/c/luna", label: "Characters" },
   { href: "/c/einstein", label: "Historical minds" },
-  { href: "/c/aiko", label: "Roleplay" },
   { href: "/c/stoic-mentor", label: "Mentors" },
+  { href: "/#voice", label: "Voice" },
+  { href: "/#explore", label: "All paths" },
   { href: "/bring", label: "Bring a character" },
-  { href: "/#cli", label: "CLI for agents" },
 ];
 
 /** Hash-only so section links work on xxx home (/) and localhost (/after-dark). */
@@ -111,7 +112,11 @@ export function AppNav({
         />
 
         {/* Desktop */}
-        <nav className="hidden items-center gap-7 lg:flex">
+        <nav
+          className={`hidden items-center lg:flex ${
+            variant === "marketing" ? "gap-4 xl:gap-6" : "gap-7"
+          }`}
+        >
           {user ? (
             <>
               <Link href="/personas" className={linkClass}>

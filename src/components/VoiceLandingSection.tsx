@@ -21,22 +21,23 @@ export function VoiceLandingSection({
             Vesperer Voice
           </p>
           <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-5xl">
-            Hear the continuity — try a live voice demo.
+            Choose who answers.
           </h2>
           <p className="mt-4 max-w-xl text-[var(--muted)]">
-            Allow the mic and speak. Same peer memory across turns — chat and
-            voice share continuity, the way a client relationship should.
+            Speak or type. The same identity and memories continue across chat
+            and voice.
           </p>
           <ul className="mt-6 space-y-2 text-sm text-[var(--muted)]">
-            <li>· Switch between demo agents anytime</li>
-            <li>· Speak or type — memory sticks either way</li>
-            <li>· No account needed for this demo</li>
+            <li>· Luna · Einstein · Stoic Mentor</li>
+            <li>· Same memories across chat and voice</li>
+            <li>· The conversation continues wherever you return</li>
+            <li>· No account needed for the demo</li>
           </ul>
           <Link
             href="/voice"
             className="mt-8 inline-flex rounded-xl border border-[var(--line)] px-5 py-3 text-sm hover:border-[var(--accent)]"
           >
-            See the character voice layer →
+            Explore voice →
           </Link>
         </BlurFade>
         <BlurFade delay={0.08}>

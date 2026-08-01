@@ -2,13 +2,53 @@ import Link from "next/link";
 import { LEGAL_PAGES } from "@/lib/legal/constants";
 import { AFTER_DARK_URL, SITE_URL } from "@/lib/site";
 
-const MARKETING_LINKS = [
-  { href: "/docs", label: "API docs" },
-  { href: "/help", label: "Help" },
-  { href: "/technology", label: "Technology" },
-  { href: "/voice", label: "Voice" },
-  { href: "/bring", label: "Bring a character" },
-  { href: "/legal/acceptable-use", label: "Safety" },
+const MARKETING_COLUMNS: {
+  title: string;
+  links: { href: string; label: string; external?: boolean }[];
+}[] = [
+  {
+    title: "Explore",
+    links: [
+      { href: "/c/luna", label: "Characters" },
+      { href: "/c/einstein", label: "Historical minds" },
+      { href: "/c/stoic-mentor", label: "Mentors" },
+      { href: "/#voice", label: "Voice" },
+    ],
+  },
+  {
+    title: "Create",
+    links: [
+      { href: "/#create", label: "Create a persona" },
+      { href: "/bring", label: "Bring a character" },
+      { href: "/#creators", label: "For creators" },
+      { href: "/#business", label: "For business" },
+    ],
+  },
+  {
+    title: "Developers",
+    links: [
+      { href: "/docs", label: "API documentation" },
+      { href: "/docs#cli", label: "CLI" },
+      { href: "/technology", label: "Technology" },
+      { href: "/help", label: "Help" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      ...LEGAL_PAGES.map((p) => ({
+        href: `/legal/${p.slug}`,
+        label: p.title,
+      })),
+      { href: "/legal/terms", label: "AI Transparency" },
+      { href: "/legal/acceptable-use", label: "Safety" },
+      { href: "/report", label: "Report abuse" },
+    ],
+  },
+  {
+    title: "Private",
+    links: [{ href: AFTER_DARK_URL, label: "After Dark 18+", external: true }],
+  },
 ];
 
 export function LegalFooter({
@@ -18,26 +58,72 @@ export function LegalFooter({
   className?: string;
   variant?: "default" | "marketing" | "after-dark";
 }) {
+  if (variant === "marketing") {
+    return (
+      <footer
+        className={`border-t border-[var(--line)] px-4 py-10 text-sm text-[var(--muted)] sm:px-6 ${className ?? ""}`}
+      >
+        <div className="mx-auto flex max-w-6xl flex-col gap-10">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
+            {MARKETING_COLUMNS.map((col) => (
+              <div key={col.title}>
+                <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--ink)]">
+                  {col.title}
+                </p>
+                <nav className="mt-3 flex flex-col gap-2">
+                  {col.links.map((link) =>
+                    link.external ? (
+                      <a
+                        key={link.label}
+                        href={link.href}
+                        className="hover:text-[var(--ink)]"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link
+                        key={link.label}
+                        href={link.href}
+                        className="hover:text-[var(--ink)]"
+                      >
+                        {link.label}
+                      </Link>
+                    ),
+                  )}
+                </nav>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs leading-relaxed text-[var(--muted)]/80">
+            Vesperer provides tools for creating and operating AI personas with
+            persistent identity, memory and automated-interaction disclosure.
+            Adult experiences are available only through the separate After Dark
+            18+ service.
+          </p>
+        </div>
+      </footer>
+    );
+  }
+
   return (
     <footer
       className={`border-t border-[var(--line)] px-4 py-8 text-sm text-[var(--muted)] sm:px-6 ${className ?? ""}`}
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-6">
-        {variant === "marketing" || variant === "after-dark" ? (
+        {variant === "after-dark" ? (
           <nav className="flex flex-wrap gap-x-5 gap-y-2">
-            {(variant === "after-dark"
-              ? [
-                  { href: SITE_URL, label: "Vesperer", external: true },
-                  { href: "#pipeline", label: "How it works" },
-                  { href: "#pricing", label: "Pricing" },
-                  {
-                    href: `${SITE_URL}/#ownership`,
-                    label: "Ownership",
-                    external: true,
-                  },
-                  { href: "/legal/acceptable-use", label: "Safety" },
-                ]
-              : MARKETING_LINKS.map((l) => ({ ...l, external: false }))
+            {(
+              [
+                { href: SITE_URL, label: "Vesperer", external: true },
+                { href: "#pipeline", label: "How it works" },
+                { href: "#pricing", label: "Pricing" },
+                {
+                  href: `${SITE_URL}/#ownership`,
+                  label: "Ownership",
+                  external: true,
+                },
+                { href: "/legal/acceptable-use", label: "Safety" },
+              ] as const
             ).map((link) =>
               "external" in link && link.external ? (
                 <a
@@ -79,23 +165,13 @@ export function LegalFooter({
             <Link href="/report" className="hover:text-[var(--ink)]">
               Report abuse
             </Link>
-            {variant === "marketing" ? (
-              <a
-                href={AFTER_DARK_URL}
-                className="hover:text-[var(--ink)]"
-              >
-                After Dark (18+)
-              </a>
-            ) : null}
           </nav>
         </div>
 
         <p className="text-xs leading-relaxed text-[var(--muted)]/80">
           {variant === "after-dark"
             ? "After Dark is an adults-only zone on xxx.vesperer.com. Sexual content involving minors is strictly prohibited."
-            : variant === "marketing"
-              ? "Vesperer provides AI character infrastructure with identity, memory, and automated-interaction disclosures (EU AI Act transparency). Adult content is only in After Dark (xxx.vesperer.com), a separate 18+ zone."
-              : "Automated AI interactions are disclosed per our Terms and Privacy Policy. Illegal and exploitative content is prohibited."}
+            : "Automated AI interactions are disclosed per our Terms and Privacy Policy. Illegal and exploitative content is prohibited."}
         </p>
       </div>
     </footer>

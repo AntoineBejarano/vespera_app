@@ -10,11 +10,10 @@ export {
   AFTER_DARK_URL,
 } from "@/lib/hosts";
 
-export const SITE_TAGLINE =
-  "Answer every client with all your knowledge — and build the connection that keeps them.";
+export const SITE_TAGLINE = "Meet someone impossible.";
 
 export const SITE_DESCRIPTION =
-  "Vesperer turns your business knowledge, voice, and rules into an AI that answers clients with memory — so relationships compound across web, Telegram, voice, and your own app via API.";
+  "Vesperer is a platform for AI personas with stable identity, long-term memory and evolving relationships — companions, mentors, historical minds, creators and AI employees across chat and voice.";
 
 /** Main (non-XXX) brand — icy blue from logo */
 export const BRAND_ACCENT = "#5badee";
