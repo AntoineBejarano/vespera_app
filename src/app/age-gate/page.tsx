@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useHexclaveApp, useUser } from "@hexclave/next";
 import { BrandMark } from "@/components/BrandLogo";
@@ -10,7 +10,6 @@ import { PageSpinner } from "@/components/Spinner";
 import { AFTER_DARK_URL } from "@/lib/site";
 
 function AgeGateInner() {
-  const router = useRouter();
   const search = useSearchParams();
   const app = useHexclaveApp();
   const user = useUser({ or: "return-null" });
@@ -60,7 +59,9 @@ function AgeGateInner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(attestBody),
       });
-      const attestData = await attest.json();
+      const attestData = (await attest.json().catch(() => ({}))) as {
+        error?: string;
+      };
       if (!attest.ok) throw new Error(attestData.error ?? "Attestation failed");
 
       if (user) {
@@ -80,25 +81,27 @@ function AgeGateInner() {
             legalVersion: LEGAL_VERSION,
           }),
         });
-        const data = await res.json();
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+        };
         if (!res.ok) throw new Error(data.error ?? "Failed");
-        // /after-dark → XXX home via proxy (or stays on localhost for local dev)
-        router.replace(nextPath || (isAdult ? "/after-dark" : "/personas"));
-        router.refresh();
+      }
+
+      if (!user && intent === "signup") {
+        await app.redirectToSignUp();
+        return;
+      }
+      if (!user && intent === "signin") {
+        await app.redirectToSignIn();
         return;
       }
 
-      if (intent === "signup") {
-        void app.redirectToSignUp();
-        return;
-      }
-      if (intent === "signin") {
-        void app.redirectToSignIn();
-        return;
-      }
-
-      router.replace(nextPath || (isAdult ? "/after-dark" : "/"));
-      router.refresh();
+      // Hard navigate after Set-Cookie. Soft router.replace can hang when the
+      // edge serves a prerendered HTML document instead of an RSC payload.
+      const destination =
+        nextPath ||
+        (isAdult ? "/after-dark" : user ? "/personas" : "/");
+      window.location.assign(destination);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");
       setLoading(false);
