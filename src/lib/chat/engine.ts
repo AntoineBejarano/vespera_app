@@ -11,6 +11,7 @@ import {
 import { checkAndIncrementDailyLimit } from "@/lib/memory/limits";
 import { appendHistory, getRecentHistory } from "@/lib/memory/history";
 import { searchMemories } from "@/lib/memory/vector";
+import { searchCharacterKnowledge } from "@/lib/knowledge/retrieve";
 import { maybeExtractMemories } from "@/lib/memory/extractor";
 import {
   getLatestSummary,
@@ -208,13 +209,19 @@ export async function runCharacterReply(params: {
     : await pickCharacterPhoto(character.id, text);
 
   const modelId = resolveModel(user.preferredModel);
-  const memories = await searchMemories({
-    userId: user.id,
-    characterId: character.id,
-    query: text,
-  });
-  const summary = await getLatestSummary(conversation.id);
-  const relationship = await ensureRelationshipState(user.id, character.id);
+  const [memories, knowledgeBrief, summary, relationship] = await Promise.all([
+    searchMemories({
+      userId: user.id,
+      characterId: character.id,
+      query: text,
+    }),
+    searchCharacterKnowledge({
+      characterId: character.id,
+      query: text,
+    }),
+    getLatestSummary(conversation.id),
+    ensureRelationshipState(user.id, character.id),
+  ]);
 
   const channel = params.partner?.channel ?? "web";
   const tgFirst =
@@ -251,6 +258,7 @@ export async function runCharacterReply(params: {
       summary: relationship.summary ?? undefined,
     },
     memoryBrief: memories,
+    knowledgeBrief,
     summary: summary?.content,
     partner: {
       displayName: partnerName.displayName,

@@ -121,6 +121,9 @@ export function AppNav({
               <Link href="/personas" className={linkClass}>
                 Personas
               </Link>
+              <Link href="/knowledge" className={linkClass}>
+                Knowledge
+              </Link>
               <Link href="/help" className={linkClass}>
                 Help
               </Link>
@@ -250,6 +253,13 @@ export function AppNav({
                   onClick={() => setOpen(false)}
                 >
                   Personas
+                </Link>
+                <Link
+                  href="/knowledge"
+                  className="py-2.5 hover:text-[var(--ink)]"
+                  onClick={() => setOpen(false)}
+                >
+                  Knowledge
                 </Link>
                 <Link
                   href="/help"

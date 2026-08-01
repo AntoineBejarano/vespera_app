@@ -12,6 +12,7 @@ const BUDGET = {
   relationship: 320,
   partner: 220,
   memory: 800,
+  knowledge: 1200,
 } as const;
 
 function clip(text: string, maxChars: number) {
@@ -81,12 +82,21 @@ export function assemblePersonaPrompt(params: {
   persona: PersonaBundle;
   relationship?: RelationshipSnapshot | null;
   memoryBrief: string[];
+  /** Retrieved Knowledge Pack chunks (already ingested — never remote fetch). */
+  knowledgeBrief?: string[];
   summary?: string | null;
   partner?: PartnerContext | null;
   photoHint?: boolean | "cute" | "spicy" | string;
 }): string {
-  const { persona, relationship, memoryBrief, summary, partner, photoHint } =
-    params;
+  const {
+    persona,
+    relationship,
+    memoryBrief,
+    knowledgeBrief = [],
+    summary,
+    partner,
+    photoHint,
+  } = params;
   const identity = persona.identityJson as IdentitySheet | null;
 
   const soul =
@@ -148,6 +158,10 @@ export function assemblePersonaPrompt(params: {
     ? memoryBrief.map((m, i) => `${i + 1}. ${m}`).join("\n")
     : "No long memories yet.";
 
+  const knowledgeMd = knowledgeBrief.length
+    ? knowledgeBrief.map((k, i) => `${i + 1}. ${k}`).join("\n")
+    : "";
+
   const intensityGuide =
     persona.intensity <= 2
       ? "Moderate chemistry."
@@ -176,6 +190,9 @@ export function assemblePersonaPrompt(params: {
     "",
     `# Memory brief`,
     clip(memoryMd, BUDGET.memory),
+    knowledgeMd
+      ? `\n# Knowledge brief (from linked Knowledge Packs — cite ideas, don't dump verbatim)\n${clip(knowledgeMd, BUDGET.knowledge)}`
+      : "",
     summary ? `\n# Session summary\n${clip(summary, 500)}` : "",
     persona.limitsJson
       ? `\n# User limits\n${JSON.stringify(persona.limitsJson)}`

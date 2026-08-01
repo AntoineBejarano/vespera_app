@@ -42,15 +42,16 @@ model User {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
-  characters    Character[]
-  settings      UserSettings?
-  conversations Conversation[]
-  memories      Memory[]
-  telegramBots  TelegramBot[]
-  telegramPeers TelegramPeer[]
-  apiKeys       UserApiKey[]
+  accounts       Account[]
+  sessions       Session[]
+  characters     Character[]
+  settings       UserSettings?
+  conversations  Conversation[]
+  memories       Memory[]
+  telegramBots   TelegramBot[]
+  telegramPeers  TelegramPeer[]
+  apiKeys        UserApiKey[]
+  knowledgePacks KnowledgePack[]
 
   @@index([email])
   @@index([telegramId])
@@ -164,12 +165,13 @@ model Character {
   user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   forkedFrom     Character?          @relation("CharacterForks", fields: [forkedFromId], references: [id], onDelete: SetNull)
   forks          Character[]         @relation("CharacterForks")
-  conversations  Conversation[]
-  memories       Memory[]
-  summaries      Summary[]
-  relationships  RelationshipState[]
-  photos         CharacterPhoto[]
-  telegramBots   TelegramBot[]
+  conversations   Conversation[]
+  memories        Memory[]
+  summaries       Summary[]
+  relationships   RelationshipState[]
+  photos          CharacterPhoto[]
+  telegramBots    TelegramBot[]
+  knowledgeLinks  CharacterKnowledgePack[]
 
   @@index([userId])
   @@index([userId, active])
@@ -320,4 +322,121 @@ model Memory {
 
   @@index([userId, characterId])
   @@index([characterId, type])
+}
+
+/// Curated knowledge pack (Plato Essentials, museum guide, AI employee docs…).
+/// Full document text lives in Upstash Vector chunks — never in Postgres.
+model KnowledgePack {
+  id          String   @id @default(cuid())
+  userId      String
+  /// Stable slug for seeds (e.g. plato-essentials); unique per owner
+  slug        String?
+  name        String
+  description String?  @db.Text
+  language    String   @default("en")
+  active      Boolean  @default(true)
+  /// Seed template key if created from a preset (config only — not hardcoded ingest logic)
+  seedKey     String?
+  documentCount Int    @default(0)
+  chunkCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user       User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sources    KnowledgeSource[]
+  jobs       KnowledgeIngestJob[]
+  characters CharacterKnowledgePack[]
+
+  @@unique([userId, slug])
+  @@index([userId])
+  @@index([userId, active])
+}
+
+/// Source provenance + ingest state. No full document body stored here.
+model KnowledgeSource {
+  id               String   @id @default(cuid())
+  knowledgePackId  String
+  /// generic_url | huggingface | gutenberg | mediawiki | object_storage | user_owned
+  provider         String
+  /// Provider-specific external id (ebook id, datasetId, page title, object key…)
+  externalId       String
+  canonicalUrl     String?
+  /// Dataset revision / git sha / MediaWiki revid / content version
+  datasetRevision  String?
+  license          String?
+  language         String   @default("en")
+  /// SHA-256 of normalized source payload (idempotency / change detection)
+  checksum         String?
+  /// pending | inspecting | ready | ingesting | indexed | failed | cancelled | disabled
+  status           String   @default("pending")
+  enabled          Boolean  @default(true)
+  /// Adapter config (dataset split, textColumn, ebook format, host…). Not document body.
+  configJson       Json
+  /// License + provenance summary from inspect()
+  provenanceJson   Json?
+  /// Object storage key when original file is snapshotted (R2/S3)
+  objectKey        String?
+  documentCount    Int      @default(0)
+  chunkCount       Int      @default(0)
+  lastError        String?  @db.Text
+  lastIngestedAt   DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  knowledgePack KnowledgePack        @relation(fields: [knowledgePackId], references: [id], onDelete: Cascade)
+  jobs          KnowledgeIngestJob[]
+
+  @@unique([knowledgePackId, provider, externalId])
+  @@index([knowledgePackId])
+  @@index([knowledgePackId, status])
+  @@index([provider, externalId])
+  @@index([checksum])
+}
+
+/// Async ingest / reindex / delete-vectors job (Postgres-backed queue).
+model KnowledgeIngestJob {
+  id              String   @id @default(cuid())
+  knowledgePackId String
+  sourceId        String?
+  /// ingest | reindex | delete_source_vectors
+  kind            String   @default("ingest")
+  /// queued | running | succeeded | failed | cancelled
+  status          String   @default("queued")
+  progress        Int      @default(0)
+  documentsDone   Int      @default(0)
+  documentsTotal  Int      @default(0)
+  chunksDone      Int      @default(0)
+  attempt         Int      @default(0)
+  maxAttempts     Int      @default(3)
+  /// Opaque cursor for batched / streaming resume
+  cursorJson      Json?
+  error           String?  @db.Text
+  logJson         Json?
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  knowledgePack KnowledgePack    @relation(fields: [knowledgePackId], references: [id], onDelete: Cascade)
+  source        KnowledgeSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([knowledgePackId, status])
+  @@index([sourceId])
+}
+
+/// Many-to-many: one pack can power several personas (Plato, tutor clones…).
+model CharacterKnowledgePack {
+  id              String   @id @default(cuid())
+  characterId     String
+  knowledgePackId String
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  character     Character     @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  knowledgePack KnowledgePack @relation(fields: [knowledgePackId], references: [id], onDelete: Cascade)
+
+  @@unique([characterId, knowledgePackId])
+  @@index([characterId])
+  @@index([knowledgePackId])
 }

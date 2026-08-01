@@ -417,6 +417,12 @@ export function PersonaDetail({
           >
             Memory
           </Link>
+          <Link
+            href={`/knowledge?characterId=${persona.id}`}
+            className="rounded-xl border border-[var(--line)] px-3 py-2.5 text-center text-sm hover:border-[var(--accent)] sm:px-4"
+          >
+            Knowledge
+          </Link>
         </div>
       </div>
 
