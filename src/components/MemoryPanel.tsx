@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MagicCard } from "@/components/magicui/magic-card";
 
@@ -69,17 +68,11 @@ export function MemoryPanel({
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <Link
-        href={`/personas/${characterId}`}
-        className="text-sm text-[var(--muted)] hover:text-[var(--ink)]"
-      >
-        ← {characterName}
-      </Link>
-      <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--ink)]">
+    <div className="px-4 py-6 sm:px-6 sm:py-8">
+      <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--ink)] sm:text-3xl">
         Memory · {characterName}
       </h1>
-      <p className="mt-2 text-[var(--muted)]">
+      <p className="mt-1 text-sm text-[var(--muted)]">
         What this persona remembers across test chat and Telegram peers.
       </p>
       {error ? <p className="mt-4 text-sm text-[var(--danger)]">{error}</p> : null}

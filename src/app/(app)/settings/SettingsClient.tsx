@@ -107,12 +107,9 @@ export default function SettingsClient() {
   }
 
   return (
-    <div className="mx-auto max-w-xl space-y-8 px-4 py-10">
+    <div className="max-w-2xl space-y-8 px-4 py-6 sm:px-6 sm:py-8">
       <div>
-        <p className="text-xs uppercase tracking-[0.3em] text-[var(--accent)]">
-          Admin
-        </p>
-        <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl">
+        <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight sm:text-3xl">
           Settings
         </h1>
         <p className="mt-2 text-[var(--muted)]">
@@ -135,9 +132,14 @@ export default function SettingsClient() {
         </p>
       </div>
 
-      <WorkspaceMembersPanel />
+      <div id="workspace" className="scroll-mt-20">
+        <WorkspaceMembersPanel />
+      </div>
 
-      <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
+      <section
+        id="api-keys"
+        className="scroll-mt-20 space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4"
+      >
         <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
           Account API keys (CLI / AI agents)
         </h2>

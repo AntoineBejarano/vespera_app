@@ -108,7 +108,7 @@ export function OnboardingFlow() {
   }
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-12">
+    <div className="mx-auto max-w-xl px-4 py-6 sm:px-6 sm:py-8">
       <div className="mb-8 h-1 w-full bg-[var(--line)]">
         <div
           className="h-1 bg-[var(--accent)] transition-all"

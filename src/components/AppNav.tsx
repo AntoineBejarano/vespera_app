@@ -2,10 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useHexclaveApp, useUser } from "@hexclave/next";
+import { useHexclaveApp, useUser, UserButton } from "@hexclave/next";
 import { SITE_URL } from "@/lib/site";
-import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
-import { DebugRoleSwitcher } from "@/components/DebugRoleSwitcher";
 
 const MARKETING_LINKS = [
   { href: "/#live-personas", label: "Live Personas" },
@@ -64,12 +62,11 @@ function Wordmark({
   );
 }
 
+/** Marketing / After Dark chrome only. Authenticated product uses AppShell. */
 export function AppNav({
-  email,
-  variant = "app",
+  variant = "marketing",
 }: {
-  email?: string | null;
-  variant?: "app" | "marketing" | "after-dark";
+  variant?: "marketing" | "after-dark";
 }) {
   const app = useHexclaveApp();
   const user = useUser({ or: "return-null" });
@@ -77,21 +74,10 @@ export function AppNav({
   const [exploreOpen, setExploreOpen] = useState(false);
 
   const guestLinks =
-    variant === "after-dark"
-      ? AFTER_DARK_LINKS
-      : variant === "marketing"
-        ? MARKETING_LINKS
-        : [
-            { href: "/#create", label: "Create" },
-            { href: "/help", label: "Help" },
-            { href: "/#pricing", label: "Pricing" },
-          ];
+    variant === "after-dark" ? AFTER_DARK_LINKS : MARKETING_LINKS;
 
-  const homeHref = user
-    ? "/personas"
-    : variant === "after-dark"
-      ? "/after-dark"
-      : "/";
+  const homeHref =
+    variant === "after-dark" ? "/after-dark" : user ? "/personas" : "/";
 
   const mainSiteHref = SITE_URL;
 
@@ -113,92 +99,71 @@ export function AppNav({
           subtitle={variant === "after-dark" ? "After Dark" : undefined}
         />
 
-        {/* Desktop */}
         <nav
           className={`hidden items-center lg:flex ${
             variant === "marketing" ? "gap-4 xl:gap-6" : "gap-7"
           }`}
         >
+          {variant === "marketing" ? (
+            <div
+              className="relative"
+              onMouseEnter={() => setExploreOpen(true)}
+              onMouseLeave={() => setExploreOpen(false)}
+            >
+              <Link
+                href="/explore"
+                className={linkClass}
+                aria-expanded={exploreOpen}
+              >
+                Explore
+              </Link>
+              {exploreOpen ? (
+                <div className="absolute left-0 top-full z-50 min-w-[11.5rem] pt-3">
+                  <div className="border border-white/[0.08] bg-[var(--bg-elevated)]/95 py-2 shadow-2xl backdrop-blur-xl">
+                    {EXPLORE_LINKS.map((item, i) => (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        className={`block px-4 py-2 text-[13px] transition hover:bg-white/[0.03] hover:text-[var(--ink)] ${
+                          i === EXPLORE_LINKS.length - 1
+                            ? "mt-1 border-t border-white/[0.06] pt-3 text-[var(--muted)]/80"
+                            : "text-[var(--muted)]"
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {guestLinks.map((link) => (
+            <Link
+              key={link.href + link.label}
+              href={link.href}
+              className={linkClass}
+            >
+              {link.label}
+            </Link>
+          ))}
+
+          {variant === "after-dark" ? (
+            <a href={mainSiteHref} className={linkClass}>
+              Main site
+            </a>
+          ) : null}
+
           {user ? (
             <>
-              <DebugRoleSwitcher />
-              <WorkspaceSwitcher />
               <Link href="/personas" className={linkClass}>
-                Personas
+                Open app
               </Link>
-              <Link href="/knowledge" className={linkClass}>
-                Sources
-              </Link>
-              <Link href="/help" className={linkClass}>
-                Help
-              </Link>
-              <Link href="/settings" className={linkClass}>
-                Settings
-              </Link>
-              <button
-                type="button"
-                className={linkClass}
-                onClick={() => app.redirectToSignOut()}
-              >
-                Sign out
-              </button>
-              <span className="max-w-[10rem] truncate text-xs text-[var(--muted)]/80 xl:max-w-none">
-                {email ?? user.primaryEmail}
-              </span>
+              <UserButton showUserInfo={false} />
             </>
           ) : (
             <>
-              {variant === "marketing" ? (
-                <div
-                  className="relative"
-                  onMouseEnter={() => setExploreOpen(true)}
-                  onMouseLeave={() => setExploreOpen(false)}
-                >
-                  <Link
-                    href="/explore"
-                    className={linkClass}
-                    aria-expanded={exploreOpen}
-                  >
-                    Explore
-                  </Link>
-                  {exploreOpen ? (
-                    <div className="absolute left-0 top-full z-50 min-w-[11.5rem] pt-3">
-                      <div className="border border-white/[0.08] bg-[var(--bg-elevated)]/95 py-2 shadow-2xl backdrop-blur-xl">
-                        {EXPLORE_LINKS.map((item, i) => (
-                          <Link
-                            key={item.label}
-                            href={item.href}
-                            className={`block px-4 py-2 text-[13px] transition hover:bg-white/[0.03] hover:text-[var(--ink)] ${
-                              i === EXPLORE_LINKS.length - 1
-                                ? "mt-1 border-t border-white/[0.06] pt-3 text-[var(--muted)]/80"
-                                : "text-[var(--muted)]"
-                            }`}
-                          >
-                            {item.label}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-
-              {guestLinks.map((link) => (
-                <Link
-                  key={link.href + link.label}
-                  href={link.href}
-                  className={linkClass}
-                >
-                  {link.label}
-                </Link>
-              ))}
-
-              {variant === "after-dark" ? (
-                <a href={mainSiteHref} className={linkClass}>
-                  Main site
-                </a>
-              ) : null}
-
               <button
                 type="button"
                 className={linkClass}
@@ -206,7 +171,6 @@ export function AppNav({
               >
                 Sign in
               </button>
-
               <button
                 type="button"
                 className="ml-1 border border-[var(--ink)]/20 px-3.5 py-1.5 text-[13px] font-medium tracking-[0.01em] text-[var(--ink)] transition hover:border-[var(--accent)]/50 hover:bg-[var(--accent-soft)]"
@@ -224,7 +188,6 @@ export function AppNav({
           )}
         </nav>
 
-        {/* Mobile toggle */}
         <button
           type="button"
           className="inline-flex h-10 w-10 items-center justify-center text-[var(--ink)] lg:hidden"
@@ -250,92 +213,52 @@ export function AppNav({
       {open ? (
         <nav className="safe-pad border-t border-white/[0.06] px-4 py-5 lg:hidden sm:px-6">
           <div className="flex flex-col gap-1 text-[15px] text-[var(--muted)]">
+            {variant === "marketing"
+              ? EXPLORE_LINKS.map((item) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className="py-2.5 hover:text-[var(--ink)]"
+                    onClick={() => setOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ))
+              : null}
+            {guestLinks.map((link) => (
+              <Link
+                key={link.href + link.label}
+                href={link.href}
+                className="py-2.5 hover:text-[var(--ink)]"
+                onClick={() => setOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+            {variant === "after-dark" ? (
+              <a
+                href={mainSiteHref}
+                className="py-2.5 hover:text-[var(--ink)]"
+                onClick={() => setOpen(false)}
+              >
+                Main site
+              </a>
+            ) : null}
             {user ? (
               <>
-                <div className="py-2">
-                  <DebugRoleSwitcher />
-                </div>
                 <Link
                   href="/personas"
                   className="py-2.5 hover:text-[var(--ink)]"
                   onClick={() => setOpen(false)}
                 >
-                  Personas
+                  Open app
                 </Link>
-                <Link
-                  href="/knowledge"
-                  className="py-2.5 hover:text-[var(--ink)]"
-                  onClick={() => setOpen(false)}
-                >
-                  Sources
-                </Link>
-                <Link
-                  href="/help"
-                  className="py-2.5 hover:text-[var(--ink)]"
-                  onClick={() => setOpen(false)}
-                >
-                  Help
-                </Link>
-                <Link
-                  href="/docs"
-                  className="py-2.5 hover:text-[var(--ink)]"
-                  onClick={() => setOpen(false)}
-                >
-                  Docs
-                </Link>
-                <Link
-                  href="/settings"
-                  className="py-2.5 hover:text-[var(--ink)]"
-                  onClick={() => setOpen(false)}
-                >
-                  Settings
-                </Link>
-                <button
-                  type="button"
-                  className="py-2.5 text-left hover:text-[var(--ink)]"
-                  onClick={() => {
-                    setOpen(false);
-                    void app.redirectToSignOut();
-                  }}
-                >
-                  Sign out
-                </button>
+                <div className="py-2">
+                  <UserButton showUserInfo={false} />
+                </div>
               </>
             ) : (
               <>
-                {variant === "marketing" ? (
-                  <>
-                    {EXPLORE_LINKS.map((item) => (
-                      <Link
-                        key={item.label}
-                        href={item.href}
-                        className="py-2.5 hover:text-[var(--ink)]"
-                        onClick={() => setOpen(false)}
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </>
-                ) : null}
-                {guestLinks.map((link) => (
-                  <Link
-                    key={link.href + link.label}
-                    href={link.href}
-                    className="py-2.5 hover:text-[var(--ink)]"
-                    onClick={() => setOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-                {variant === "after-dark" ? (
-                  <a
-                    href={mainSiteHref}
-                    className="py-2.5 hover:text-[var(--ink)]"
-                    onClick={() => setOpen(false)}
-                  >
-                    Main site
-                  </a>
-                ) : null}
                 <button
                   type="button"
                   className="py-2.5 text-left hover:text-[var(--ink)]"

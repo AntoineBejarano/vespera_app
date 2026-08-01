@@ -29,7 +29,7 @@ export function AcceptInviteClient({ token }: { token: string }) {
   }
 
   return (
-    <div className="mx-auto max-w-md space-y-4 px-4 py-16">
+    <div className="mx-auto max-w-md space-y-4 px-4 py-6 sm:px-6 sm:py-8">
       <h1 className="font-[family-name:var(--font-display)] text-3xl">
         Join workspace
       </h1>

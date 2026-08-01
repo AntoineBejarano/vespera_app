@@ -194,7 +194,7 @@ export function ChatPanel({
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-57px)] max-w-3xl flex-col px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-4 sm:pb-4">
+    <div className="mx-auto flex h-[calc(100dvh-3.5rem)] max-w-3xl flex-col px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-4">
       <div className="flex flex-wrap items-center gap-2 border-b border-[var(--line)] py-2.5 sm:gap-3 sm:py-3">
         <a
           href={`/personas/${characterId}`}

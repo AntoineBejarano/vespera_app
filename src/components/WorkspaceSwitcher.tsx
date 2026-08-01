@@ -25,9 +25,7 @@ export function WorkspaceSwitcher() {
     void load();
   }, []);
 
-  if (workspaces.length <= 1) {
-    return null;
-  }
+  const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
 
   async function onChange(workspaceId: string) {
     setBusy(true);
@@ -46,11 +44,34 @@ export function WorkspaceSwitcher() {
     }
   }
 
+  if (workspaces.length === 0) {
+    return (
+      <div className="rounded-lg border border-white/[0.06] px-2.5 py-2 text-[12px] text-[var(--muted)]">
+        Workspace
+      </div>
+    );
+  }
+
+  if (workspaces.length === 1) {
+    return (
+      <div className="rounded-lg border border-white/[0.06] px-2.5 py-2">
+        <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]/70">
+          Workspace
+        </p>
+        <p className="mt-0.5 truncate text-[13px] font-medium text-[var(--ink)]">
+          {active?.name ?? "Personal"}
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <label className="flex min-w-0 items-center gap-2 text-sm text-[var(--muted)]">
-      <span className="sr-only">Workspace</span>
+    <label className="block min-w-0">
+      <span className="mb-1 block text-[10px] uppercase tracking-[0.16em] text-[var(--muted)]/70">
+        Workspace
+      </span>
       <select
-        className="max-w-[12rem] truncate rounded-md border border-[var(--line)] bg-transparent px-2 py-1 text-[var(--ink)]"
+        className="w-full truncate rounded-lg border border-white/[0.08] bg-[var(--bg)] px-2.5 py-2 text-[13px] text-[var(--ink)]"
         value={activeId ?? ""}
         disabled={busy}
         onChange={(e) => void onChange(e.target.value)}
