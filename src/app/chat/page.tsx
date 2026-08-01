@@ -1,4 +1,5 @@
 import { getAppUser } from "@/lib/session";
+import { accountAgeGateHref } from "@/lib/legal/access-cookie";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { prisma } from "@/lib/db";
 import { AppNav } from "@/components/AppNav";
@@ -10,11 +11,14 @@ export default async function ChatPage({
 }: {
   searchParams: Promise<{ characterId?: string }>;
 }) {
+  const { characterId } = await searchParams;
   const user = await getAppUser({ or: "redirect" });
   if (!user) redirect("/handler/sign-in");
-  if (needsAccountAgeGate(user)) redirect("/age-gate?zone=standard");
+  const chatNext = characterId
+    ? `/chat?characterId=${encodeURIComponent(characterId)}`
+    : "/personas";
+  if (needsAccountAgeGate(user)) redirect(accountAgeGateHref(chatNext));
 
-  const { characterId } = await searchParams;
   if (!characterId) redirect("/personas");
 
   const character = await prisma.character.findFirst({

@@ -1,4 +1,5 @@
 import { getAppUser } from "@/lib/session";
+import { accountAgeGateHref } from "@/lib/legal/access-cookie";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { AppNav } from "@/components/AppNav";
 import { KnowledgePacksPanel } from "@/components/KnowledgePacksPanel";
@@ -9,11 +10,13 @@ type Props = {
 };
 
 export default async function KnowledgePage({ searchParams }: Props) {
+  const sp = await searchParams;
   const user = await getAppUser({ or: "redirect" });
   if (!user) redirect("/handler/sign-in");
-  if (needsAccountAgeGate(user)) redirect("/age-gate?zone=standard");
-
-  const sp = await searchParams;
+  const knowledgeNext = sp.characterId
+    ? `/knowledge?characterId=${encodeURIComponent(sp.characterId)}`
+    : "/knowledge";
+  if (needsAccountAgeGate(user)) redirect(accountAgeGateHref(knowledgeNext));
 
   return (
     <>

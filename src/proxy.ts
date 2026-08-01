@@ -18,6 +18,7 @@ function isAgeExempt(pathname: string) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     pathname.startsWith("/handler") ||
+    pathname.startsWith("/auth/continue") ||
     pathname.startsWith("/brand") ||
     pathname.startsWith("/icon") ||
     pathname.startsWith("/apple-icon")

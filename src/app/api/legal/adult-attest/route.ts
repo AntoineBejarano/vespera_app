@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import {
+  accessCookieOptions,
+  adultConsentCookieOptions,
+} from "@/lib/legal/access-cookie";
+import {
+  ADULT_CONSENT_COOKIE,
   ADULT_COOKIE,
-  ADULT_COOKIE_MAX_AGE_SEC,
   LEGAL_VERSION,
 } from "@/lib/legal/constants";
 
@@ -38,15 +42,8 @@ export async function POST(req: Request) {
     legalVersion: LEGAL_VERSION,
   });
 
-  res.cookies.set({
-    name: ADULT_COOKIE,
-    value: LEGAL_VERSION,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: ADULT_COOKIE_MAX_AGE_SEC,
-  });
+  res.cookies.set(accessCookieOptions());
+  res.cookies.set(adultConsentCookieOptions());
 
   return res;
 }
@@ -54,12 +51,15 @@ export async function POST(req: Request) {
 export async function DELETE() {
   const res = NextResponse.json({ ok: true });
   res.cookies.set({
+    ...accessCookieOptions(""),
     name: ADULT_COOKIE,
     value: "",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
+    maxAge: 0,
+  });
+  res.cookies.set({
+    ...adultConsentCookieOptions(""),
+    name: ADULT_CONSENT_COOKIE,
+    value: "",
     maxAge: 0,
   });
   return res;

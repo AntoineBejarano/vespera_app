@@ -1,4 +1,5 @@
 import { getAppUser } from "@/lib/session";
+import { accountAgeGateHref } from "@/lib/legal/access-cookie";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { redirect } from "next/navigation";
 
@@ -6,6 +7,6 @@ import { redirect } from "next/navigation";
 export default async function MemoryPage() {
   const user = await getAppUser({ or: "redirect" });
   if (!user) redirect("/handler/sign-in");
-  if (needsAccountAgeGate(user)) redirect("/age-gate?zone=standard");
+  if (needsAccountAgeGate(user)) redirect(accountAgeGateHref("/personas"));
   redirect("/personas");
 }

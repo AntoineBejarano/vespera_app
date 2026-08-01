@@ -322,7 +322,7 @@ export function LandingPage() {
     if (search.get("hexclave_cross_domain_auth")) return;
 
     if (user) {
-      window.location.replace("/personas");
+      window.location.replace("/auth/continue");
       return;
     }
     const auth = search.get("auth");

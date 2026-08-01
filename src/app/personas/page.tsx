@@ -1,4 +1,5 @@
 import { getAppUser } from "@/lib/session";
+import { accountAgeGateHref } from "@/lib/legal/access-cookie";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { prisma } from "@/lib/db";
 import { AppNav } from "@/components/AppNav";
@@ -8,7 +9,7 @@ import { redirect } from "next/navigation";
 export default async function PersonasPage() {
   const user = await getAppUser({ or: "redirect" });
   if (!user) redirect("/");
-  if (needsAccountAgeGate(user)) redirect("/age-gate?zone=standard");
+  if (needsAccountAgeGate(user)) redirect(accountAgeGateHref("/personas"));
 
   const characters = await prisma.character.findMany({
     where: { userId: user.id },

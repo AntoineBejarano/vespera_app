@@ -150,10 +150,11 @@ export function AfterDarkLanding() {
     if (search.get("hexclave_cross_domain_auth")) return;
 
     if (user) {
-      window.location.replace("/personas");
+      window.location.replace("/auth/continue");
       return;
     }
     const auth = search.get("auth");
+    // Adult clickwrap once, then Hexclave; /auth/continue persists cookie→account.
     if (auth === "signin") {
       window.location.replace("/age-gate?zone=adult&intent=signin");
       return;

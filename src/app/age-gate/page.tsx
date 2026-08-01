@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useHexclaveApp, useUser } from "@hexclave/next";
 import { BrandMark } from "@/components/BrandLogo";
+import { safeNextPath } from "@/lib/legal/access-cookie";
 import { LEGAL_VERSION } from "@/lib/legal/constants";
 import { PageSpinner } from "@/components/Spinner";
 import { AFTER_DARK_URL } from "@/lib/site";
@@ -22,13 +23,43 @@ function AgeGateInner() {
   const [privacyOk, setPrivacyOk] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState(() => Boolean(user));
 
-  const nextPath = safeNext(search.get("next"));
+  const nextPath = safeNextPath(search.get("next"));
   const intent = search.get("intent");
   const isAdult = zone === "adult";
   const ready = isAdult
     ? ageOk && adultOk && tosOk && privacyOk
     : aiOk && tosOk && privacyOk;
+
+  // Returning users already attested on the account: restore cookie and leave.
+  useEffect(() => {
+    if (!user) {
+      setRestoring(false);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch("/api/legal/restore-access", {
+          method: "POST",
+        });
+        if (cancelled) return;
+        if (res.ok) {
+          window.location.replace(
+            nextPath || (isAdult ? "/after-dark" : "/personas"),
+          );
+          return;
+        }
+      } catch {
+        // Fall through to the form.
+      }
+      if (!cancelled) setRestoring(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, nextPath, isAdult]);
 
   async function continueFlow() {
     if (!ready) return;
@@ -106,6 +137,10 @@ function AgeGateInner() {
       setError(err instanceof Error ? err.message : "Error");
       setLoading(false);
     }
+  }
+
+  if (restoring) {
+    return <PageSpinner label="Continuing" />;
   }
 
   return (
@@ -295,12 +330,6 @@ function AgeGateInner() {
       </p>
     </main>
   );
-}
-
-function safeNext(raw: string | null) {
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
-  if (raw.startsWith("/age-gate") || raw.startsWith("/underage")) return null;
-  return raw;
 }
 
 export default function AgeGatePage() {

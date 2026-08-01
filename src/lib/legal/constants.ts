@@ -3,6 +3,9 @@ export const LEGAL_VERSION = "2026-08-02";
 
 export const ADULT_COOKIE = "vesperer_adult";
 
+/** Set alongside the access cookie when the adult (After Dark) gate was completed. */
+export const ADULT_CONSENT_COOKIE = "vesperer_adult_ok";
+
 /** Cookie value = legal version accepted */
 export const ADULT_COOKIE_MAX_AGE_SEC = 60 * 60 * 24 * 365; // 1 year
 

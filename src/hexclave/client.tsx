@@ -10,8 +10,9 @@ export const hexclaveClientApp = new HexclaveClientApp({
     signIn: "/handler/sign-in",
     signUp: "/handler/sign-up",
     home: "/personas",
-    afterSignIn: "/personas",
-    afterSignUp: "/age-gate?zone=standard",
+    // Single post-auth hop: restore cookie or one age-gate, then destination.
+    afterSignIn: "/auth/continue",
+    afterSignUp: "/auth/continue",
     afterSignOut: "/",
   },
 });
