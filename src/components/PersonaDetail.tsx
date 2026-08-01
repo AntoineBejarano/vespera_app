@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PersonaProfileShell } from "@/components/persona/PersonaProfileShell";
 import { PersonaOverviewTab } from "@/components/persona/PersonaOverviewTab";
 import { PersonaConnectionsTab } from "@/components/persona/PersonaConnectionsTab";
@@ -63,6 +63,15 @@ export function PersonaDetail({
 
   const telegramPeerCount = bots.reduce((n, b) => n + b.peerCount, 0);
   const showOperatorAck = !operatorAttested;
+
+  useEffect(() => {
+    function onMsg(e: Event) {
+      const detail = (e as CustomEvent<string>).detail;
+      if (typeof detail === "string") setMessage(detail);
+    }
+    window.addEventListener("persona-message", onMsg);
+    return () => window.removeEventListener("persona-message", onMsg);
+  }, []);
 
   function operatorPayload() {
     return operatorAttested || operatorAck

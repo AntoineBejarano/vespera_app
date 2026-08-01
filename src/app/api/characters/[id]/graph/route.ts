@@ -1,36 +1,27 @@
 import { prisma } from "@/lib/db";
 import { getAppUser } from "@/lib/session";
+import {
+  buildMindGraph,
+  layersToMindDocs,
+  type MindDoc,
+} from "@/lib/persona/mind-graph";
 
 type Params = { params: Promise<{ id: string }> };
 
-export type GraphNodeKind =
-  | "persona"
-  | "layer"
-  | "memoryType"
-  | "memory"
-  | "relationship"
-  | "bot"
-  | "peer"
-  | "knowledge";
-
-export type PersonaGraphNode = {
-  id: string;
-  kind: GraphNodeKind;
-  label: string;
-  detail?: string | null;
-  meta?: Record<string, string | number | boolean | null>;
+type ObsidianMeta = {
+  notes?: {
+    path: string;
+    title: string;
+    content: string;
+    type?: string;
+    confidence?: number;
+    private?: boolean;
+  }[];
+  syncedAt?: string;
 };
 
-export type PersonaGraphEdge = {
-  id: string;
-  source: string;
-  target: string;
-  label?: string;
-};
-
-const MEMORY_LIMIT = 24;
-const RELATIONSHIP_LIMIT = 12;
-const PEERS_PER_BOT = 8;
+const MEMORY_LIMIT = 20;
+const RELATIONSHIP_LIMIT = 10;
 
 export async function GET(_req: Request, { params }: Params) {
   const user = await getAppUser();
@@ -45,29 +36,22 @@ export async function GET(_req: Request, { params }: Params) {
       telegramBots: {
         include: {
           peers: {
-            take: PEERS_PER_BOT,
+            take: 6,
             orderBy: { updatedAt: "desc" },
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  telegramUsername: true,
-                  telegramFirstName: true,
-                },
-              },
-            },
           },
           _count: { select: { peers: true } },
         },
         orderBy: { createdAt: "desc" },
+        take: 8,
       },
       knowledgeLinks: {
         where: { active: true },
         include: {
-          knowledgePack: { select: { id: true, name: true } },
+          knowledgePack: {
+            select: { id: true, name: true, description: true },
+          },
         },
-        take: 12,
+        take: 16,
       },
       relationships: {
         take: RELATIONSHIP_LIMIT,
@@ -80,14 +64,10 @@ export async function GET(_req: Request, { params }: Params) {
           id: true,
           type: true,
           content: true,
-          updatedAt: true,
         },
       },
       _count: {
-        select: {
-          memories: true,
-          relationships: true,
-        },
+        select: { memories: true, relationships: true },
       },
     },
   });
@@ -96,209 +76,104 @@ export async function GET(_req: Request, { params }: Params) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
-  const relUserIds = character.relationships.map((r) => r.userId);
-  const relUsers = relUserIds.length
-    ? await prisma.user.findMany({
-        where: { id: { in: relUserIds } },
-        select: {
-          id: true,
-          name: true,
-          telegramUsername: true,
-          telegramFirstName: true,
-          email: true,
-        },
-      })
-    : [];
-  const relUserMap = new Map(relUsers.map((u) => [u.id, u]));
-
-  const nodes: PersonaGraphNode[] = [];
-  const edges: PersonaGraphEdge[] = [];
-
-  const personaNodeId = `persona:${character.id}`;
-  nodes.push({
-    id: personaNodeId,
-    kind: "persona",
-    label: character.name,
-    detail: character.tagline,
-    meta: {
-      intensity: character.intensity,
-      isAdult: character.isAdult,
-      memoryCount: character._count.memories,
-      relationshipCount: character._count.relationships,
-    },
-  });
-
-  const layers: { key: string; label: string; content: string | null }[] = [
-    { key: "soul", label: "Soul", content: character.soulMd },
-    { key: "style", label: "Style", content: character.styleMd },
-    { key: "rules", label: "Rules", content: character.rulesMd },
-    { key: "context", label: "Context", content: character.contextMd },
+  const docs: MindDoc[] = [
+    ...layersToMindDocs(character),
+    ...character.knowledgeLinks.map((link) => ({
+      id: `pack-${link.knowledgePack.id}`,
+      title: link.knowledgePack.name,
+      group: "knowledge",
+      content: [
+        link.knowledgePack.name,
+        link.knowledgePack.description ?? "",
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+    })),
   ];
 
-  for (const layer of layers) {
-    const text = layer.content?.trim();
-    if (!text) continue;
-    const nodeId = `layer:${layer.key}`;
-    nodes.push({
-      id: nodeId,
-      kind: "layer",
-      label: layer.label,
-      detail: text.slice(0, 280),
-      meta: { chars: text.length },
-    });
-    edges.push({
-      id: `e:${personaNodeId}-${nodeId}`,
-      source: personaNodeId,
-      target: nodeId,
-      label: "defines",
+  const meta = (character.metaJson ?? {}) as {
+    obsidian?: ObsidianMeta;
+  };
+  for (const note of meta.obsidian?.notes ?? []) {
+    const typed = note as {
+      path: string;
+      title: string;
+      content: string;
+      type?: import("@/lib/persona/mind-graph").MindNodeType;
+      confidence?: number;
+      private?: boolean;
+    };
+    docs.push({
+      id: `obsidian-${typed.path}`,
+      title: typed.title || typed.path,
+      group: "note",
+      type: typed.type,
+      content: typed.content,
+      sourcePath: typed.path,
+      confidence: typed.confidence,
+      private: typed.private,
     });
   }
 
-  const memoriesByType = new Map<string, typeof character.memories>();
-  for (const m of character.memories) {
-    const list = memoriesByType.get(m.type) ?? [];
-    list.push(m);
-    memoriesByType.set(m.type, list);
-  }
-
-  for (const [type, list] of memoriesByType) {
-    const typeId = `memoryType:${type}`;
-    nodes.push({
-      id: typeId,
-      kind: "memoryType",
-      label: type,
-      detail: `${list.length} recent`,
-      meta: { count: list.length },
-    });
-    edges.push({
-      id: `e:${personaNodeId}-${typeId}`,
-      source: personaNodeId,
-      target: typeId,
-      label: "remembers",
-    });
-
-    for (const m of list.slice(0, 4)) {
-      const memId = `memory:${m.id}`;
-      nodes.push({
-        id: memId,
-        kind: "memory",
-        label: truncate(m.content, 42),
-        detail: m.content.slice(0, 400),
-        meta: { type: m.type },
-      });
-      edges.push({
-        id: `e:${typeId}-${memId}`,
-        source: typeId,
-        target: memId,
-      });
-    }
-  }
-
-  for (const rel of character.relationships) {
-    const u = relUserMap.get(rel.userId);
-    const label =
-      u?.telegramFirstName ||
-      u?.telegramUsername ||
-      u?.name ||
-      u?.email?.split("@")[0] ||
-      "Peer";
-    const nodeId = `rel:${rel.id}`;
-    nodes.push({
-      id: nodeId,
-      kind: "relationship",
-      label,
-      detail: rel.summary?.slice(0, 280) ?? `mood: ${rel.mood}`,
-      meta: {
-        mood: rel.mood,
-        trust: Number(rel.trust.toFixed(2)),
-        affection: Number(rel.affection.toFixed(2)),
-        energy: Number(rel.energy.toFixed(2)),
-      },
-    });
-    edges.push({
-      id: `e:${personaNodeId}-${nodeId}`,
-      source: personaNodeId,
-      target: nodeId,
-      label: rel.mood,
+  for (const mem of character.memories) {
+    docs.push({
+      id: `memory-${mem.id}`,
+      title: `Memory · ${mem.type}`,
+      group: "memory",
+      content: mem.content,
     });
   }
 
   for (const bot of character.telegramBots) {
-    const botId = `bot:${bot.id}`;
-    nodes.push({
-      id: botId,
-      kind: "bot",
-      label: `@${bot.username}`,
-      detail: bot.label || "Telegram bot",
-      meta: {
-        active: bot.active,
-        peerCount: bot._count.peers,
-      },
-    });
-    edges.push({
-      id: `e:${personaNodeId}-${botId}`,
-      source: personaNodeId,
-      target: botId,
-      label: "channel",
-    });
-
-    for (const peer of bot.peers) {
-      const peerId = `peer:${peer.id}`;
-      const peerLabel =
-        peer.telegramFirstName ||
-        peer.telegramUsername ||
-        peer.user.telegramFirstName ||
-        peer.user.name ||
-        `tg:${peer.telegramUserId}`;
-      nodes.push({
-        id: peerId,
-        kind: "peer",
-        label: peerLabel,
-        detail: peer.telegramUsername
-          ? `@${peer.telegramUsername}`
-          : peer.telegramUserId,
-        meta: {
-          ageAttested: Boolean(peer.ageAttestedAt),
-        },
-      });
-      edges.push({
-        id: `e:${botId}-${peerId}`,
-        source: botId,
-        target: peerId,
-        label: "talks",
-      });
-    }
-  }
-
-  for (const link of character.knowledgeLinks) {
-    const packId = `knowledge:${link.knowledgePack.id}`;
-    nodes.push({
-      id: packId,
-      kind: "knowledge",
-      label: link.knowledgePack.name,
-      detail: "Knowledge pack",
-    });
-    edges.push({
-      id: `e:${personaNodeId}-${packId}`,
-      source: personaNodeId,
-      target: packId,
-      label: "knows",
+    docs.push({
+      id: `bot-${bot.id}`,
+      title: `@${bot.username}`,
+      group: "channel",
+      content: [
+        `Telegram bot @${bot.username}`,
+        bot.label ? `Label: ${bot.label}` : "",
+        `${bot._count.peers} peers`,
+        ...bot.peers.map(
+          (p) =>
+            `Peer: ${p.telegramFirstName || p.telegramUsername || p.telegramUserId}`,
+        ),
+      ]
+        .filter(Boolean)
+        .join("\n"),
     });
   }
+
+  for (const rel of character.relationships) {
+    docs.push({
+      id: `rel-${rel.id}`,
+      title: `Relationship · ${rel.mood}`,
+      group: "relationship",
+      content: [
+        `mood: ${rel.mood}`,
+        `trust: ${rel.trust.toFixed(2)}`,
+        `affection: ${rel.affection.toFixed(2)}`,
+        `energy: ${rel.energy.toFixed(2)}`,
+        rel.summary ?? "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    });
+  }
+
+  const graph = buildMindGraph(docs, {
+    rootId: `persona:${character.id}`,
+    rootLabel: character.name,
+    maxConcepts: 100,
+  });
 
   return Response.json({
-    nodes,
-    edges,
+    graph,
     stats: {
-      nodeCount: nodes.length,
-      edgeCount: edges.length,
+      nodeCount: graph.nodes.length,
+      linkCount: graph.links.length,
       memoryTotal: character._count.memories,
       relationshipTotal: character._count.relationships,
+      obsidianNotes: meta.obsidian?.notes?.length ?? 0,
     },
   });
-}
-
-function truncate(s: string, n: number) {
-  const t = s.replace(/\s+/g, " ").trim();
-  return t.length <= n ? t : `${t.slice(0, n - 1)}…`;
 }

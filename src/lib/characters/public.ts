@@ -5,6 +5,12 @@ import {
   type ShowcaseCharacter,
 } from "@/lib/characters/showcase";
 
+export type PublicLayerPreview = {
+  key: "soul" | "style" | "rules" | "context";
+  label: string;
+  preview: string;
+};
+
 export type PublicCharacterView = {
   source: "db" | "showcase";
   id: string | null;
@@ -15,19 +21,47 @@ export type PublicCharacterView = {
   categories: string[];
   isAdult: boolean;
   allowFork: boolean;
+  intensity: number;
   conversationCount: number;
   creatorLabel: string;
   creatorId: string | null;
   photoUrl: string | null;
+  photos: string[];
   soulPreview: string;
+  layers: PublicLayerPreview[];
 };
 
-function preview(md: string | null | undefined) {
+function preview(md: string | null | undefined, max = 220) {
   return (md || "")
     .replace(/^#+\s.*/gm, "")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, 220);
+    .slice(0, max);
+}
+
+function buildLayers(docs: {
+  soulMd?: string | null;
+  styleMd?: string | null;
+  rulesMd?: string | null;
+  contextMd?: string | null;
+}): PublicLayerPreview[] {
+  const entries: {
+    key: PublicLayerPreview["key"];
+    label: string;
+    md?: string | null;
+  }[] = [
+    { key: "soul", label: "Soul", md: docs.soulMd },
+    { key: "style", label: "Style", md: docs.styleMd },
+    { key: "rules", label: "Rules", md: docs.rulesMd },
+    { key: "context", label: "Context", md: docs.contextMd },
+  ];
+  return entries
+    .map((e) => ({
+      key: e.key,
+      label: e.label,
+      preview: preview(e.md, 160),
+    }))
+    .filter((e) => e.preview.length > 0);
 }
 
 function fromShowcase(c: ShowcaseCharacter): PublicCharacterView {
@@ -41,11 +75,14 @@ function fromShowcase(c: ShowcaseCharacter): PublicCharacterView {
     categories: c.categories,
     isAdult: c.isAdult,
     allowFork: c.allowFork,
+    intensity: c.intensity,
     conversationCount: c.conversationCount,
     creatorLabel: c.creatorLabel,
     creatorId: null,
     photoUrl: c.imageUrl,
+    photos: c.imageUrl ? [c.imageUrl] : [],
     soulPreview: preview(c.soulMd),
+    layers: buildLayers(c),
   };
 }
 
@@ -64,10 +101,14 @@ export async function getPublicCharacterBySlug(
         categories: true,
         isAdult: true,
         allowFork: true,
+        intensity: true,
         soulMd: true,
+        styleMd: true,
+        rulesMd: true,
+        contextMd: true,
         user: { select: { id: true, name: true } },
         photos: {
-          take: 1,
+          take: 8,
           orderBy: { createdAt: "desc" },
           select: { url: true },
         },
@@ -81,6 +122,7 @@ export async function getPublicCharacterBySlug(
     });
 
     if (fromDb?.slug) {
+      const photos = fromDb.photos.map((p) => p.url);
       return {
         source: "db",
         id: fromDb.id,
@@ -92,12 +134,15 @@ export async function getPublicCharacterBySlug(
         categories: fromDb.categories,
         isAdult: fromDb.isAdult,
         allowFork: fromDb.allowFork,
+        intensity: fromDb.intensity,
         conversationCount:
           fromDb._count.conversations + fromDb._count.relationships,
         creatorLabel: fromDb.user.name || "Creator",
         creatorId: fromDb.user.id,
-        photoUrl: fromDb.photos[0]?.url ?? null,
+        photoUrl: photos[0] ?? null,
+        photos,
         soulPreview: preview(fromDb.soulMd),
+        layers: buildLayers(fromDb),
       };
     }
   } catch {
@@ -128,10 +173,14 @@ export async function listPublicCharacters(opts?: {
       categories: true,
       isAdult: true,
       allowFork: true,
+      intensity: true,
       soulMd: true,
+      styleMd: true,
+      rulesMd: true,
+      contextMd: true,
       user: { select: { id: true, name: true } },
       photos: {
-        take: 1,
+        take: 8,
         orderBy: { createdAt: "desc" },
         select: { url: true },
       },
@@ -143,24 +192,31 @@ export async function listPublicCharacters(opts?: {
 
   const fromDb: PublicCharacterView[] = dbRows
     .filter((r): r is typeof r & { slug: string } => Boolean(r.slug))
-    .map((fromDbRow) => ({
-      source: "db" as const,
-      id: fromDbRow.id,
-      slug: fromDbRow.slug,
-      name: fromDbRow.name,
-      tagline: fromDbRow.tagline || `Talk with ${fromDbRow.name}.`,
-      openingLine:
-        fromDbRow.openingLine || `Hi — I'm ${fromDbRow.name}. Shall we begin?`,
-      categories: fromDbRow.categories,
-      isAdult: fromDbRow.isAdult,
-      allowFork: fromDbRow.allowFork,
-      conversationCount:
-        fromDbRow._count.conversations + fromDbRow._count.relationships,
-      creatorLabel: fromDbRow.user.name || "Creator",
-      creatorId: fromDbRow.user.id,
-      photoUrl: fromDbRow.photos[0]?.url ?? null,
-      soulPreview: preview(fromDbRow.soulMd),
-    }));
+    .map((fromDbRow) => {
+      const photos = fromDbRow.photos.map((p) => p.url);
+      return {
+        source: "db" as const,
+        id: fromDbRow.id,
+        slug: fromDbRow.slug,
+        name: fromDbRow.name,
+        tagline: fromDbRow.tagline || `Talk with ${fromDbRow.name}.`,
+        openingLine:
+          fromDbRow.openingLine ||
+          `Hi — I'm ${fromDbRow.name}. Shall we begin?`,
+        categories: fromDbRow.categories,
+        isAdult: fromDbRow.isAdult,
+        allowFork: fromDbRow.allowFork,
+        intensity: fromDbRow.intensity,
+        conversationCount:
+          fromDbRow._count.conversations + fromDbRow._count.relationships,
+        creatorLabel: fromDbRow.user.name || "Creator",
+        creatorId: fromDbRow.user.id,
+        photoUrl: photos[0] ?? null,
+        photos,
+        soulPreview: preview(fromDbRow.soulMd),
+        layers: buildLayers(fromDbRow),
+      };
+    });
 
   const showcase = SHOWCASE_CHARACTERS.filter((c) => c.isAdult === adult).map(
     fromShowcase,
