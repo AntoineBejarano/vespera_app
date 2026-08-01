@@ -61,14 +61,14 @@ const RELATIONSHIP_EVOLUTION = [
       "Luna has become more open after your recent conversations.",
   },
   {
-    name: "Plato",
+    name: "Socrates",
     label: "Your dialogue",
     rows: [
       ["Topics explored", "Justice, virtue and knowledge"],
       ["Current disagreement", "Whether virtue can be taught"],
       ["Shared conversations", "11"],
     ],
-    change: "Plato now challenges your arguments more directly.",
+    change: "Socrates now presses your definitions more sharply.",
   },
   {
     name: "AI Receptionist",
@@ -167,7 +167,7 @@ const BUSINESS_BENEFITS = [
 ];
 
 const HISTORY_EXAMPLES = [
-  "Plato",
+  "Socrates",
   "Einstein",
   "Marie Curie",
   "Leonardo da Vinci",
@@ -194,7 +194,7 @@ const OWNERSHIP = [
 
 const HERO_PERSONAS = [
   { name: "Luna", role: "Virtual Companion", href: "/c/luna" },
-  { name: "Plato", role: "Historical Mind", href: "/meet/plato" },
+  { name: "Socrates", role: "Historical Mind", href: "/meet/socrates" },
   { name: "Aria", role: "AI Receptionist", href: "/hire/ai-receptionist" },
   { name: "Kai", role: "Personal Mentor", href: "/learn/stoic-mentor" },
 ];
