@@ -38,7 +38,11 @@ export function serializePersona(
     slug: c.slug,
     categories: c.categories,
     allowFork: c.allowFork,
-    hasChatApiKey: Boolean(c.apiKey),
+    hasChatApiKey: Boolean(
+      c.apiKey ||
+        ("apiKeyHash" in c && c.apiKeyHash) ||
+        ("apiKeyPrefix" in c && c.apiKeyPrefix),
+    ),
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,
   };
@@ -80,7 +84,11 @@ export function serializePersonaListItem(
     isPublic: c.isPublic,
     isAdult: c.isAdult,
     slug: c.slug,
-    hasChatApiKey: Boolean(c.apiKey),
+    hasChatApiKey: Boolean(
+      c.apiKey ||
+        ("apiKeyHash" in c && c.apiKeyHash) ||
+        ("apiKeyPrefix" in c && c.apiKeyPrefix),
+    ),
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,
   };

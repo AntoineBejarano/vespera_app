@@ -1,13 +1,15 @@
-import { randomBytes } from "crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@/generated/prisma/client";
 import { getAppUser } from "@/lib/session";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { maxCharactersForPlan } from "@/lib/monetization";
-import { countUserCharacters } from "@/lib/users";
+import { countWorkspaceCharacters } from "@/lib/users";
 import { ensureRelationshipState } from "@/lib/persona/relationship";
 import { getShowcaseBySlug } from "@/lib/characters/showcase";
+import { generateChatApiKeySecret } from "@/lib/api-keys/chat-keys";
+import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
+import { requireWorkspacePermission } from "@/lib/workspace/permissions";
 
 const bodySchema = z.object({
   /** Fork a published DB character */
@@ -25,7 +27,17 @@ export async function POST(req: Request) {
     return Response.json({ error: "Age verification 18+ required" }, { status: 403 });
   }
 
-  const count = await countUserCharacters(user.id);
+  const workspaceId = await getOrCreateActiveWorkspaceId(user);
+  try {
+    await requireWorkspacePermission(user.id, workspaceId, "personas.write");
+  } catch {
+    return Response.json(
+      { error: "Missing permission: personas.write" },
+      { status: 403 },
+    );
+  }
+
+  const count = await countWorkspaceCharacters(workspaceId);
   const max = maxCharactersForPlan(user.plan);
   if (count >= max) {
     return Response.json(
@@ -135,14 +147,17 @@ export async function POST(req: Request) {
   }
 
   await prisma.character.updateMany({
-    where: { userId: user.id, active: true },
+    where: { workspaceId, active: true },
     data: { active: false },
   });
 
-  const apiKey = `vesp_${randomBytes(24).toString("hex")}`;
+  const { raw: apiKey, keyPrefix, lastFour, keyHash } =
+    generateChatApiKeySecret();
   const character = await prisma.character.create({
     data: {
+      workspaceId,
       userId: user.id,
+      updatedByUserId: user.id,
       name: `${source.name}`,
       identityJson: source.identityJson,
       soulMd: source.soulMd,
@@ -161,6 +176,9 @@ export async function POST(req: Request) {
       limitsJson: source.limitsJson,
       active: true,
       apiKey,
+      apiKeyHash: keyHash,
+      apiKeyPrefix: keyPrefix,
+      apiKeyLastFour: lastFour,
     },
   });
 

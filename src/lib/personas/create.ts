@@ -1,13 +1,15 @@
-import { randomBytes } from "crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { generatePersonaLayers } from "@/lib/persona/generator";
 import { onboardingAnswersSchema } from "@/lib/identity/schema";
 import { maxCharactersForPlan } from "@/lib/monetization";
-import { countUserCharacters } from "@/lib/users";
+import { countWorkspaceCharacters } from "@/lib/users";
 import { ensureRelationshipState } from "@/lib/persona/relationship";
 import { Prisma, type User } from "@/generated/prisma/client";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
+import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
+import { requireWorkspacePermission } from "@/lib/workspace/permissions";
+import { generateChatApiKeySecret } from "@/lib/api-keys/chat-keys";
 
 export const personaDirectCreateSchema = z.object({
   name: z.string().min(1).max(80),
@@ -34,11 +36,24 @@ export type PersonaCreateResult = {
   mode: "direct" | "generate";
 };
 
-export async function assertCanCreatePersona(user: User) {
+export async function assertCanCreatePersona(
+  user: User,
+  workspaceId?: string,
+) {
   if (needsAccountAgeGate(user)) {
     return { ok: false as const, status: 403, error: "Age verification 18+ required" };
   }
-  const count = await countUserCharacters(user.id);
+  const wsId = workspaceId ?? (await getOrCreateActiveWorkspaceId(user));
+  try {
+    await requireWorkspacePermission(user.id, wsId, "personas.write");
+  } catch {
+    return {
+      ok: false as const,
+      status: 403,
+      error: "Missing permission: personas.write. Ask a workspace admin for Editor access.",
+    };
+  }
+  const count = await countWorkspaceCharacters(wsId);
   const max = maxCharactersForPlan(user.plan);
   if (count >= max) {
     return {
@@ -47,11 +62,12 @@ export async function assertCanCreatePersona(user: User) {
       error: `Persona limit reached (${max}).`,
     };
   }
-  return { ok: true as const };
+  return { ok: true as const, workspaceId: wsId };
 }
 
 async function finalizePersona(params: {
   user: User;
+  workspaceId: string;
   name: string;
   identity: object;
   soulMd: string;
@@ -67,16 +83,42 @@ async function finalizePersona(params: {
   isAdult?: boolean;
   mode: "direct" | "generate";
 }): Promise<PersonaCreateResult> {
+  let isPublic = params.isPublic ?? false;
+  let isAdult = params.isAdult ?? false;
+
+  if (isPublic) {
+    try {
+      await requireWorkspacePermission(
+        params.user.id,
+        params.workspaceId,
+        "content.publish",
+      );
+    } catch {
+      isPublic = false;
+    }
+  }
+  if (isAdult) {
+    const ws = await prisma.workspace.findUnique({
+      where: { id: params.workspaceId },
+    });
+    if (!ws?.adultEnabled) {
+      isAdult = false;
+    }
+  }
+
   await prisma.character.updateMany({
-    where: { userId: params.user.id, active: true },
+    where: { workspaceId: params.workspaceId, active: true },
     data: { active: false },
   });
 
-  const chatApiKey = `vesp_${randomBytes(24).toString("hex")}`;
+  const { raw: chatApiKey, keyPrefix, lastFour, keyHash } =
+    generateChatApiKeySecret();
 
   const character = await prisma.character.create({
     data: {
+      workspaceId: params.workspaceId,
       userId: params.user.id,
+      updatedByUserId: params.user.id,
       name: params.name,
       identityJson: params.identity,
       soulMd: params.soulMd,
@@ -88,10 +130,13 @@ async function finalizePersona(params: {
       limitsJson: params.limitsJson,
       active: true,
       apiKey: chatApiKey,
+      apiKeyHash: keyHash,
+      apiKeyPrefix: keyPrefix,
+      apiKeyLastFour: lastFour,
       tagline: params.tagline,
       openingLine: params.openingLine,
-      isPublic: params.isPublic ?? false,
-      isAdult: params.isAdult ?? false,
+      isPublic,
+      isAdult,
     },
   });
 
@@ -119,6 +164,7 @@ async function finalizePersona(params: {
 export async function createPersonaFromDirect(
   user: User,
   input: z.infer<typeof personaDirectCreateSchema>,
+  workspaceId?: string,
 ): Promise<PersonaCreateResult> {
   const identity = {
     temperament: input.soul.slice(0, 200),
@@ -136,8 +182,10 @@ export async function createPersonaFromDirect(
     excludedThemes: [] as string[],
   };
 
+  const wsId = workspaceId ?? (await getOrCreateActiveWorkspaceId(user));
   return finalizePersona({
     user,
+    workspaceId: wsId,
     name: input.name,
     identity,
     soulMd: input.soul,
@@ -161,6 +209,7 @@ export async function createPersonaFromDirect(
 export async function createPersonaFromGenerate(
   user: User,
   input: z.infer<typeof personaGenerateCreateSchema>,
+  workspaceId?: string,
 ): Promise<PersonaCreateResult> {
   const layers = await generatePersonaLayers(
     input,
@@ -185,8 +234,10 @@ export async function createPersonaFromGenerate(
       excludedThemes: [],
     } as const);
 
+  const wsId = workspaceId ?? (await getOrCreateActiveWorkspaceId(user));
   return finalizePersona({
     user,
+    workspaceId: wsId,
     name: input.name,
     identity: identity as object,
     soulMd: layers.soulMd,
@@ -203,11 +254,16 @@ export async function createPersonaFromGenerate(
   });
 }
 
-export async function createPersonaFromBody(user: User, body: unknown) {
-  const gate = await assertCanCreatePersona(user);
+export async function createPersonaFromBody(
+  user: User,
+  body: unknown,
+  workspaceId?: string,
+) {
+  const gate = await assertCanCreatePersona(user, workspaceId);
   if (!gate.ok) {
     return { ok: false as const, status: gate.status, error: gate.error };
   }
+  const wsId = gate.workspaceId;
 
   const asRecord = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   const mode = asRecord.mode === "generate" ? "generate" : "direct";
@@ -223,7 +279,7 @@ export async function createPersonaFromBody(user: User, body: unknown) {
       };
     }
     try {
-      const character = await createPersonaFromGenerate(user, parsed.data);
+      const character = await createPersonaFromGenerate(user, parsed.data, wsId);
       return { ok: true as const, character };
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Unknown error";
@@ -252,6 +308,6 @@ export async function createPersonaFromBody(user: User, body: unknown) {
     };
   }
 
-  const character = await createPersonaFromDirect(user, parsed.data);
+  const character = await createPersonaFromDirect(user, parsed.data, wsId);
   return { ok: true as const, character };
 }

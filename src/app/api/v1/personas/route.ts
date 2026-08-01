@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   const user = auth.user;
 
   const characters = await prisma.character.findMany({
-    where: { userId: user.id },
+    where: { workspaceId: auth.workspaceId, archivedAt: null },
     orderBy: { updatedAt: "desc" },
     select: {
       id: true,
@@ -26,11 +26,15 @@ export async function GET(req: Request) {
       createdAt: true,
       updatedAt: true,
       apiKey: true,
+      apiKeyPrefix: true,
+      apiKeyLastFour: true,
+      apiKeyHash: true,
     },
   });
 
   return Response.json({
     personas: characters.map(serializePersonaListItem),
+    workspaceId: auth.workspaceId,
   });
 }
 
@@ -50,7 +54,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "JSON body required" }, { status: 400 });
   }
 
-  const result = await createPersonaFromBody(user, body);
+  const result = await createPersonaFromBody(user, body, auth.workspaceId);
   if (!result.ok) {
     return Response.json(
       {

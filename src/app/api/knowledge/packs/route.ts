@@ -7,6 +7,11 @@ import {
   listSeedTemplates,
 } from "@/lib/knowledge/packs";
 import { providerMeta } from "@/lib/knowledge/adapters/registry";
+import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
+import {
+  requireWorkspacePermission,
+  workspaceAuthResponse,
+} from "@/lib/workspace/permissions";
 
 export async function GET() {
   const user = await getAppUser();
@@ -14,8 +19,18 @@ export async function GET() {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
+  let workspaceId: string;
+  try {
+    workspaceId = await getOrCreateActiveWorkspaceId(user);
+    await requireWorkspacePermission(user.id, workspaceId, "knowledge.read");
+  } catch (err) {
+    const res = workspaceAuthResponse(err);
+    if (res) return res;
+    throw err;
+  }
+
   const packs = await prisma.knowledgePack.findMany({
-    where: { userId: user.id },
+    where: { workspaceId, archivedAt: null },
     include: {
       sources: {
         orderBy: { createdAt: "asc" },
@@ -90,9 +105,13 @@ export async function POST(req: Request) {
   }
 
   try {
+    const workspaceId = await getOrCreateActiveWorkspaceId(user);
+    await requireWorkspacePermission(user.id, workspaceId, "knowledge.write");
+
     if (parsed.data.seedKey) {
       const { pack, created } = await createPackFromSeed({
         userId: user.id,
+        workspaceId,
         seedKey: parsed.data.seedKey,
       });
       return Response.json({ pack, created }, { status: created ? 201 : 200 });
@@ -104,6 +123,7 @@ export async function POST(req: Request) {
 
     const pack = await createKnowledgePack({
       userId: user.id,
+      workspaceId,
       name: parsed.data.name,
       description: parsed.data.description,
       language: parsed.data.language,
@@ -111,6 +131,8 @@ export async function POST(req: Request) {
     });
     return Response.json({ pack, created: true }, { status: 201 });
   } catch (error) {
+    const res = workspaceAuthResponse(error);
+    if (res) return res;
     const message = error instanceof Error ? error.message : "Failed";
     return Response.json({ error: message }, { status: 400 });
   }

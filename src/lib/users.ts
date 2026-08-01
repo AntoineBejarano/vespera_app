@@ -39,7 +39,13 @@ export async function ensureConversation(
 }
 
 export async function countUserCharacters(userId: string) {
-  return prisma.character.count({ where: { userId } });
+  return prisma.character.count({ where: { userId, archivedAt: null } });
+}
+
+export async function countWorkspaceCharacters(workspaceId: string) {
+  return prisma.character.count({
+    where: { workspaceId, archivedAt: null },
+  });
 }
 
 export { getAppUser, requireAppUser };

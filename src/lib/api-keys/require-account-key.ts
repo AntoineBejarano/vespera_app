@@ -2,7 +2,7 @@ import type { User } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import {
   extractBearerOrApiKey,
-  resolveUserFromApiKey,
+  resolveAccountKeyContext,
   USER_API_KEY_PREFIX,
 } from "@/lib/api-keys/user-keys";
 import {
@@ -11,8 +11,8 @@ import {
 } from "@/lib/api-keys/rate-limit";
 
 export type AccountKeyAuth =
-  | { user: User; error?: undefined }
-  | { user?: undefined; error: Response };
+  | { user: User; workspaceId: string; error?: undefined }
+  | { user?: undefined; workspaceId?: undefined; error: Response };
 
 function rateLimitResponse(retryAfterSec: number, limit: number) {
   return Response.json(
@@ -33,7 +33,7 @@ function rateLimitResponse(retryAfterSec: number, limit: number) {
 
 /**
  * Resolve account API key (vsk_…) for management routes.
- * Rejects persona chat keys (vesp_…) and applies per-user rate limits.
+ * Workspace is derived from the key itself — never from X-Workspace-Id.
  */
 export async function requireAccountApiKey(
   req: Request,
@@ -78,8 +78,8 @@ export async function requireAccountApiKey(
     };
   }
 
-  const user = await resolveUserFromApiKey(raw);
-  if (!user) {
+  const ctx = await resolveAccountKeyContext(raw);
+  if (!ctx) {
     return {
       error: Response.json(
         { error: "Invalid or revoked API key" },
@@ -96,7 +96,7 @@ export async function requireAccountApiKey(
       : V1_RATE_LIMITS.management);
 
   const rl = await checkApiRateLimit({
-    userId: user.id,
+    userId: ctx.user.id,
     bucket: String(bucket),
     limitPerMinute: limit,
   });
@@ -105,19 +105,19 @@ export async function requireAccountApiKey(
     return { error: rateLimitResponse(rl.retryAfterSec, rl.limit) };
   }
 
-  return { user };
+  return { user: ctx.user, workspaceId: ctx.workspaceId };
 }
 
-/** Own a character or return null (no enumeration of other tenants). */
-export async function findOwnedCharacter(userId: string, id: string) {
+/** Own a character in the workspace or return null (no cross-tenant enumeration). */
+export async function findOwnedCharacter(workspaceId: string, id: string) {
   return prisma.character.findFirst({
-    where: { id, userId },
+    where: { id, workspaceId, archivedAt: null },
   });
 }
 
-/** Own a knowledge pack or return null. */
-export async function findOwnedKnowledgePack(userId: string, id: string) {
+/** Own a knowledge pack in the workspace or return null. */
+export async function findOwnedKnowledgePack(workspaceId: string, id: string) {
   return prisma.knowledgePack.findFirst({
-    where: { id, userId },
+    where: { id, workspaceId, archivedAt: null },
   });
 }

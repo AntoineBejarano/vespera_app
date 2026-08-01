@@ -8,6 +8,10 @@ import {
   ensurePlatformOperatorAttestation,
   isPlatformOperatorRequiredError,
 } from "@/lib/legal/operator";
+import {
+  hasWorkspacePermission,
+  requireWorkspacePermission,
+} from "@/lib/workspace/permissions";
 
 export const personaPatchSchema = z.object({
   active: z.boolean().optional(),
@@ -63,13 +67,34 @@ export type PersonaUpdateResult =
 export async function updateOwnedPersona(params: {
   user: User;
   characterId: string;
+  workspaceId?: string;
   input: PersonaPatchInput;
 }): Promise<PersonaUpdateResult> {
   const character = await prisma.character.findFirst({
-    where: { id: params.characterId, userId: params.user.id },
+    where: {
+      id: params.characterId,
+      ...(params.workspaceId
+        ? { workspaceId: params.workspaceId }
+        : { userId: params.user.id }),
+      archivedAt: null,
+    },
   });
   if (!character) {
     return { ok: false, status: 404, error: "Not found" };
+  }
+
+  const canWrite = await hasWorkspacePermission(
+    params.user.id,
+    character.workspaceId,
+    "personas.write",
+  );
+  if (!canWrite) {
+    return {
+      ok: false,
+      status: 403,
+      error: "Missing permission: personas.write",
+      code: "MISSING_CAPABILITY",
+    };
   }
 
   const data = params.input;
@@ -78,9 +103,43 @@ export async function updateOwnedPersona(params: {
   const rulesMd = data.rulesMd ?? data.rules;
   const contextMd = data.contextMd ?? data.context;
 
+  if (
+    data.isPublic !== undefined ||
+    data.allowFork !== undefined ||
+    data.slug !== undefined
+  ) {
+    const canPublish = await hasWorkspacePermission(
+      params.user.id,
+      character.workspaceId,
+      "content.publish",
+    );
+    if (!canPublish) {
+      return {
+        ok: false,
+        status: 403,
+        error: "Missing permission: content.publish. Ask an admin to publish.",
+        code: "MISSING_CAPABILITY",
+      };
+    }
+  }
+
+  if (data.isAdult !== undefined) {
+    const ws = await prisma.workspace.findUnique({
+      where: { id: character.workspaceId },
+    });
+    if (data.isAdult && !ws?.adultEnabled) {
+      return {
+        ok: false,
+        status: 403,
+        error: "After Dark is not enabled for this workspace (Owner only).",
+        code: "ADULT_DISABLED",
+      };
+    }
+  }
+
   if (data.active) {
     await prisma.character.updateMany({
-      where: { userId: params.user.id, active: true },
+      where: { workspaceId: character.workspaceId, active: true },
       data: { active: false },
     });
   }
@@ -165,6 +224,7 @@ export async function updateOwnedPersona(params: {
   const updated = await prisma.character.update({
     where: { id: params.characterId },
     data: {
+      updatedByUserId: params.user.id,
       active: data.active ?? character.active,
       intensity: data.intensity ?? character.intensity,
       name: data.name ?? character.name,
@@ -207,14 +267,42 @@ export async function updateOwnedPersona(params: {
 export async function deleteOwnedPersona(params: {
   userId: string;
   characterId: string;
+  workspaceId?: string;
 }): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
   const character = await prisma.character.findFirst({
-    where: { id: params.characterId, userId: params.userId },
-    select: { id: true },
+    where: {
+      id: params.characterId,
+      ...(params.workspaceId
+        ? { workspaceId: params.workspaceId }
+        : { userId: params.userId }),
+      archivedAt: null,
+    },
+    select: { id: true, workspaceId: true },
   });
   if (!character) {
     return { ok: false, status: 404, error: "Not found" };
   }
-  await prisma.character.delete({ where: { id: character.id } });
+  try {
+    await requireWorkspacePermission(
+      params.userId,
+      character.workspaceId,
+      "content.archive",
+    );
+  } catch {
+    return {
+      ok: false,
+      status: 403,
+      error: "Missing permission: content.archive",
+    };
+  }
+  await prisma.character.update({
+    where: { id: character.id },
+    data: {
+      archivedAt: new Date(),
+      archivedByUserId: params.userId,
+      active: false,
+      isPublic: false,
+    },
+  });
   return { ok: true };
 }

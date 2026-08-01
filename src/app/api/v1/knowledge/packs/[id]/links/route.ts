@@ -21,7 +21,7 @@ export async function GET(req: Request, { params }: Params) {
   if (auth.error) return auth.error;
   const { id } = await params;
 
-  const pack = await findOwnedKnowledgePack(auth.user.id, id);
+  const pack = await findOwnedKnowledgePack(auth.workspaceId, id);
   if (!pack) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
@@ -32,7 +32,7 @@ export async function GET(req: Request, { params }: Params) {
       include: { character: { select: { id: true, name: true } } },
     }),
     prisma.character.findMany({
-      where: { userId: auth.user.id },
+      where: { workspaceId: auth.workspaceId, archivedAt: null },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
@@ -55,6 +55,7 @@ export async function POST(req: Request, { params }: Params) {
   try {
     const characterIds = await linkPackToCharacters({
       userId: auth.user.id,
+      workspaceId: auth.workspaceId,
       knowledgePackId: id,
       characterIds: parsed.data.characterIds,
     });
@@ -78,6 +79,7 @@ export async function DELETE(req: Request, { params }: Params) {
 
   const ok = await unlinkPackFromCharacter({
     userId: auth.user.id,
+    workspaceId: auth.workspaceId,
     knowledgePackId: id,
     characterId,
   });

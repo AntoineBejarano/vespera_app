@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "JSON body required" }, { status: 400 });
   }
 
-  const result = await importPersonaFromBody(auth.user, body);
+  const result = await importPersonaFromBody(auth.user, body, auth.workspaceId);
   if (!result.ok) {
     return Response.json({ error: result.error }, { status: result.status });
   }

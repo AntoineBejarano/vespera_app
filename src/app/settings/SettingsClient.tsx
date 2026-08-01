@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useHexclaveApp } from "@hexclave/next";
 import { ALLOWED_MODELS, MODEL_LABELS } from "@/lib/ai/models";
+import { WorkspaceMembersPanel } from "@/components/WorkspaceMembersPanel";
 
 type ApiKeyRow = {
   id: string;
   name: string;
   keyPrefix: string;
+  lastFour?: string;
   lastUsedAt: string | null;
   createdAt: string;
 };
@@ -133,6 +135,8 @@ export default function SettingsClient() {
         </p>
       </div>
 
+      <WorkspaceMembersPanel />
+
       <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
         <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
           Account API keys (CLI / AI agents)
@@ -180,7 +184,10 @@ export default function SettingsClient() {
             >
               <div>
                 <p className="text-[var(--ink)]">
-                  {k.name} · <code>{k.keyPrefix}…</code>
+                  {k.name} ·{" "}
+                  <code>
+                    {k.keyPrefix}…{k.lastFour ?? ""}
+                  </code>
                 </p>
                 <p className="text-xs text-[var(--muted)]">
                   Created {new Date(k.createdAt).toLocaleDateString()}

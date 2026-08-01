@@ -2,9 +2,11 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { hexclaveServerApp } from "@/hexclave/server";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
+import { ensurePersonalWorkspace } from "@/lib/workspace/ensure";
 
 /**
- * Resolve Hexclave auth → local Prisma tenant User (multi-tenant).
+ * Resolve IdP session (Hexclave v1) → local Prisma User.
+ * Ensures a personal Workspace (Owner) for non-peer users.
  *
  * Never use Hexclave's `{ or: "redirect" }` on the server — it can throw
  * HexclaveAssertionError. Send unauthenticated users to the same-domain handler.
@@ -45,6 +47,7 @@ export async function getAppUser(opts?: {
     where: {
       OR: [
         { hexclaveId },
+        { externalAuthUserId: hexclaveId },
         ...(email ? [{ email }] : []),
       ],
     },
@@ -54,6 +57,8 @@ export async function getAppUser(opts?: {
     user = await prisma.user.create({
       data: {
         hexclaveId,
+        externalAuthUserId: hexclaveId,
+        authProvider: "hexclave",
         email: email ?? `hx_${hexclaveId.slice(0, 16)}@hexclave.local`,
         name: hx.displayName ?? email?.split("@")[0] ?? "User",
         ageVerifiedAt: null,
@@ -65,15 +70,27 @@ export async function getAppUser(opts?: {
         },
       },
     });
-  } else if (!user.hexclaveId || user.hexclaveId !== hexclaveId) {
+  } else if (
+    !user.hexclaveId ||
+    user.hexclaveId !== hexclaveId ||
+    user.externalAuthUserId !== hexclaveId
+  ) {
     user = await prisma.user.update({
       where: { id: user.id },
       data: {
         hexclaveId,
+        externalAuthUserId: hexclaveId,
+        authProvider: user.authProvider ?? "hexclave",
         name: user.name || hx.displayName || user.name,
         email: email ?? user.email,
       },
     });
+  }
+
+  if (!user.isTelegramPeer) {
+    await ensurePersonalWorkspace(user);
+    user =
+      (await prisma.user.findUnique({ where: { id: user.id } })) ?? user;
   }
 
   return user;

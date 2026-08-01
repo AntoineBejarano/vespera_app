@@ -74,6 +74,7 @@ async function ensureEnvBotRow(
   const bot = await prisma.telegramBot.upsert({
     where: { token },
     create: {
+      workspaceId: activeChar.workspaceId,
       ownerUserId: activeChar.userId,
       characterId: activeChar.id,
       token,

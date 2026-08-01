@@ -1,15 +1,17 @@
-import { randomBytes } from "crypto";
 import { Prisma, type User } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { maxCharactersForPlan } from "@/lib/monetization";
-import { countUserCharacters } from "@/lib/users";
+import { countWorkspaceCharacters } from "@/lib/users";
 import { ensureRelationshipState } from "@/lib/persona/relationship";
 import {
   importRequestSchema,
   parseCharacterImport,
 } from "@/lib/characters/import";
 import { containsProhibitedMinorContent } from "@/lib/ai/safety";
+import { generateChatApiKeySecret } from "@/lib/api-keys/chat-keys";
+import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
+import { requireWorkspacePermission } from "@/lib/workspace/permissions";
 
 export type PersonaImportResult =
   | {
@@ -26,12 +28,24 @@ export type PersonaImportResult =
 export async function importPersonaFromBody(
   user: User,
   body: unknown,
+  workspaceId?: string,
 ): Promise<PersonaImportResult> {
   if (needsAccountAgeGate(user)) {
     return { ok: false, status: 403, error: "Age verification 18+ required" };
   }
 
-  const count = await countUserCharacters(user.id);
+  const wsId = workspaceId ?? (await getOrCreateActiveWorkspaceId(user));
+  try {
+    await requireWorkspacePermission(user.id, wsId, "personas.write");
+  } catch {
+    return {
+      ok: false,
+      status: 403,
+      error: "Missing permission: personas.write",
+    };
+  }
+
+  const count = await countWorkspaceCharacters(wsId);
   const max = maxCharactersForPlan(user.plan);
   if (count >= max) {
     return {
@@ -82,15 +96,18 @@ export async function importPersonaFromBody(
   }
 
   await prisma.character.updateMany({
-    where: { userId: user.id, active: true },
+    where: { workspaceId: wsId, active: true },
     data: { active: false },
   });
 
-  const chatApiKey = `vesp_${randomBytes(24).toString("hex")}`;
+  const { raw: chatApiKey, keyPrefix, lastFour, keyHash } =
+    generateChatApiKeySecret();
 
   const character = await prisma.character.create({
     data: {
+      workspaceId: wsId,
       userId: user.id,
+      updatedByUserId: user.id,
       name: draft.name,
       identityJson: {
         temperament: draft.personality.slice(0, 200),
@@ -128,6 +145,9 @@ export async function importPersonaFromBody(
       } as Prisma.InputJsonValue,
       active: true,
       apiKey: chatApiKey,
+      apiKeyHash: keyHash,
+      apiKeyPrefix: keyPrefix,
+      apiKeyLastFour: lastFour,
     },
   });
 

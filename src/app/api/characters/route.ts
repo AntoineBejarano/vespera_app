@@ -1,13 +1,9 @@
-import { randomBytes } from "crypto";
 import { prisma } from "@/lib/db";
-import { generatePersonaLayers } from "@/lib/persona/generator";
 import { onboardingAnswersSchema } from "@/lib/identity/schema";
-import { maxCharactersForPlan } from "@/lib/monetization";
-import { countUserCharacters } from "@/lib/users";
-import { ensureRelationshipState } from "@/lib/persona/relationship";
-import { Prisma } from "@/generated/prisma/client";
-import { requireAppUser, getAppUser } from "@/lib/session";
+import { getAppUser } from "@/lib/session";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
+import { createPersonaFromGenerate } from "@/lib/personas/create";
+import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
 
 export async function GET() {
   const user = await getAppUser();
@@ -15,8 +11,9 @@ export async function GET() {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
+  const workspaceId = await getOrCreateActiveWorkspaceId(user);
   const characters = await prisma.character.findMany({
-    where: { userId: user.id },
+    where: { workspaceId, archivedAt: null },
     orderBy: { updatedAt: "desc" },
     select: {
       id: true,
@@ -80,17 +77,6 @@ export async function POST(req: Request) {
     return Response.json({ error: "Age verification 18+ required" }, { status: 403 });
   }
 
-  const count = await countUserCharacters(user.id);
-  const max = maxCharactersForPlan(user.plan);
-  if (count >= max) {
-    return Response.json(
-      {
-        error: `Persona limit reached (${max}).`,
-      },
-      { status: 403 },
-    );
-  }
-
   const body = await req.json();
   const parsed = onboardingAnswersSchema.safeParse(body);
   if (!parsed.success) {
@@ -98,77 +84,18 @@ export async function POST(req: Request) {
   }
 
   try {
-    const layers = await generatePersonaLayers(
+    const workspaceId = await getOrCreateActiveWorkspaceId(user);
+    const character = await createPersonaFromGenerate(
+      user,
       parsed.data,
-      user.preferredModel ?? undefined,
+      workspaceId,
     );
-
-    const identity =
-      layers.identity ??
-      ({
-        temperament: layers.soulMd.slice(0, 200),
-        desires: [],
-        fears: [],
-        contradictions: [],
-        linguisticStyle: layers.styleMd.slice(0, 200),
-        humor: "natural",
-        backstory: layers.contextMd.slice(0, 300),
-        goals: [],
-        relationshipDynamic: parsed.data.relationshipType,
-        intensity: parsed.data.intensity,
-        kinks: [],
-        boundaries: parsed.data.boundaries
-          ? [parsed.data.boundaries]
-          : [],
-        excludedThemes: [],
-      } as const);
-
-    // New persona becomes the default for admin test chat (others stay usable)
-    await prisma.character.updateMany({
-      where: { userId: user.id, active: true },
-      data: { active: false },
-    });
-
-    const apiKey = `vesp_${randomBytes(24).toString("hex")}`;
-
-    const character = await prisma.character.create({
-      data: {
-        userId: user.id,
-        name: parsed.data.name,
-        identityJson: identity as object,
-        soulMd: layers.soulMd,
-        styleMd: layers.styleMd,
-        rulesMd: layers.rulesMd,
-        contextMd: layers.contextMd,
-        metaJson: layers.meta as object,
-        intensity: parsed.data.intensity,
-        limitsJson: {
-          boundaries: parsed.data.boundaries,
-          excludedThemes: identity.excludedThemes ?? [],
-        } as Prisma.InputJsonValue,
-        active: true,
-        apiKey,
-      },
-    });
-
-    await ensureRelationshipState(user.id, character.id);
-    await prisma.conversation.create({
-      data: {
-        userId: user.id,
-        characterId: character.id,
-        title: `With ${character.name}`,
-      },
-    });
-
-    const { track } = await import("@/lib/metrics");
-    track("character_created");
-
     return Response.json({
       character: {
         id: character.id,
         name: character.name,
-        apiKey,
-        layers: ["soul", "style", "rules", "context", "relationship"],
+        apiKey: character.chatApiKey,
+        layers: character.layers,
       },
     });
   } catch (error) {

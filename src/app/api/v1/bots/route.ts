@@ -37,7 +37,7 @@ export async function GET(req: Request) {
   if (auth.error) return auth.error;
 
   const bots = await prisma.telegramBot.findMany({
-    where: { ownerUserId: auth.user.id },
+    where: { workspaceId: auth.workspaceId },
     include: {
       character: { select: { id: true, name: true } },
       _count: { select: { peers: true } },
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
   }
 
   const character = await findOwnedCharacter(
-    auth.user.id,
+    auth.workspaceId,
     parsed.data.characterId,
   );
   if (!character) {
@@ -103,6 +103,7 @@ export async function POST(req: Request) {
   try {
     const bot = await prisma.telegramBot.create({
       data: {
+        workspaceId: auth.workspaceId,
         ownerUserId: auth.user.id,
         characterId: character.id,
         token: parsed.data.token.trim(),
@@ -173,7 +174,7 @@ export async function PATCH(req: Request) {
   }
 
   const bot = await prisma.telegramBot.findFirst({
-    where: { id: parsed.data.botId, ownerUserId: auth.user.id },
+    where: { id: parsed.data.botId, workspaceId: auth.workspaceId },
   });
   if (!bot) {
     return Response.json({ error: "Not found" }, { status: 404 });
@@ -181,7 +182,7 @@ export async function PATCH(req: Request) {
 
   if (parsed.data.characterId) {
     const character = await findOwnedCharacter(
-      auth.user.id,
+      auth.workspaceId,
       parsed.data.characterId,
     );
     if (!character) {
@@ -224,7 +225,7 @@ export async function DELETE(req: Request) {
   }
 
   const result = await prisma.telegramBot.deleteMany({
-    where: { id: botId, ownerUserId: auth.user.id },
+    where: { id: botId, workspaceId: auth.workspaceId },
   });
   if (result.count === 0) {
     return Response.json({ error: "Not found" }, { status: 404 });

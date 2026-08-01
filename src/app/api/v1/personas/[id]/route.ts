@@ -19,7 +19,7 @@ export async function GET(req: Request, { params }: Params) {
   if (auth.error) return auth.error;
   const { id } = await params;
 
-  const character = await findOwnedCharacter(auth.user.id, id);
+  const character = await findOwnedCharacter(auth.workspaceId, id);
   if (!character) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
@@ -47,6 +47,7 @@ export async function PATCH(req: Request, { params }: Params) {
   const result = await updateOwnedPersona({
     user: auth.user,
     characterId: id,
+    workspaceId: auth.workspaceId,
     input: parsed.data,
   });
 
@@ -69,6 +70,7 @@ export async function DELETE(req: Request, { params }: Params) {
   const result = await deleteOwnedPersona({
     userId: auth.user.id,
     characterId: id,
+    workspaceId: auth.workspaceId,
   });
 
   if (!result.ok) {

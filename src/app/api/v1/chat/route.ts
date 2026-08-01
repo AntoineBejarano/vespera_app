@@ -43,15 +43,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const character = await prisma.character.findFirst({
-    where: { apiKey },
-    select: {
-      id: true,
-      name: true,
-      userId: true,
-      isAdult: true,
-    },
-  });
+  const { findCharacterByChatKey } = await import("@/lib/api-keys/chat-keys");
+  const character = await findCharacterByChatKey(apiKey);
   if (!character) {
     return Response.json({ error: "Invalid API key" }, { status: 401 });
   }

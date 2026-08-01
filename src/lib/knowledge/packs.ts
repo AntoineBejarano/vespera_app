@@ -34,6 +34,7 @@ export function getSeedTemplate(key: string) {
 
 export async function createKnowledgePack(params: {
   userId: string;
+  workspaceId: string;
   name: string;
   description?: string;
   language?: string;
@@ -42,6 +43,7 @@ export async function createKnowledgePack(params: {
 }) {
   return prisma.knowledgePack.create({
     data: {
+      workspaceId: params.workspaceId,
       userId: params.userId,
       name: params.name,
       description: params.description,
@@ -55,6 +57,7 @@ export async function createKnowledgePack(params: {
 /** Create pack + sources from a seed template (config only — engine stays generic). */
 export async function createPackFromSeed(params: {
   userId: string;
+  workspaceId: string;
   seedKey: string;
 }) {
   const seed = getSeedTemplate(params.seedKey);
@@ -63,12 +66,13 @@ export async function createPackFromSeed(params: {
   }
 
   const existing = await prisma.knowledgePack.findFirst({
-    where: { userId: params.userId, slug: seed.slug },
+    where: { workspaceId: params.workspaceId, slug: seed.slug },
   });
   if (existing) return { pack: existing, created: false };
 
   const pack = await prisma.knowledgePack.create({
     data: {
+      workspaceId: params.workspaceId,
       userId: params.userId,
       name: seed.name,
       description: seed.description,
@@ -283,16 +287,27 @@ export async function setSourceEnabled(params: {
 
 export async function linkPackToCharacters(params: {
   userId: string;
+  workspaceId?: string;
   knowledgePackId: string;
   characterIds: string[];
 }) {
   const pack = await prisma.knowledgePack.findFirst({
-    where: { id: params.knowledgePackId, userId: params.userId },
+    where: {
+      id: params.knowledgePackId,
+      archivedAt: null,
+      ...(params.workspaceId
+        ? { workspaceId: params.workspaceId }
+        : { userId: params.userId }),
+    },
   });
   if (!pack) throw new AdapterError("Knowledge pack not found", false);
 
   const characters = await prisma.character.findMany({
-    where: { userId: params.userId, id: { in: params.characterIds } },
+    where: {
+      id: { in: params.characterIds },
+      archivedAt: null,
+      workspaceId: pack.workspaceId,
+    },
     select: { id: true },
   });
 
@@ -320,17 +335,28 @@ export async function linkPackToCharacters(params: {
 
 export async function unlinkPackFromCharacter(params: {
   userId: string;
+  workspaceId?: string;
   knowledgePackId: string;
   characterId: string;
 }) {
   const pack = await prisma.knowledgePack.findFirst({
-    where: { id: params.knowledgePackId, userId: params.userId },
+    where: {
+      id: params.knowledgePackId,
+      archivedAt: null,
+      ...(params.workspaceId
+        ? { workspaceId: params.workspaceId }
+        : { userId: params.userId }),
+    },
   });
   if (!pack) return false;
 
-  // Only unlink if the character also belongs to this tenant.
+  // Only unlink if the character is in the same workspace (no cross-tenant links).
   const character = await prisma.character.findFirst({
-    where: { id: params.characterId, userId: params.userId },
+    where: {
+      id: params.characterId,
+      workspaceId: pack.workspaceId,
+      archivedAt: null,
+    },
     select: { id: true },
   });
   if (!character) return false;

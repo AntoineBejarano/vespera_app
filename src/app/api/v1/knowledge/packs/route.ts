@@ -22,7 +22,7 @@ export async function GET(req: Request) {
   if (auth.error) return auth.error;
 
   const packs = await prisma.knowledgePack.findMany({
-    where: { userId: auth.user.id },
+    where: { workspaceId: auth.workspaceId, archivedAt: null },
     include: {
       sources: {
         orderBy: { createdAt: "asc" },
@@ -72,6 +72,7 @@ export async function POST(req: Request) {
     if (parsed.data.seedKey) {
       const { pack, created } = await createPackFromSeed({
         userId: auth.user.id,
+        workspaceId: auth.workspaceId,
         seedKey: parsed.data.seedKey,
       });
       return Response.json({ pack, created }, { status: created ? 201 : 200 });
@@ -86,6 +87,7 @@ export async function POST(req: Request) {
 
     const pack = await createKnowledgePack({
       userId: auth.user.id,
+      workspaceId: auth.workspaceId,
       name: parsed.data.name,
       description: parsed.data.description,
       language: parsed.data.language,

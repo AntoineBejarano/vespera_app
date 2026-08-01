@@ -1,14 +1,21 @@
-import { randomBytes } from "crypto";
 import { z } from "zod";
-import { prisma } from "@/lib/db";
 import {
   findOwnedCharacter,
   requireAccountApiKey,
 } from "@/lib/api-keys/require-account-key";
 import {
+  chatKeyDisplay,
+  generateChatApiKeySecret,
+  setCharacterChatKey,
+} from "@/lib/api-keys/chat-keys";
+import {
   ensurePlatformOperatorAttestation,
   isPlatformOperatorRequiredError,
 } from "@/lib/legal/operator";
+import {
+  requireWorkspacePermission,
+  workspaceAuthResponse,
+} from "@/lib/workspace/permissions";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -16,24 +23,38 @@ const rotateSchema = z.object({
   platformOperatorAccepted: z.boolean().optional(),
 });
 
-/** Reveal chat key (vesp_…) for a persona you own. */
+/** Metadata only — secret is never revealed after create/rotate. */
 export async function GET(req: Request, { params }: Params) {
   const auth = await requireAccountApiKey(req, { bucket: "management" });
   if (auth.error) return auth.error;
   const { id } = await params;
 
-  const character = await findOwnedCharacter(auth.user.id, id);
+  try {
+    await requireWorkspacePermission(
+      auth.user.id,
+      auth.workspaceId,
+      "chat_keys.manage",
+    );
+  } catch (err) {
+    const res = workspaceAuthResponse(err);
+    if (res) return res;
+    throw err;
+  }
+
+  const character = await findOwnedCharacter(auth.workspaceId, id);
   if (!character) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
+  const display = chatKeyDisplay(character);
   return Response.json({
     characterId: character.id,
     name: character.name,
-    chatApiKey: character.apiKey,
+    ...display,
     endpoint: "/api/v1/chat",
     usage: {
       header: "X-Api-Key: <chatApiKey>",
+      note: "Secret is shown only once on create or rotate.",
       body: {
         message: "hey",
         peerId: "optional-stable-id",
@@ -45,18 +66,30 @@ export async function GET(req: Request, { params }: Params) {
   });
 }
 
-/** Rotate chat key — invalidates the previous vesp_ key. */
+/** Rotate chat key — returns secret once; invalidates previous vesp_ key. */
 export async function POST(req: Request, { params }: Params) {
   const auth = await requireAccountApiKey(req, { bucket: "management" });
   if (auth.error) return auth.error;
   const { id } = await params;
+
+  try {
+    await requireWorkspacePermission(
+      auth.user.id,
+      auth.workspaceId,
+      "chat_keys.manage",
+    );
+  } catch (err) {
+    const res = workspaceAuthResponse(err);
+    if (res) return res;
+    throw err;
+  }
 
   const body = rotateSchema.safeParse(await req.json().catch(() => ({})));
   const platformOperatorAccepted = body.success
     ? body.data.platformOperatorAccepted
     : undefined;
 
-  const character = await findOwnedCharacter(auth.user.id, id);
+  const character = await findOwnedCharacter(auth.workspaceId, id);
   if (!character) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
@@ -77,15 +110,13 @@ export async function POST(req: Request, { params }: Params) {
     throw err;
   }
 
-  const chatApiKey = `vesp_${randomBytes(24).toString("hex")}`;
-  await prisma.character.update({
-    where: { id: character.id },
-    data: { apiKey: chatApiKey },
-  });
+  const { raw: chatApiKey } = generateChatApiKeySecret();
+  await setCharacterChatKey(character.id, chatApiKey);
 
   return Response.json({
     characterId: id,
     chatApiKey,
     endpoint: "/api/v1/chat",
+    note: "Copy now — this secret will not be shown again.",
   });
 }

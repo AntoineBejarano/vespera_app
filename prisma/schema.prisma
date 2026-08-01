@@ -14,8 +14,12 @@ model User {
   emailVerified      DateTime?
   image              String?
   passwordHash       String?
-  /// Hexclave (Stack Auth) user id — multi-tenant identity
+  /// Hexclave user id (v1 IdP). Prefer externalAuthUserId for new code.
   hexclaveId         String?   @unique
+  /// Portable IdP subject (Hexclave today, Supabase auth.users.id later)
+  externalAuthUserId String?   @unique
+  /// hexclave | supabase | …
+  authProvider       String?   @default("hexclave")
   plan               String    @default("free")
   dailyMessageCount  Int       @default(0)
   dailyResetAt       DateTime  @default(now())
@@ -39,43 +43,137 @@ model User {
   telegramLastName   String?
   /// Shadow account auto-created for a Telegram peer (not admin login)
   isTelegramPeer     Boolean   @default(false)
+  /// Last selected workspace (UX only — never authz)
+  activeWorkspaceId  String?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  accounts       Account[]
-  sessions       Session[]
-  characters     Character[]
-  settings       UserSettings?
-  conversations  Conversation[]
-  memories       Memory[]
-  telegramBots   TelegramBot[]
-  telegramPeers  TelegramPeer[]
-  apiKeys        UserApiKey[]
-  knowledgePacks KnowledgePack[]
+  accounts            Account[]
+  sessions            Session[]
+  characters          Character[]         @relation("CharacterCreator")
+  settings            UserSettings?
+  conversations       Conversation[]
+  memories            Memory[]
+  telegramBots        TelegramBot[]
+  telegramPeers       TelegramPeer[]
+  apiKeys             UserApiKey[]
+  knowledgePacks      KnowledgePack[]
+  workspaceMembers    WorkspaceMember[]
+  workspaceInvitesSent WorkspaceInvite[]  @relation("WorkspaceInviteSender")
+  ownershipTransfersFrom WorkspaceOwnershipTransfer[] @relation("OwnershipFrom")
+  ownershipTransfersTo   WorkspaceOwnershipTransfer[] @relation("OwnershipTo")
+  activeWorkspace     Workspace?          @relation("UserActiveWorkspace", fields: [activeWorkspaceId], references: [id], onDelete: SetNull)
 
   @@index([email])
   @@index([telegramId])
   @@index([hexclaveId])
+  @@index([externalAuthUserId])
+}
+
+/// Product tenant. Authz is WorkspaceMember.role + local capability map (not IdP).
+model Workspace {
+  id                 String   @id @default(cuid())
+  name               String
+  /// Hexclave Team id (v1) — mapping only, never used as domain PK
+  externalAuthTeamId String?  @unique
+  adultEnabled       Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  members      WorkspaceMember[]
+  invites      WorkspaceInvite[]
+  characters   Character[]
+  knowledgePacks KnowledgePack[]
+  apiKeys      UserApiKey[]
+  telegramBots TelegramBot[]
+  ownershipTransfers WorkspaceOwnershipTransfer[]
+  activeForUsers User[] @relation("UserActiveWorkspace")
+
+  @@index([createdAt])
+}
+
+model WorkspaceMember {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  /// owner | admin | editor | viewer  (operator reserved for phase 2)
+  role        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+  @@index([workspaceId, role])
+}
+
+model WorkspaceInvite {
+  id          String    @id @default(cuid())
+  workspaceId String
+  email       String
+  /// admin | editor | viewer (never owner)
+  role        String
+  token       String    @unique
+  invitedByUserId String
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("WorkspaceInviteSender", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, email])
+  @@index([email])
+  @@index([token])
+}
+
+model WorkspaceOwnershipTransfer {
+  id              String    @id @default(cuid())
+  workspaceId     String
+  fromUserId      String
+  toUserId        String
+  token           String    @unique
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  fromUser  User      @relation("OwnershipFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser    User      @relation("OwnershipTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([token])
 }
 
 /// Account-level API key for CLI / AI agents (create personas, manage).
-/// Distinct from Character.apiKey (chat-only, vesp_…).
+/// Distinct from Character chat keys (vesp_…). Secret shown once on create.
 model UserApiKey {
-  id         String    @id @default(cuid())
-  userId     String
+  id              String    @id @default(cuid())
+  workspaceId     String
+  /// Creator (actor) — not the tenant owner
+  userId          String
   /// Display name set by the user (e.g. "cursor", "ci")
-  name       String    @default("default")
+  name            String    @default("default")
   /// First chars for UI listing (e.g. vsk_abcd1234)
-  keyPrefix  String
+  keyPrefix       String
+  /// Last 4 of secret for display (••••8JQ2)
+  lastFour        String    @default("")
   /// sha256 hex of the full secret
-  keyHash    String    @unique
-  lastUsedAt DateTime?
-  revokedAt  DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  keyHash         String    @unique
+  lastUsedAt      DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([workspaceId])
   @@index([userId])
   @@index([keyPrefix])
 }
@@ -135,7 +233,11 @@ model UserSettings {
 
 model Character {
   id           String   @id @default(cuid())
+  /// Tenant owner of this persona
+  workspaceId  String
+  /// Creator actor (legacy field name; treat as createdByUserId)
   userId       String
+  updatedByUserId String?
   name         String
   identityJson Json
   /// Meuxe-style layered persona (markdown docs stored in DB for multi-tenant)
@@ -147,9 +249,13 @@ model Character {
   intensity    Int      @default(3)
   limitsJson   Json?
   active       Boolean  @default(false)
-  /// Public chat API key for this persona (Bearer / X-Api-Key)
+  /// Chat key secret — prefer hash lookup; kept for legacy keys until rotated
   apiKey       String?  @unique
-  /// Public profile URL: vesperer.com/c/{slug}
+  /// sha256 of chat key (vesp_…) when hashed storage is used
+  apiKeyHash   String?  @unique
+  apiKeyPrefix String?
+  apiKeyLastFour String?
+  /// Public profile URL: vesperer.com/c/{slug} (globally unique when set)
   slug         String?  @unique
   isPublic     Boolean  @default(false)
   tagline      String?
@@ -159,10 +265,13 @@ model Character {
   /// Adult-oriented public listing (routes to After Dark discovery)
   isAdult      Boolean  @default(false)
   forkedFromId String?
+  archivedAt   DateTime?
+  archivedByUserId String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace      Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user           User                @relation("CharacterCreator", fields: [userId], references: [id], onDelete: Cascade)
   forkedFrom     Character?          @relation("CharacterForks", fields: [forkedFromId], references: [id], onDelete: SetNull)
   forks          Character[]         @relation("CharacterForks")
   conversations   Conversation[]
@@ -173,11 +282,16 @@ model Character {
   telegramBots    TelegramBot[]
   knowledgeLinks  CharacterKnowledgePack[]
 
+  @@index([workspaceId])
+  @@index([workspaceId, active])
   @@index([userId])
   @@index([userId, active])
   @@index([apiKey])
+  @@index([apiKeyHash])
+  @@index([slug])
   @@index([isPublic, updatedAt])
   @@index([isPublic, isAdult])
+  @@index([workspaceId, archivedAt])
 }
 
 model CharacterPhoto {
@@ -221,6 +335,7 @@ model RelationshipState {
 /// N bots can point at the same Character and talk to N peers in parallel.
 model TelegramBot {
   id             String   @id @default(cuid())
+  workspaceId    String
   ownerUserId    String
   characterId    String
   token          String   @unique
@@ -231,10 +346,12 @@ model TelegramBot {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  workspace Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   owner     User           @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
   character Character      @relation(fields: [characterId], references: [id], onDelete: Cascade)
   peers     TelegramPeer[]
 
+  @@index([workspaceId])
   @@index([ownerUserId])
   @@index([characterId])
   @@index([webhookSecret])
@@ -328,8 +445,10 @@ model Memory {
 /// Full document text lives in Upstash Vector chunks — never in Postgres.
 model KnowledgePack {
   id          String   @id @default(cuid())
+  workspaceId String
+  /// Creator actor
   userId      String
-  /// Stable slug for seeds (e.g. plato-essentials); unique per owner
+  /// Stable slug for seeds (e.g. plato-essentials); unique per workspace
   slug        String?
   name        String
   description String?  @db.Text
@@ -339,15 +458,20 @@ model KnowledgePack {
   seedKey     String?
   documentCount Int    @default(0)
   chunkCount  Int      @default(0)
+  archivedAt  DateTime?
+  archivedByUserId String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  workspace  Workspace                @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user       User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
   sources    KnowledgeSource[]
   jobs       KnowledgeIngestJob[]
   characters CharacterKnowledgePack[]
 
-  @@unique([userId, slug])
+  @@unique([workspaceId, slug])
+  @@index([workspaceId])
+  @@index([workspaceId, active])
   @@index([userId])
   @@index([userId, active])
 }

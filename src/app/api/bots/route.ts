@@ -88,6 +88,7 @@ export async function POST(req: Request) {
   try {
     const bot = await prisma.telegramBot.create({
       data: {
+        workspaceId: character.workspaceId,
         ownerUserId: user.id,
         characterId: character.id,
         token: parsed.data.token.trim(),

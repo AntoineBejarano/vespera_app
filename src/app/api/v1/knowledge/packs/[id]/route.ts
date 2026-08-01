@@ -50,7 +50,7 @@ export async function PATCH(req: Request, { params }: Params) {
     return Response.json({ error: "Invalid data" }, { status: 400 });
   }
 
-  const owned = await findOwnedKnowledgePack(auth.user.id, id);
+  const owned = await findOwnedKnowledgePack(auth.workspaceId, id);
   if (!owned) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
@@ -80,7 +80,7 @@ export async function DELETE(req: Request, { params }: Params) {
   if (auth.error) return auth.error;
   const { id } = await params;
 
-  const owned = await findOwnedKnowledgePack(auth.user.id, id);
+  const owned = await findOwnedKnowledgePack(auth.workspaceId, id);
   if (!owned) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
