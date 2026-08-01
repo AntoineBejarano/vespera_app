@@ -19,6 +19,7 @@ const EXPLORE_LINKS = [
   { href: "/explore?filter=hire", label: "AI employees" },
   { href: "/explore?filter=create", label: "Create" },
   { href: "/bring", label: "Bring a character" },
+  { href: "/integrations/claude", label: "Claude · vibecode" },
   { href: "/#cli", label: "CLI for agents" },
 ];
 

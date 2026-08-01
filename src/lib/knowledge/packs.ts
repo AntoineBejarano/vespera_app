@@ -327,13 +327,21 @@ export async function unlinkPackFromCharacter(params: {
     where: { id: params.knowledgePackId, userId: params.userId },
   });
   if (!pack) return false;
-  await prisma.characterKnowledgePack.deleteMany({
+
+  // Only unlink if the character also belongs to this tenant.
+  const character = await prisma.character.findFirst({
+    where: { id: params.characterId, userId: params.userId },
+    select: { id: true },
+  });
+  if (!character) return false;
+
+  const deleted = await prisma.characterKnowledgePack.deleteMany({
     where: {
       knowledgePackId: pack.id,
-      characterId: params.characterId,
+      characterId: character.id,
     },
   });
-  return true;
+  return deleted.count > 0;
 }
 
 export async function deleteSourceVectors(params: {

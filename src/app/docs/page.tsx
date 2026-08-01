@@ -8,7 +8,7 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 export const metadata: Metadata = {
   title: "API & CLI docs",
   description:
-    "Vesperer CLI and APIs for AI agents: create personas with account keys (vsk_), chat with persona keys (vesp_).",
+    "Vesperer CLI and APIs for AI agents: create, update, delete personas, knowledge packs, and chat — account keys (vsk_) and persona keys (vesp_) with tenant isolation.",
   alternates: { canonical: `${SITE_URL}/docs` },
 };
 
@@ -90,8 +90,21 @@ npm run vesperer -- login --key vsk_YOUR_SECRET
 # { "name":"Alex", "soul":"…", "style":"…", "rules":"…", "context":"…" }
 
 npm run vesperer -- personas create --from persona.json
-npm run vesperer -- personas list`}
+npm run vesperer -- personas list --json
+npm run vesperer -- personas get <id>
+npm run vesperer -- personas update <id> --soul ./soul.md
+npm run vesperer -- knowledge packs link <packId> --character <id>`}
           </pre>
+          <p className="text-sm text-[var(--muted)]">
+            Full vibecode walkthrough for Claude Code:{" "}
+            <Link
+              href="/integrations/claude"
+              className="text-[var(--accent)] hover:underline"
+            >
+              /integrations/claude
+            </Link>
+            .
+          </p>
           <p className="text-sm text-[var(--muted)]">
             Same thing over HTTP if you prefer curl / your agent’s fetch:
           </p>
@@ -115,6 +128,48 @@ npm run vesperer -- personas list`}
             <code className="text-[var(--ink)]">mode: &quot;generate&quot;</code>{" "}
             uses onboarding fields and expands layers with the LLM.
           </p>
+        </section>
+
+        <section id="api" className="mt-14 scroll-mt-24 space-y-4">
+          <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
+            Account API surface
+          </h2>
+          <p className="text-sm text-[var(--muted)]">
+            All management routes require{" "}
+            <code className="text-[var(--ink)]">X-Api-Key: vsk_…</code>. Every
+            query is scoped to your user. Foreign IDs return 404. Rate limits
+            apply per account.
+          </p>
+          <div className="overflow-hidden rounded-2xl border border-[var(--line)] text-sm">
+            {[
+              ["GET", "/api/v1/personas", "List your personas"],
+              ["POST", "/api/v1/personas", "Create (direct or generate)"],
+              ["GET", "/api/v1/personas/:id", "Get layers (no chat key)"],
+              ["PATCH", "/api/v1/personas/:id", "Update layers / flags"],
+              ["DELETE", "/api/v1/personas/:id", "Delete persona"],
+              ["POST", "/api/v1/personas/import", "Import Character Card"],
+              ["GET/POST", "/api/v1/personas/:id/chat-key", "Reveal / rotate vesp_"],
+              ["GET/POST", "/api/v1/knowledge/packs", "List / create packs"],
+              ["POST", "/api/v1/knowledge/packs/:id/links", "Link to your personas"],
+              ["GET/POST", "/api/v1/bots", "List / bind Telegram bots"],
+              ["POST", "/api/v1/chat", "Chat with vesp_ (not vsk_)"],
+            ].map(([method, path, desc]) => (
+              <div
+                key={`${method}-${path}`}
+                className="grid grid-cols-[5.5rem_1fr] border-b border-[var(--line)] last:border-b-0 sm:grid-cols-[5.5rem_minmax(0,1.2fr)_1fr]"
+              >
+                <div className="border-r border-[var(--line)] px-3 py-2 font-mono text-xs font-medium">
+                  {method}
+                </div>
+                <div className="border-r border-[var(--line)] px-3 py-2 font-mono text-xs text-[var(--ink)] max-sm:col-span-1 sm:border-r">
+                  {path}
+                </div>
+                <div className="px-3 py-2 text-[var(--muted)] max-sm:col-span-2 max-sm:border-t max-sm:border-[var(--line)]">
+                  {desc}
+                </div>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section id="chat" className="mt-14 scroll-mt-24 space-y-4">
@@ -182,13 +237,23 @@ npm run vesperer -- personas list`}
             Telegram
           </h2>
           <p className="text-sm leading-relaxed text-[var(--muted)]">
-            Paste a BotFather token on the persona in the web UI. Webhooks and
-            peer memory are configured for you. See{" "}
+            Bind a BotFather token via CLI or{" "}
+            <code className="text-[var(--ink)]">POST /api/v1/bots</code>{" "}
+            (requires operator attestation). Webhooks and peer memory are
+            configured for you. Tokens are never returned in full after create —
+            only masked. See{" "}
             <Link href="/help" className="text-[var(--accent)] hover:underline">
               Help
             </Link>
             .
           </p>
+          <pre className="overflow-x-auto rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-4 text-xs leading-relaxed text-[var(--ink)]">
+{`npm run vesperer -- bots create \\
+  --token 123456:ABC… \\
+  --username my_bot \\
+  --character <personaId> \\
+  --accept-operator`}
+          </pre>
         </section>
 
         <section className="mt-14 rounded-2xl border border-[var(--line)] p-6">
@@ -201,6 +266,12 @@ npm run vesperer -- personas list`}
               className="rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-medium text-[var(--accent-ink)]"
             >
               Create account API key
+            </Link>
+            <Link
+              href="/integrations/claude"
+              className="rounded-xl border border-[var(--line)] px-5 py-3 text-sm"
+            >
+              Claude · vibecode
             </Link>
             <Link
               href="/#cli"

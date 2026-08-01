@@ -1,12 +1,14 @@
 # vesperer CLI
 
-Create and list Vesperer personas with an **account API key** (`vsk_…`). Designed so AI agents can provision characters without a browser.
+Manage Vesperer personas and knowledge packs with an **account API key** (`vsk_…`). Designed so AI agents (Claude Code, Cursor, …) can provision characters without a browser — with production tenant isolation.
+
+Guide: [vesperer.com/integrations/claude](https://vesperer.com/integrations/claude)
 
 ## Setup
 
 1. Sign up at [vesperer.com](https://vesperer.com)
 2. Settings → **API keys** → Create key (copy the `vsk_…` secret once)
-3. Accept platform operator attestation in Personas if prompted
+3. Accept platform operator attestation in Personas if you publish / rotate keys
 
 ```bash
 # From this repo
@@ -35,9 +37,21 @@ export VESPERER_API_URL=https://vesperer.com   # optional
 
 ```bash
 npm run vesperer -- personas create --from persona.json
+# stdin: cat persona.json | npm run vesperer -- personas create --from -
 ```
 
 The response includes a **chat** API key (`vesp_…`) for `/api/v1/chat`.
+
+## Lifecycle
+
+```bash
+npm run vesperer -- personas list --json
+npm run vesperer -- personas get <id>
+npm run vesperer -- personas update <id> --soul ./soul.md --style ./style.md
+npm run vesperer -- personas delete <id>
+npm run vesperer -- personas chat-key <id>
+npm run vesperer -- personas chat-key <id> --rotate --accept-operator
+```
 
 ## Generate via LLM
 
@@ -52,15 +66,31 @@ npm run vesperer -- personas create --generate \
   --intensity 1
 ```
 
-## List
+## Import Character Card
 
 ```bash
-npm run vesperer -- personas list
+npm run vesperer -- personas import --from card.json --permission-confirmed
+```
+
+## Knowledge packs
+
+```bash
+npm run vesperer -- knowledge packs create --name "Product FAQ"
+npm run vesperer -- knowledge packs link <packId> --character <personaId>
+npm run vesperer -- knowledge packs list
+```
+
+## Chat
+
+```bash
+npm run vesperer -- chat --key vesp_… --message "Hello" --peer customer_123 --age-attested
 ```
 
 ## Keys
 
 | Key | Prefix | Use |
 |-----|--------|-----|
-| Account (CLI) | `vsk_` | Create/list personas |
+| Account (CLI) | `vsk_` | Create/list/update/delete personas, knowledge |
 | Persona chat | `vesp_` | `POST /api/v1/chat` only |
+
+Account keys are hashed at rest. Management routes always scope by `userId`. Foreign IDs return 404. Rate limits apply per account.

@@ -808,6 +808,12 @@ export function LandingPage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
+                  href="/integrations/claude"
+                  className="inline-flex rounded-xl bg-[var(--accent)] px-6 py-3.5 text-sm font-medium text-[var(--accent-ink)]"
+                >
+                  Vibecode with Claude
+                </Link>
+                <Link
                   href="/docs#cli"
                   className="inline-flex rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
                 >

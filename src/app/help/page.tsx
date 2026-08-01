@@ -39,7 +39,7 @@ const FAQ = [
   },
   {
     q: "Can an AI agent create personas for me?",
-    a: "Yes. Settings → create an account API key (vsk_…). Then use the CLI (npm run vesperer -- personas create) or POST /api/v1/personas. Full guide on /docs#cli.",
+    a: "Yes. Settings → create an account API key (vsk_…). Then use the CLI (create/update/delete, knowledge packs, chat) or /api/v1/*. Vibecode walkthrough: /integrations/claude.",
   },
   {
     q: "How many characters can I create?",

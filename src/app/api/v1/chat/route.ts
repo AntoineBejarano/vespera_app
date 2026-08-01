@@ -1,6 +1,10 @@
 import { createHash } from "crypto";
 import { prisma } from "@/lib/db";
 import { runCharacterReply } from "@/lib/chat/engine";
+import {
+  checkApiRateLimit,
+  V1_RATE_LIMITS,
+} from "@/lib/api-keys/rate-limit";
 
 export const maxDuration = 60;
 
@@ -15,8 +19,9 @@ class AgeAttestRequiredError extends Error {
 
 /**
  * Public persona chat API.
- * Auth: X-Api-Key = Character.apiKey
+ * Auth: X-Api-Key = Character.apiKey (vesp_…)
  * Optional peerId: stable string to isolate memory per end-user.
+ * Rate-limited per character owner; peers are tenant-isolated synthetic users.
  */
 export async function POST(req: Request) {
   const apiKey =
@@ -28,17 +33,58 @@ export async function POST(req: Request) {
     return Response.json({ error: "Missing X-Api-Key" }, { status: 401 });
   }
 
+  if (apiKey.startsWith("vsk_")) {
+    return Response.json(
+      {
+        error:
+          "Account keys (vsk_…) cannot chat. Use the persona chat key (vesp_…) returned on create.",
+      },
+      { status: 401 },
+    );
+  }
+
   const character = await prisma.character.findFirst({
     where: { apiKey },
+    select: {
+      id: true,
+      name: true,
+      userId: true,
+      isAdult: true,
+    },
   });
   if (!character) {
     return Response.json({ error: "Invalid API key" }, { status: 401 });
+  }
+
+  const rl = await checkApiRateLimit({
+    userId: character.userId,
+    bucket: `chat:${character.id}`,
+    limitPerMinute: V1_RATE_LIMITS.chat,
+  });
+  if (!rl.ok) {
+    return Response.json(
+      {
+        error: "Rate limit exceeded. Slow down and retry.",
+        limitPerMinute: rl.limit,
+        retryAfterSec: rl.retryAfterSec,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rl.retryAfterSec) },
+      },
+    );
   }
 
   const body = await req.json().catch(() => ({}));
   const message = String(body.message ?? "").trim();
   if (!message) {
     return Response.json({ error: "message required" }, { status: 400 });
+  }
+  if (message.length > 8000) {
+    return Response.json(
+      { error: "message too long (max 8000 chars)" },
+      { status: 400 },
+    );
   }
 
   const peerId = String(body.peerId ?? body.userId ?? "default").slice(0, 80);
@@ -67,15 +113,14 @@ export async function POST(req: Request) {
     characterId: character.id,
     partner: {
       channel: "web",
-      telegramFirstName: body.displayName ? String(body.displayName).slice(0, 40) : null,
+      telegramFirstName: body.displayName
+        ? String(body.displayName).slice(0, 40)
+        : null,
     },
   });
 
   if (!result.ok) {
-    return Response.json(
-      { error: result.error },
-      { status: result.status },
-    );
+    return Response.json({ error: result.error }, { status: result.status });
   }
 
   return Response.json(
@@ -91,6 +136,7 @@ export async function POST(req: Request) {
       headers: {
         "X-Vesperer-Age-Attestation":
           "Integrator must verify end users are 18+ before chat; false attestation may violate law and Terms.",
+        "X-RateLimit-Remaining": String(rl.remaining),
       },
     },
   );
@@ -102,6 +148,7 @@ async function ensureApiPeer(
   peerId: string,
   endUserAgeAttested: boolean,
 ) {
+  // Peer identity is scoped to (character, peerId) — never shared across personas.
   const hash = createHash("sha256")
     .update(`api:${characterId}:${peerId}`)
     .digest("hex")
@@ -156,7 +203,6 @@ async function ensureApiPeer(
   });
 
   void ownerUserId;
-  void characterId;
 
   return user.id;
 }
