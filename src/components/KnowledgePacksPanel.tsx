@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { PageHeader } from "@/components/app-shell/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type ProviderMeta = { id: string; label: string; description: string };
 type SeedMeta = {
@@ -377,32 +380,24 @@ export function KnowledgePacksPanel({
 
   return (
     <div className="px-4 py-6 sm:px-6 sm:py-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight text-[var(--ink)] sm:text-3xl">
-            Sources
-          </h1>
-          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[var(--muted)]">
-            Snapshot and index approved material so chat retrieves evidence —
-            never by re-fetching remotes at conversation time.
-          </p>
-        </div>
-        {characterId ? (
-          <Link
-            href={`/personas/${characterId}`}
-            className="rounded-lg border border-white/[0.08] px-3 py-2 text-sm text-[var(--muted)] transition hover:border-[var(--accent)]/40 hover:text-[var(--ink)]"
-          >
-            ← Back to persona
-          </Link>
-        ) : null}
-      </div>
+      <PageHeader
+        title="Sources"
+        description="Snapshot and index approved material so chat retrieves evidence — never by re-fetching remotes at conversation time."
+        actions={
+          characterId ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/personas/${characterId}`}>← Back to persona</Link>
+            </Button>
+          ) : null
+        }
+      />
 
       {error ? (
-        <p className="mt-4 text-sm text-[var(--danger)]">{error}</p>
+        <p className="mt-4 text-sm text-destructive">{error}</p>
       ) : null}
 
-      <section className="mt-8 space-y-3 border-t border-[var(--line)] pt-6">
-        <h2 className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
+      <section className="mt-8 space-y-3 border-t border-border pt-6">
+        <h2 className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
           Start from seed
         </h2>
         <div className="flex flex-wrap gap-3">
@@ -412,30 +407,29 @@ export function KnowledgePacksPanel({
               type="button"
               disabled={busy}
               onClick={() => void createFromSeed(s.key)}
-              className="rounded-xl border border-[var(--line)] px-4 py-3 text-left hover:border-[var(--accent)] disabled:opacity-50"
+              className="rounded-lg border border-border px-4 py-3 text-left hover:border-[var(--accent)] disabled:opacity-50"
             >
-              <div className="font-medium text-[var(--ink)]">{s.name}</div>
-              <div className="mt-1 max-w-xs text-xs text-[var(--muted)]">
+              <div className="font-medium text-foreground">{s.name}</div>
+              <div className="mt-1 max-w-xs text-xs text-muted-foreground">
                 {s.sourceCount} sources · {s.language}
               </div>
             </button>
           ))}
         </div>
         <div className="flex flex-wrap gap-2 pt-2">
-          <input
+          <Input
             value={newPackName}
             onChange={(e) => setNewPackName(e.target.value)}
             placeholder="New pack name"
-            className="min-w-[12rem] flex-1 border border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-sm"
+            className="min-w-[12rem] flex-1"
           />
-          <button
+          <Button
             type="button"
             disabled={busy || !newPackName.trim()}
             onClick={() => void createEmpty()}
-            className="rounded-xl bg-[var(--ink)] px-4 py-2 text-sm text-[var(--bg)] disabled:opacity-50"
           >
             Create pack
-          </button>
+          </Button>
         </div>
       </section>
 
@@ -454,8 +448,8 @@ export function KnowledgePacksPanel({
                 onClick={() => setSelectedId(p.id)}
                 className={`block w-full rounded-lg px-3 py-2 text-left text-sm ${
                   selected?.id === p.id
-                    ? "bg-[var(--ink)] text-[var(--bg)]"
-                    : "hover:bg-[var(--line)]/40"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
                 <div className="font-medium">{p.name}</div>
@@ -644,14 +638,13 @@ export function KnowledgePacksPanel({
                 className="w-full border border-[var(--line)] bg-[var(--bg)] px-3 py-2 font-mono text-xs"
               />
               <div className="flex flex-wrap items-center gap-3">
-                <button
+                <Button
                   type="button"
                   disabled={busy}
                   onClick={() => void addSource()}
-                  className="rounded-xl bg-[var(--ink)] px-4 py-2 text-sm text-[var(--bg)] disabled:opacity-50"
                 >
                   Add & inspect
-                </button>
+                </Button>
                 <label className="cursor-pointer text-sm text-[var(--muted)] underline">
                   Upload file (R2 snapshot)
                   <input
@@ -684,10 +677,10 @@ export function KnowledgePacksPanel({
                             : [...prev, c.id],
                         )
                       }
-                      className={`rounded-full border px-3 py-1 text-xs ${
+                      className={`rounded-lg border px-3 py-1 text-xs ${
                         on
-                          ? "border-[var(--ink)] bg-[var(--ink)] text-[var(--bg)]"
-                          : "border-[var(--line)] text-[var(--muted)]"
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border text-muted-foreground"
                       }`}
                     >
                       {c.name}

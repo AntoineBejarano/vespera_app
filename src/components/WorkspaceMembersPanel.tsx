@@ -1,6 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 type Member = {
   userId: string;
@@ -88,85 +97,86 @@ export function WorkspaceMembersPanel() {
   if (!workspaceId) return null;
 
   return (
-    <section className="space-y-3 border border-[var(--line)] bg-[var(--bg-elevated)] p-4">
-      <h2 className="text-sm uppercase tracking-wider text-[var(--muted)]">
-        Team
-      </h2>
-      <p className="text-sm text-[var(--muted)]">
-        Your role: <span className="text-[var(--ink)]">{role}</span>. Owner
-        controls admins and After Dark for the workspace.
-      </p>
-
-      <ul className="space-y-2 text-sm">
-        {members.map((m) => (
-          <li
-            key={m.userId}
-            className="flex items-center justify-between gap-3 border border-[var(--line)] px-3 py-2"
-          >
-            <div>
-              <p className="text-[var(--ink)]">
-                {m.name || m.email || m.userId}
-              </p>
-              <p className="text-xs text-[var(--muted)]">
-                {m.roleLabel}
-                {m.email ? ` · ${m.email}` : ""}
-              </p>
-            </div>
-            {canManage && m.role !== "owner" ? (
-              <button
-                type="button"
-                className="text-xs text-red-400"
-                onClick={() => void removeMember(m.userId)}
-              >
-                Remove
-              </button>
-            ) : null}
-          </li>
-        ))}
-      </ul>
-
-      {canManage ? (
-        <div className="space-y-2 border-t border-[var(--line)] pt-3">
-          <p className="text-xs uppercase tracking-wider text-[var(--muted)]">
-            Invite
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <input
-              className="min-w-[10rem] flex-1 border border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-sm"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="colleague@company.com"
-              type="email"
-            />
-            <select
-              className="border border-[var(--line)] bg-[var(--bg)] px-3 py-2 text-sm"
-              value={inviteRole}
-              onChange={(e) =>
-                setInviteRole(e.target.value as "viewer" | "editor" | "admin")
-              }
+    <Card id="workspace" className="scroll-mt-20 shadow-none">
+      <CardHeader>
+        <CardTitle>Team</CardTitle>
+        <CardDescription>
+          Your role: <span className="text-foreground">{role}</span>. Owner
+          controls admins and After Dark for the workspace.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <ul className="space-y-2 text-sm">
+          {members.map((m) => (
+            <li
+              key={m.userId}
+              className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2"
             >
-              <option value="viewer">Viewer</option>
-              <option value="editor">Editor</option>
-              {canInviteAdmin ? <option value="admin">Admin</option> : null}
-            </select>
-            <button
-              type="button"
-              onClick={() => void invite()}
-              className="bg-[var(--accent)] px-4 py-2 text-sm text-[var(--accent-ink)]"
-            >
+              <div>
+                <p className="text-foreground">
+                  {m.name || m.email || m.userId}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {m.roleLabel}
+                  {m.email ? ` · ${m.email}` : ""}
+                </p>
+              </div>
+              {canManage && m.role !== "owner" ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive"
+                  onClick={() => void removeMember(m.userId)}
+                >
+                  Remove
+                </Button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+
+        {canManage ? (
+          <div className="space-y-2 border-t border-border pt-3">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
               Invite
-            </button>
-          </div>
-          {inviteLink ? (
-            <p className="text-xs text-[var(--muted)]">
-              Accept link:{" "}
-              <code className="text-[var(--ink)]">{inviteLink}</code>
             </p>
-          ) : null}
-        </div>
-      ) : null}
+            <div className="flex flex-wrap gap-2">
+              <Input
+                className="min-w-[10rem] flex-1"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="colleague@company.com"
+                type="email"
+              />
+              <select
+                className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+                value={inviteRole}
+                onChange={(e) =>
+                  setInviteRole(e.target.value as "viewer" | "editor" | "admin")
+                }
+              >
+                <option value="viewer">Viewer</option>
+                <option value="editor">Editor</option>
+                {canInviteAdmin ? <option value="admin">Admin</option> : null}
+              </select>
+              <Button type="button" onClick={() => void invite()}>
+                Invite
+              </Button>
+            </div>
+            {inviteLink ? (
+              <p className="text-xs text-muted-foreground">
+                Accept link:{" "}
+                <code className="text-foreground">{inviteLink}</code>
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
-      {message ? <p className="text-sm text-[var(--accent)]">{message}</p> : null}
-    </section>
+        {message ? (
+          <p className="text-sm text-[var(--accent)]">{message}</p>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }

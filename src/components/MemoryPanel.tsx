@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { MagicCard } from "@/components/magicui/magic-card";
 import { PageHeader } from "@/components/app-shell/PageHeader";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 type MemoryRow = {
   id: string;
@@ -81,28 +82,30 @@ export function MemoryPanel({
           </Button>
         }
       />
-      {error ? <p className="mt-4 text-sm text-[var(--danger)]">{error}</p> : null}
+      {error ? (
+        <p className="mt-4 text-sm text-destructive">{error}</p>
+      ) : null}
       <ul className="mt-8 space-y-3">
         {memories.length === 0 ? (
-          <li className="text-[var(--muted)]">
+          <li className="text-muted-foreground">
             No memories yet for this persona.
           </li>
         ) : (
           memories.map((m) => (
             <li key={m.id}>
-              <MagicCard>
-                <div className="p-4">
-                  <div className="mb-2 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+              <Card className="shadow-none">
+                <CardContent className="pt-4">
+                  <div className="mb-2 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                     <span>{m.type}</span>
                     {m.peerLabel ? (
-                      <span className="rounded-full border border-[var(--line)] px-2 py-0.5 normal-case tracking-normal">
+                      <Badge variant="outline" className="normal-case tracking-normal">
                         {m.peerLabel}
-                      </span>
+                      </Badge>
                     ) : null}
                   </div>
                   {editing[m.id] !== undefined ? (
                     <textarea
-                      className="w-full border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+                      className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                       value={editing[m.id]}
                       onChange={(e) =>
                         setEditing((prev) => ({
@@ -112,23 +115,26 @@ export function MemoryPanel({
                       }
                     />
                   ) : (
-                    <p className="leading-relaxed text-[var(--ink)]">
+                    <p className="leading-relaxed text-foreground">
                       {m.content}
                     </p>
                   )}
-                  <div className="mt-3 flex gap-3 text-sm">
+                  <div className="mt-3 flex gap-2">
                     {editing[m.id] !== undefined ? (
-                      <button
+                      <Button
                         type="button"
-                        className="text-[var(--accent)]"
-                        onClick={() => save(m.id)}
+                        variant="link"
+                        size="sm"
+                        className="h-auto px-0"
+                        onClick={() => void save(m.id)}
                       >
                         Save
-                      </button>
+                      </Button>
                     ) : (
-                      <button
+                      <Button
                         type="button"
-                        className="text-[var(--muted)]"
+                        variant="ghost"
+                        size="sm"
                         onClick={() =>
                           setEditing((prev) => ({
                             ...prev,
@@ -137,18 +143,20 @@ export function MemoryPanel({
                         }
                       >
                         Edit
-                      </button>
+                      </Button>
                     )}
-                    <button
+                    <Button
                       type="button"
-                      className="text-[var(--danger)]"
-                      onClick={() => remove(m.id)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => void remove(m.id)}
                     >
                       Delete
-                    </button>
+                    </Button>
                   </div>
-                </div>
-              </MagicCard>
+                </CardContent>
+              </Card>
             </li>
           ))
         )}

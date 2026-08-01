@@ -137,17 +137,15 @@ export default function SettingsClient() {
         }
       />
 
-      <div id="workspace" className="scroll-mt-20">
-        <WorkspaceMembersPanel />
-      </div>
+      <WorkspaceMembersPanel />
 
-      <Card id="api-keys" className="scroll-mt-20 border-white/[0.06] bg-card/50">
+      <Card id="api-keys" className="scroll-mt-20 shadow-none">
         <CardHeader>
           <CardTitle>Account API keys</CardTitle>
           <CardDescription>
-            Keys starting with <code className="text-[var(--ink)]">vsk_</code>{" "}
-            let agents create personas via CLI or{" "}
-            <code className="text-[var(--ink)]">POST /api/v1/personas</code>.
+            Keys starting with <code className="text-foreground">vsk_</code> let
+            agents create personas via CLI or{" "}
+            <code className="text-foreground">POST /api/v1/personas</code>.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -163,14 +161,14 @@ export default function SettingsClient() {
             </Button>
           </div>
           {newSecret ? (
-            <div className="rounded-xl border border-[var(--accent)]/40 bg-[var(--accent-soft)] p-3 text-sm">
-              <p className="text-xs uppercase tracking-wider text-[var(--muted)]">
+            <div className="rounded-lg border border-[var(--accent)]/40 bg-[var(--accent-soft)] p-3 text-sm">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">
                 Copy now
               </p>
-              <code className="mt-2 block break-all text-[var(--ink)]">
+              <code className="mt-2 block break-all text-foreground">
                 {newSecret}
               </code>
-              <pre className="mt-3 overflow-x-auto text-xs text-[var(--muted)]">
+              <pre className="mt-3 overflow-x-auto text-xs text-muted-foreground">
                 {`npm run vesperer -- login --key ${newSecret}`}
               </pre>
             </div>
@@ -179,16 +177,16 @@ export default function SettingsClient() {
             {keys.map((k) => (
               <li
                 key={k.id}
-                className="flex items-center justify-between gap-3 rounded-xl border border-white/[0.06] px-3 py-2.5"
+                className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5"
               >
                 <div>
-                  <p className="text-sm text-[var(--ink)]">
+                  <p className="text-sm text-foreground">
                     {k.name} ·{" "}
                     <code>
                       {k.keyPrefix}…{k.lastFour ?? ""}
                     </code>
                   </p>
-                  <p className="text-xs text-[var(--muted)]">
+                  <p className="text-xs text-muted-foreground">
                     Created {new Date(k.createdAt).toLocaleDateString()}
                     {k.lastUsedAt
                       ? ` · last used ${new Date(k.lastUsedAt).toLocaleDateString()}`
@@ -207,7 +205,9 @@ export default function SettingsClient() {
               </li>
             ))}
             {keys.length === 0 ? (
-              <li className="text-sm text-[var(--muted)]">No active keys yet.</li>
+              <li className="text-sm text-muted-foreground">
+                No active keys yet.
+              </li>
             ) : null}
           </ul>
           <Button asChild variant="link" className="h-auto px-0">
@@ -216,10 +216,12 @@ export default function SettingsClient() {
         </CardContent>
       </Card>
 
-      <Card className="border-white/[0.06] bg-card/50">
+      <Card className="shadow-none">
         <CardHeader>
           <CardTitle>OpenRouter model</CardTitle>
-          <CardDescription>Default model for persona generation and chat.</CardDescription>
+          <CardDescription>
+            Default model for persona generation and chat.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <select
@@ -242,13 +244,19 @@ export default function SettingsClient() {
         </CardContent>
       </Card>
 
-      <Card className="border-white/[0.06] bg-card/50">
+      <Card className="shadow-none">
         <CardHeader>
           <CardTitle>Privacy</CardTitle>
-          <CardDescription>Export or permanently delete your account.</CardDescription>
+          <CardDescription>
+            Export or permanently delete your account.
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={() => void exportData()}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void exportData()}
+          >
             Export data
           </Button>
           <Button
@@ -261,14 +269,16 @@ export default function SettingsClient() {
         </CardContent>
       </Card>
 
-      {message ? <p className="text-sm text-[var(--accent)]">{message}</p> : null}
+      {message ? (
+        <p className="text-sm text-[var(--accent)]">{message}</p>
+      ) : null}
 
       <Separator />
 
       <Button
         type="button"
         variant="ghost"
-        className="text-[var(--muted)]"
+        className="text-muted-foreground"
         onClick={() => app.redirectToSignOut()}
       >
         Sign out

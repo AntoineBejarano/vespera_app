@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ONBOARDING_STEPS } from "@/lib/identity/schema";
+import { Button } from "@/components/ui/button";
 
 type Answers = {
   name: string;
@@ -109,20 +110,20 @@ export function OnboardingFlow() {
 
   return (
     <div className="mx-auto max-w-xl px-4 py-6 sm:px-6 sm:py-8">
-      <div className="mb-8 h-1 w-full bg-[var(--line)]">
+      <div className="mb-8 h-1 w-full overflow-hidden rounded-full bg-border">
         <div
-          className="h-1 bg-[var(--accent)] transition-all"
+          className="h-1 bg-primary transition-all"
           style={{ width: `${progress}%` }}
         />
       </div>
-      <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">
+      <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">
         New persona
       </p>
-      <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
+      <h1 className="mt-3 font-[family-name:var(--font-display)] text-3xl text-foreground">
         {current.prompt}
       </h1>
       <textarea
-        className="mt-8 min-h-32 w-full border border-[var(--line)] bg-[var(--bg-elevated)] px-4 py-3 text-[var(--ink)] outline-none focus:border-[var(--accent)]"
+        className="mt-8 min-h-32 w-full rounded-lg border border-input bg-card px-4 py-3 text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         placeholder={
@@ -134,30 +135,27 @@ export function OnboardingFlow() {
         }
         disabled={loading}
       />
-      {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}
+      {error ? (
+        <p className="mt-3 text-sm text-destructive">{error}</p>
+      ) : null}
       <div className="mt-6 flex gap-3">
         {step > 0 ? (
-          <button
+          <Button
             type="button"
-            className="border border-[var(--line)] px-4 py-3 text-[var(--muted)]"
+            variant="outline"
             onClick={() => setStep((s) => s - 1)}
             disabled={loading}
           >
             Back
-          </button>
+          </Button>
         ) : null}
-        <button
-          type="button"
-          className="bg-[var(--accent)] px-6 py-3 text-[var(--bg)] disabled:opacity-50"
-          onClick={next}
-          disabled={loading}
-        >
+        <Button type="button" onClick={next} disabled={loading}>
           {loading
             ? "Building mind…"
             : step >= ONBOARDING_STEPS.length - 1
               ? "Generate persona"
               : "Continue"}
-        </button>
+        </Button>
       </div>
     </div>
   );
