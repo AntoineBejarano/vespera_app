@@ -66,11 +66,11 @@ export function AppSidebar({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-[17rem] flex-col border-r border-border bg-sidebar/95 backdrop-blur-xl transition-transform lg:static lg:z-0 lg:translate-x-0",
-          open ? "translate-x-0" : "-translate-x-full",
+          "fixed inset-y-0 left-0 z-50 flex h-dvh w-[17rem] shrink-0 flex-col overflow-hidden border-r border-border bg-sidebar/95 backdrop-blur-xl transition-transform lg:sticky lg:top-0 lg:z-0 lg:translate-x-0",
+          open ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
-        <div className="border-b border-border px-4 py-4">
+        <div className="shrink-0 border-b border-border px-4 py-4">
           <div className="flex items-center justify-between gap-2">
             <Link
               href="/personas"
@@ -98,11 +98,11 @@ export function AppSidebar({
           </div>
         </div>
 
-        <div className="px-3 py-3">
+        <div className="shrink-0 px-3 py-3">
           <WorkspaceSwitcher />
         </div>
 
-        <ScrollArea className="flex-1 px-3">
+        <ScrollArea className="min-h-0 flex-1 px-3">
           <nav className="pb-4">
             {APP_NAV_GROUPS.map((group, gi) => (
               <div key={group.id} className={cn(gi > 0 && "mt-5")}>
@@ -124,7 +124,7 @@ export function AppSidebar({
           </nav>
         </ScrollArea>
 
-        <div className="space-y-3 border-t border-border p-3">
+        <div className="shrink-0 space-y-3 border-t border-border p-3">
           <ul className="space-y-0.5">
             {APP_RESOURCE_LINKS.map((item) => (
               <li key={item.id}>
