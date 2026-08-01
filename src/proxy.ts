@@ -7,6 +7,7 @@ import {
   isMainSiteHost,
   normalizeHost,
 } from "@/lib/hosts";
+import { publicOrigin } from "@/lib/request-origin";
 
 function hasValidAdultCookie(request: NextRequest) {
   return request.cookies.get(ADULT_COOKIE)?.value === LEGAL_VERSION;
@@ -79,13 +80,24 @@ function afterDarkPublicUrl(pathname: string, search: string) {
  * Host routing: xxx.vesperer.com serves After Dark; apex redirects /after-dark → XXX.
  * Page/API layers still call getAppUser / ageVerifiedAt for account-level gates.
  */
+function publicNextUrl(request: NextRequest) {
+  // Rebuild from public origin so Docker/Railway HOSTNAME=0.0.0.0 never leaks
+  // into absolute Location headers.
+  return new URL(
+    `${request.nextUrl.pathname}${request.nextUrl.search}`,
+    publicOrigin(request),
+  );
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  const host = normalizeHost(request.headers.get("host"));
+  const host = normalizeHost(
+    request.headers.get("x-forwarded-host") || request.headers.get("host"),
+  );
 
   // Legacy auth routes → same-domain Hexclave handler pages
   if (pathname === "/login" || pathname === "/register") {
-    const url = request.nextUrl.clone();
+    const url = publicNextUrl(request);
     url.pathname =
       pathname === "/register" ? "/handler/sign-up" : "/handler/sign-in";
     url.search = "";
@@ -103,7 +115,7 @@ export async function proxy(request: NextRequest) {
   // XXX subdomain: canonicalize /after-dark → /, rewrite / → /after-dark
   if (isAfterDarkHost(host)) {
     if (pathname === "/after-dark" || pathname.startsWith("/after-dark/")) {
-      const url = request.nextUrl.clone();
+      const url = publicNextUrl(request);
       url.pathname = pathname.replace(/^\/after-dark/, "") || "/";
       return NextResponse.redirect(url, 308);
     }
@@ -116,7 +128,7 @@ export async function proxy(request: NextRequest) {
   }
 
   if (!isAgeExempt(pathname) && !hasValidAdultCookie(request)) {
-    const url = request.nextUrl.clone();
+    const url = publicNextUrl(request);
     url.pathname = "/age-gate";
     url.searchParams.set("zone", "standard");
     const next = `${pathname}${request.nextUrl.search}`;

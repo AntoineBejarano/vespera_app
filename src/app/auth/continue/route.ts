@@ -12,6 +12,7 @@ import {
   ADULT_COOKIE,
   LEGAL_VERSION,
 } from "@/lib/legal/constants";
+import { publicUrl } from "@/lib/request-origin";
 
 /**
  * Single post-auth landing for Hexclave afterSignIn / afterSignUp.
@@ -21,12 +22,11 @@ import {
  * - Otherwise → age-gate once with `next` preserved
  */
 export async function GET(req: NextRequest) {
-  const url = req.nextUrl;
-  const next = safeNextPath(url.searchParams.get("next")) || "/personas";
+  const next = safeNextPath(req.nextUrl.searchParams.get("next")) || "/personas";
   const user = await getAppUser();
 
   if (!user) {
-    const signIn = new URL("/handler/sign-in", url.origin);
+    const signIn = publicUrl(req, "/handler/sign-in");
     signIn.searchParams.set(
       "after_auth_return_to",
       `/auth/continue?next=${encodeURIComponent(next)}`,
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
   if (needsAccountAgeGate(user)) {
     if (!hasValidAccessCookie) {
       return NextResponse.redirect(
-        new URL(accountAgeGateHref(next, "standard"), url.origin),
+        publicUrl(req, accountAgeGateHref(next, "standard")),
       );
     }
 
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const res = NextResponse.redirect(new URL(next, url.origin));
+  const res = NextResponse.redirect(publicUrl(req, next));
   res.cookies.set(accessCookieOptions());
   return res;
 }
