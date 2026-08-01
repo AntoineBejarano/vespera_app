@@ -12,6 +12,7 @@ import {
   RetroGrid,
   ShimmerButton,
 } from "@/components/magicui/effects";
+import { LivePersonasLandingSection } from "@/components/LivePersonasLandingSection";
 import { VoiceLandingSection } from "@/components/VoiceLandingSection";
 import { AFTER_DARK_URL } from "@/lib/site";
 import type { VoiceAgentId } from "@/lib/voice/types";
@@ -98,8 +99,8 @@ const VALUE_BLOCKS = [
     d: "Every person develops a separate history with the same persona.",
   },
   {
-    t: "Knowledge",
-    d: "Teach it from documents, stories, archives, collections or your own materials.",
+    t: "Live knowledge",
+    d: "Connect approved sources so the persona stays current — with attribution, temporal memory and reviewed identity updates.",
   },
   {
     t: "Abilities",
@@ -134,8 +135,8 @@ const STEPS = [
   },
   {
     n: "2",
-    t: "Give them knowledge",
-    d: "Add stories, documents, collections, expertise or operational information.",
+    t: "Connect their sources",
+    d: "Add documents, archives, feeds or approved public sources. Live Personas keep knowledge fresh without erasing core identity.",
   },
   {
     n: "3",
@@ -162,6 +163,7 @@ const BUSINESS_BENEFITS = [
   "Book appointments",
   "Continue previous conversations",
   "Remember preferences",
+  "Stay current from approved company sources",
   "Hand off to a human when needed",
   "Stay consistent across chat and voice",
 ];
@@ -178,6 +180,7 @@ const HISTORY_EXAMPLES = [
 const CREATOR_BENEFITS = [
   "One identity",
   "Thousands of separate relationships",
+  "Live Persona sources that stay current",
   "Private or public characters",
   "Chat and voice",
   "Audience analytics",
@@ -258,7 +261,7 @@ const PRICING = [
       "Custom personas",
       "Voice and operational integrations",
       "Private or branded deployment",
-      "Custom knowledge",
+      "Live Persona sources and review workflows",
       "Support and onboarding",
     ],
     cta: "Talk to us",
@@ -532,6 +535,8 @@ export function LandingPage() {
 
       <VoiceLandingSection defaultAgent={voiceAgent} />
 
+      <LivePersonasLandingSection />
+
       {/* Problem */}
       <section className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/35 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -690,7 +695,8 @@ export function LandingPage() {
             <p className="mt-4 max-w-2xl text-[var(--muted)]">
               Turn archives, collections and historical research into
               interactive personalities visitors and students can question
-              through text or voice.
+              through text or voice. With Live Personas, scholarship updates
+              can refresh knowledge without rewriting who the figure was.
             </p>
           </BlurFade>
           <div className="mt-8 flex flex-wrap gap-2">
@@ -704,8 +710,9 @@ export function LandingPage() {
             ))}
           </div>
           <p className="mt-6 max-w-2xl text-xs leading-relaxed text-[var(--muted)]">
-            Historical personas are AI interpretations based on available
-            sources, not the real individuals.
+            Historical and public-figure personas are AI interpretations based
+            on available sources — not the real individuals, and not official
+            accounts.
           </p>
           <BlurFade delay={0.1} className="mt-8">
             <button

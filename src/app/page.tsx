@@ -25,6 +25,9 @@ export const metadata: Metadata = {
     "SillyTavern character",
     "Chat API AI persona",
     "AI voice characters",
+    "Live Personas",
+    "AI persona continuous knowledge",
+    "AI interpretation public sources",
   ],
   alternates: {
     canonical: SITE_URL,

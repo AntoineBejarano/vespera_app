@@ -6,9 +6,9 @@ import { useHexclaveApp, useUser } from "@hexclave/next";
 import { SITE_URL } from "@/lib/site";
 
 const MARKETING_LINKS = [
+  { href: "/#live-personas", label: "Live Personas" },
   { href: "/#creators", label: "For Creators" },
   { href: "/#business", label: "For Business" },
-  { href: "/#cli", label: "Developers" },
   { href: "/#pricing", label: "Pricing" },
 ];
 
@@ -122,7 +122,7 @@ export function AppNav({
                 Personas
               </Link>
               <Link href="/knowledge" className={linkClass}>
-                Knowledge
+                Sources
               </Link>
               <Link href="/help" className={linkClass}>
                 Help
@@ -259,7 +259,7 @@ export function AppNav({
                   className="py-2.5 hover:text-[var(--ink)]"
                   onClick={() => setOpen(false)}
                 >
-                  Knowledge
+                  Sources
                 </Link>
                 <Link
                   href="/help"

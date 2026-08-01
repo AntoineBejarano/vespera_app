@@ -13,7 +13,7 @@ export {
 export const SITE_TAGLINE = "Meet someone impossible.";
 
 export const SITE_DESCRIPTION =
-  "Vesperer is a platform for AI personas with stable identity, long-term memory and evolving relationships — companions, mentors, historical minds, creators and AI employees across chat and voice.";
+  "Vesperer is a platform for AI personas with stable identity, long-term memory, Live Persona sources and evolving relationships — companions, mentors, historical minds, creators and AI employees across chat and voice.";
 
 /** Main (non-XXX) brand — icy blue from logo */
 export const BRAND_ACCENT = "#5badee";

@@ -379,12 +379,21 @@ export function KnowledgePacksPanel({
     <div className="mx-auto max-w-5xl px-4 py-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--ink)]">
-            Knowledge Packs
+          <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
+            Live Personas
+          </p>
+          <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--ink)]">
+            Knowledge sources
           </h1>
-          <p className="mt-2 max-w-xl text-[var(--muted)]">
-            Ingest external sources once into Vesperer&apos;s vector index.
-            Personas query the pack at chat time — never the remote document.
+          <p className="mt-2 max-w-2xl text-[var(--muted)]">
+            Connect the sources that define a persona. Vesperer snapshots and
+            indexes approved material so chat can retrieve evidence — never by
+            re-fetching the remote document at conversation time.
+          </p>
+          <p className="mt-2 max-w-2xl text-xs leading-relaxed text-[var(--muted)]">
+            Living public figures must be framed as AI interpretations based on
+            public statements and verified sources. Sensitive identity changes
+            require review.
           </p>
         </div>
         {characterId ? (
