@@ -9,7 +9,7 @@ import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 const MARKETING_LINKS = [
   { href: "/#live-personas", label: "Live Personas" },
   { href: "/#creators", label: "For Creators" },
-  { href: "/#business", label: "For Business" },
+  { href: "/business", label: "For Business" },
   { href: "/#pricing", label: "Pricing" },
 ];
 

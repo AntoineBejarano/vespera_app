@@ -20,7 +20,8 @@ const MARKETING_COLUMNS: {
     links: [
       { href: "/create/ai-character", label: "Create a persona" },
       { href: "/bring", label: "Bring a character" },
-      { href: "/explore?filter=hire", label: "For business" },
+      { href: "/business", label: "For business" },
+      { href: "/business/agencies", label: "For agencies" },
       { href: "/#creators", label: "For creators" },
     ],
   },
@@ -28,6 +29,7 @@ const MARKETING_COLUMNS: {
     title: "Developers",
     links: [
       { href: "/docs", label: "API documentation" },
+      { href: "/business/platforms", label: "For platforms" },
       { href: "/#cli", label: "CLI for agents" },
       { href: "/docs#cli", label: "CLI docs" },
       { href: "/technology", label: "Technology" },

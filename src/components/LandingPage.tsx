@@ -157,17 +157,6 @@ const BRING_OPTIONS = [
   "Rebuild from a description",
 ];
 
-const BUSINESS_BENEFITS = [
-  "Answer enquiries 24/7",
-  "Qualify leads",
-  "Book appointments",
-  "Continue previous conversations",
-  "Remember preferences",
-  "Stay current from approved company sources",
-  "Hand off to a human when needed",
-  "Stay consistent across chat and voice",
-];
-
 const HISTORY_EXAMPLES = [
   "Socrates",
   "Einstein",
@@ -256,17 +245,17 @@ const PRICING = [
     price: "Custom",
     period: "",
     blurb:
-      "For AI employees, museums, educational institutions, private deployment and larger workloads.",
+      "Workspaces, API access and operational control for teams, agencies and platforms.",
     features: [
-      "Custom personas",
-      "Voice and operational integrations",
-      "Private or branded deployment",
-      "Live Persona sources and review workflows",
-      "Support and onboarding",
+      "Custom personas at scale",
+      "Workspaces and team access",
+      "API, Telegram and voice",
+      "Human handoff and ownership",
+      "Design-partner onboarding",
     ],
-    cta: "Talk to us",
+    cta: "Explore Business",
     highlight: false,
-    action: "contact" as const,
+    action: "business" as const,
   },
 ];
 
@@ -366,7 +355,7 @@ export function LandingPage() {
           </BlurFade>
           <BlurFade delay={0.05}>
             <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)] sm:text-xs sm:tracking-[0.35em]">
-              AI characters that remember, evolve and act
+              They remember. They change. They stay consistent.
             </p>
           </BlurFade>
           <BlurFade delay={0.1}>
@@ -377,8 +366,10 @@ export function LandingPage() {
           </BlurFade>
           <BlurFade delay={0.16}>
             <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
-              Talk to history, bring original characters to life, learn from a
-              mentor, or build an AI employee that remembers every conversation.
+              They remember what others forget. Not another chatbot — someone who
+              stays. Talk to history, fall for an original character, learn from a
+              mentor, or build a personality that becomes more real every time
+              you talk.
             </p>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--muted)] sm:text-base">
               Every Vesperer persona has a soul, feelings, long-term memory and
@@ -408,6 +399,16 @@ export function LandingPage() {
           </BlurFade>
           <p className="mt-4 text-xs text-[var(--muted)]">
             Free to start · No code required · Export anytime
+          </p>
+          <p className="mt-3 text-xs text-[var(--muted)]">
+            Building for a team or platform?{" "}
+            <Link
+              href="/business"
+              className="text-[var(--ink)] underline-offset-2 hover:underline"
+            >
+              Explore Vesperer for Business
+            </Link>
+            .
           </p>
         </div>
         <BlurFade delay={0.2} className="relative z-10">
@@ -643,7 +644,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Business */}
+      {/* Business teaser — full detail lives on /business */}
       <section
         id="business"
         className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24"
@@ -653,32 +654,23 @@ export function LandingPage() {
             Give your organisation someone people remember.
           </h2>
           <p className="mt-4 max-w-2xl text-[var(--muted)]">
-            Build an AI receptionist, sales advisor or support specialist that
-            knows your services, follows your rules and remembers every
-            returning conversation.
+            Other agents remember the task. Vesperer remembers the person —
+            across chat, voice and every returning conversation.
           </p>
-        </BlurFade>
-        <ul className="mt-8 grid gap-2 sm:grid-cols-2">
-          {BUSINESS_BENEFITS.map((b) => (
-            <li
-              key={b}
-              className="rounded-xl border border-[var(--line)] px-4 py-3 text-sm"
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href="/business"
+              className="inline-flex rounded-xl bg-[var(--accent)] px-6 py-3.5 text-sm font-medium text-[var(--accent-ink)]"
             >
-              · {b}
-            </li>
-          ))}
-        </ul>
-        <BlurFade delay={0.1}>
-          <p className="mt-8 max-w-xl font-[family-name:var(--font-display)] text-xl text-[var(--accent-2)] sm:text-2xl">
-            Other agents remember the task. Vesperer remembers the person.
-          </p>
-          <button
-            type="button"
-            className="mt-8 rounded-xl bg-[var(--accent)] px-6 py-3.5 font-medium text-[var(--accent-ink)]"
-            onClick={() => app.redirectToSignUp()}
-          >
-            Build an AI employee
-          </button>
+              Explore Vesperer for Business
+            </Link>
+            <Link
+              href="/explore?filter=hire"
+              className="inline-flex rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
+            >
+              Meet AI employees
+            </Link>
+          </div>
         </BlurFade>
       </section>
 
@@ -887,13 +879,13 @@ npm run vesperer -- personas create --from persona.json
                       <li key={f}>· {f}</li>
                     ))}
                   </ul>
-                  {tier.action === "contact" ? (
-                    <a
-                      href="mailto:legal@vesperer.com?subject=Vesperer%20Business%20%26%20Institutions"
+                  {tier.action === "business" ? (
+                    <Link
+                      href="/business"
                       className="mt-8 block w-full rounded-xl border border-[var(--line)] px-4 py-3 text-center font-medium text-[var(--ink)]"
                     >
                       {tier.cta}
-                    </a>
+                    </Link>
                   ) : (
                     <button
                       type="button"

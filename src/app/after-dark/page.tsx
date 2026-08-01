@@ -5,9 +5,9 @@ import { AFTER_DARK_KEYWORDS } from "@/lib/seo/keywords";
 import { AFTER_DARK_URL, SITE_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: `After Dark — Private AI companions | ${SITE_NAME}`,
+  title: `After Dark — Private companions that remember | ${SITE_NAME}`,
   description:
-    "Build adult AI companions with consistent personalities, evolving relationships, private deployment and full control over their identity. 18+ only.",
+    "Someone who remembers exactly what you like. Private, persistent adult AI companions with evolving chemistry and creator-owned identity. 18+ only.",
   alternates: { canonical: AFTER_DARK_URL },
   keywords: AFTER_DARK_KEYWORDS,
   robots: {
@@ -15,15 +15,15 @@ export const metadata: Metadata = {
     follow: true,
   },
   openGraph: {
-    title: `Vesperer After Dark — Private AI companions`,
+    title: `Vesperer After Dark — Private companions that remember`,
     description:
-      "Adult characters with memory, relationship progression and creator-owned identity. Enter 18+.",
+      "Private, persistent and entirely yours. The chemistry stays. The memory does too. 18+.",
     url: AFTER_DARK_URL,
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: `Vesperer After Dark — Private AI companions`,
+    title: `Vesperer After Dark — Private companions that remember`,
     description:
       "Adult AI companions with persistent memory and creator-owned identity. 18+ only.",
   },

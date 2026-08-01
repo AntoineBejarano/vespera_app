@@ -64,12 +64,43 @@ export const TECHNOLOGY_KEYWORDS = [
 ];
 
 export const AFTER_DARK_KEYWORDS = [
-  "adult AI companion creator",
-  "NSFW AI character with memory",
-  "private AI companion deployment",
-  "18+ AI character platform",
-  "adult AI chatbot with memory",
-  "creator adult AI agent",
-  "uncensored AI companion memory",
-  "multi-tenant adult AI characters",
+  "adult AI companion with memory",
+  "private AI companion 18+",
+  "persistent adult AI character",
+  "AI companion that remembers",
+  "creator AI agent with memory",
+  "adult AI character platform",
+  "private persistent AI companion",
+  "18+ AI identity for creators",
+];
+
+export const BUSINESS_KEYWORDS = [
+  "AI identity platform for business",
+  "persistent AI personas for agencies",
+  "AI character API for platforms",
+  "multi-tenant AI conversation infrastructure",
+  "AI persona workspace RBAC",
+  "human handoff AI chat",
+  "deploy AI identity Telegram API",
+  "governed AI digital twin platform",
+  "AI character memory for enterprises",
+  "creator AI identity management",
+];
+
+export const AGENCY_KEYWORDS = [
+  "AI chatter agency software",
+  "multi creator AI persona workspace",
+  "AI identity management for agencies",
+  "Telegram AI agent for creator agencies",
+  "human handoff AI companion agency",
+  "roster AI characters with memory",
+];
+
+export const PLATFORM_KEYWORDS = [
+  "AI identity API",
+  "embed AI persona API",
+  "multi-tenant AI character engine",
+  "chat key AI identity platform",
+  "white label AI companion infrastructure",
+  "digital twin conversation API",
 ];

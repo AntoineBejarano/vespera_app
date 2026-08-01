@@ -1,25 +1,43 @@
-# Vespera
+# Vesperer
 
-Plataforma web de **relaciones ficticias adultas persistentes** (18+): personalidad coherente, memoria real, chat streaming uncensored vía OpenRouter. Hosting en **Railway**.
+Plataforma de **identidades conversacionales con memoria persistente**: companions, mentores, empleados IA, creadores y After Dark (18+). Apex en `vesperer.com`; adulto en `xxx.vesperer.com`. Hosting en **Railway**.
+
+## Producto
+
+| Superficie | Rol |
+|---|---|
+| `/` | Landing emocional (curiosidad → demo → cuenta) |
+| `/explore` | Personas y paths compartibles |
+| `/business` | Infraestructura B2B: workspaces, API, handoff, ownership |
+| `/business/agencies` | Operación multi-talent |
+| `/business/platforms` | Integración API / multi-tenant |
+| `/after-dark` | After Dark 18+ (deseo, privacidad, continuidad) |
+| `/docs` | API & CLI |
+| `/technology` | Capas de identidad y memoria |
+
+Operador: **Deevly Labs LTD**. Contacto: `legal@vesperer.com`.
 
 ## Stack
 
-- Next.js (App Router) + AI SDK
-- OpenRouter (modelos uncensored, routing por env/ajustes)
-- Postgres (Railway) + Prisma
-- Upstash Redis (historial + límites; fallback en memoria)
-- Upstash Vector (memoria larga; fallback Postgres)
-- Auth.js (credenciales + age gate)
+- Next.js (App Router) + React 19 + AI SDK
+- Auth: Hexclave (`@hexclave/next`)
+- OpenRouter (modelos; routing por env/ajustes)
+- Postgres + Prisma 7
+- Upstash Redis + Vector (con fallbacks)
+- Voice: ElevenLabs (server-only)
+- Deploy: Railway + Docker
 
 ## Arranque local
 
 1. Copia `.env.example` → `.env` y rellena al menos:
    - `DATABASE_URL`
-   - `AUTH_SECRET` (`openssl rand -base64 32`)
+   - Hexclave (vía `npx @hexclave/cli dev` en desarrollo)
    - `OPENROUTER_API_KEY`
 2. `npm install`
 3. `npx prisma db push`
 4. `npm run dev`
+
+Probar After Dark en local: `http://xxx.localhost:3000`
 
 ## Railway
 
@@ -28,19 +46,12 @@ Plataforma web de **relaciones ficticias adultas persistentes** (18+): personali
 3. Deploy con `Dockerfile` / `railway.toml`
 4. Upstash Redis + Vector (opcionales pero recomendados en producción)
 
-## Flujos MVP
+## Comandos
 
-- `/` landing → `/age-gate` → registro 18+
-- `/chat/new` onboarding conversacional → ficha `identityJson`
-- `/chat` streaming + intensidad 1–5 + multi-personaje (free: 1, premium stub: 2)
-- `/memory` editar/borrar recuerdos
-- `/settings` modelo, exportar/borrar cuenta, límite diario
-
-## Telegram / pagos
-
-- Stub: `telegram/bot.ts` + `POST /api/telegram`
-- Monetización: free con límite diario; Premium vía Stars/procesador adult (no Stripe)
-
-## Seguridad
-
-Línea roja: nada de contenido sexual con menores / age-play. Bloqueo en API + reglas de system prompt.
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run db:push
+npm run vesperer   # CLI personas / API keys
+```

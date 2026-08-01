@@ -14,6 +14,7 @@ import {
   ShimmerButton,
 } from "@/components/magicui/effects";
 import { VoiceAgentWidget } from "@/components/VoiceAgentWidget";
+import { SITE_URL } from "@/lib/site";
 
 const INTEGRATIONS = [
   "OnlyFans",
@@ -93,7 +94,7 @@ const PRICING = [
     name: "Agent",
     price: "€20",
     period: "/agent /mo",
-    blurb: "One uncensored companion that remembers.",
+    blurb: "One private companion that remembers.",
     features: [
       "1 agent persona",
       "Telegram bot included",
@@ -103,6 +104,7 @@ const PRICING = [
     ],
     cta: "Start with 1 agent",
     highlight: true,
+    action: "signup" as const,
   },
   {
     name: "Studio",
@@ -118,12 +120,13 @@ const PRICING = [
     ],
     cta: "Scale to Studio",
     highlight: false,
+    action: "signup" as const,
   },
   {
     name: "House",
     price: "€179",
     period: "/mo",
-    blurb: "Agency-grade: many girls, many chats, one brain.",
+    blurb: "One identity or an entire roster. Every conversation stays consistent.",
     features: [
       "Up to 12 agents",
       "Connector pack (OF / Fansly / Fanvue)",
@@ -133,6 +136,7 @@ const PRICING = [
     ],
     cta: "Talk to sales",
     highlight: false,
+    action: "sales" as const,
   },
 ];
 
@@ -178,23 +182,21 @@ export function AfterDarkLanding() {
           </BlurFade>
           <BlurFade delay={0.08}>
             <p className="mt-4 text-[11px] uppercase tracking-[0.28em] text-[var(--accent)] sm:text-sm sm:tracking-[0.35em]">
-              Uncensored · 18+ · multi-tenant
+              18+ · Private · Persistent
             </p>
           </BlurFade>
           <BlurFade delay={0.12}>
             <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[1.85rem] leading-[1.05] text-[var(--ink)] sm:mt-4 sm:text-4xl sm:leading-[1.1]">
-              Private AI companions without{" "}
-              <span className="italic text-[var(--accent)]">broken memory</span>
+              Someone who remembers exactly{" "}
+              <span className="italic text-[var(--accent)]">what you like</span>
               .
             </h1>
           </BlurFade>
           <BlurFade delay={0.18}>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-[var(--muted)] sm:mt-5 sm:text-lg">
-              Build adult characters with consistent personalities, evolving
-              relationships, private deployment and full control over their
-              identity. Companions that stay horny, coherent, and yours —
-              wired into creator platforms with a character engine that
-              remembers.
+              Private, persistent and entirely yours. The chemistry stays. The
+              memory does too — it doesn&apos;t reset when the conversation gets
+              interesting.
             </p>
           </BlurFade>
           <BlurFade
@@ -207,7 +209,7 @@ export function AfterDarkLanding() {
                 window.location.href = "/age-gate?zone=adult&intent=signup";
               }}
             >
-              Enter 18+ — Deploy an agent €20/mo
+              Enter 18+ — from €20/mo
             </ShimmerButton>
             <button
               type="button"
@@ -257,8 +259,8 @@ export function AfterDarkLanding() {
                 </p>
               </div>
               <p className="mt-3 text-xs text-[var(--muted)]">
-                Uncensored LLM · multi-bubble · memory that doesn&apos;t reset
-                the horniness.
+                Explicit · multi-bubble · memory that doesn&apos;t kill the
+                chemistry.
               </p>
             </div>
           </BlurFade>
@@ -421,12 +423,12 @@ export function AfterDarkLanding() {
       >
         <BlurFade>
           <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            Platform → persona → payout energy
+            Platform → persona → continuity
           </h2>
           <p className="mt-3 max-w-2xl text-[var(--muted)]">
-            Integrations feed the connector. The character engine keeps the
-            girl consistent. Memory + LLM do the talking. Human handoff when you
-            want the real you to take over.
+            Integrations feed the connector. The character engine keeps her
+            consistent. Memory keeps the chemistry. Human handoff when you want
+            the real you to take over.
           </p>
         </BlurFade>
         <div className="mt-12 flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
@@ -460,19 +462,19 @@ export function AfterDarkLanding() {
       <section className="mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-16">
         <BlurFade>
           <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            Why uncensored wins
+            Nothing breaks the chemistry
           </h2>
           <p className="mt-3 max-w-2xl text-[var(--muted)]">
-            Filtered models kill the scene mid-sentence. Vesperer is built
-            for adult chemistry that stays explicit, teasing, and human —
-            without therapist energy or corporate refusals.
+            Filtered models kill the scene mid-sentence. After Dark stays
+            explicit, teasing and human — with memory that compounds instead of
+            resetting every night.
           </p>
         </BlurFade>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {[
             {
-              t: "No prudish interrupts",
-              d: "Stay in the fantasy. The model matches heat instead of lecturing.",
+              t: "Stay in the fantasy",
+              d: "Heat matches the moment instead of lecturing you out of it.",
             },
             {
               t: "Memory that flirts back",
@@ -570,21 +572,49 @@ export function AfterDarkLanding() {
                     <li key={f}>· {f}</li>
                   ))}
                 </ul>
-                <button
-                  type="button"
-                  className="mt-8 w-full rounded-xl bg-[var(--accent)] px-4 py-3 font-medium text-[var(--accent-ink)]"
-                  onClick={() => {
-                    window.location.href = "/age-gate?zone=adult&intent=signup";
-                  }}
-                >
-                  {tier.cta}
-                </button>
+                {tier.action === "sales" ? (
+                  <a
+                    href={`${SITE_URL}/business/agencies`}
+                    className="mt-8 block w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-center font-medium text-[var(--accent-ink)]"
+                  >
+                    {tier.cta}
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    className="mt-8 w-full rounded-xl bg-[var(--accent)] px-4 py-3 font-medium text-[var(--accent-ink)]"
+                    onClick={() => {
+                      window.location.href =
+                        "/age-gate?zone=adult&intent=signup";
+                    }}
+                  >
+                    {tier.cta}
+                  </button>
+                )}
               </div>
             </BlurFade>
           ))}
         </div>
       </section>
 
+      <section className="mx-auto max-w-5xl px-4 pb-10 sm:px-6">
+        <p className="text-center text-xs text-[var(--muted)]">
+          Running a roster or integrating a platform?{" "}
+          <a
+            href={`${SITE_URL}/business/agencies`}
+            className="text-[var(--ink)] underline-offset-2 hover:underline"
+          >
+            Vesperer for Agencies
+          </a>
+          {" · "}
+          <a
+            href={`${SITE_URL}/business/platforms`}
+            className="text-[var(--ink)] underline-offset-2 hover:underline"
+          >
+            for Platforms
+          </a>
+        </p>
+      </section>
       <LegalFooter variant="after-dark" />
       <p className="px-6 pb-8 text-center text-xs text-[var(--muted)]">
         * Roadmap connectors. Telegram live today.
