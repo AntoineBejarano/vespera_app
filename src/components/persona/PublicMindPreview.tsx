@@ -1,8 +1,23 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { ObsidianMindGraph } from "@/components/persona/ObsidianMindGraph";
 import type { MindGraphData } from "@/lib/persona/mind-graph";
+
+const ObsidianMindGraph = dynamic(
+  () =>
+    import("@/components/persona/ObsidianMindGraph").then(
+      (m) => m.ObsidianMindGraph,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[520px] items-center justify-center rounded-2xl border border-[var(--line)] bg-[#0b0d10]">
+        <p className="text-sm text-[var(--muted)]">Loading mind graph…</p>
+      </div>
+    ),
+  },
+);
 
 export function PublicMindPreview({ slug }: { slug: string }) {
   const [graph, setGraph] = useState<MindGraphData | null>(null);

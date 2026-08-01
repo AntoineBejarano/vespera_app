@@ -1,10 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Graph from "graphology";
-import Sigma from "sigma";
-import forceAtlas2 from "graphology-layout-forceatlas2";
-import FA2Layout from "graphology-layout-forceatlas2/worker";
 import {
   NODE_TYPE_COLOR,
   type MindGraphData,
@@ -51,6 +47,10 @@ function hexToRgba(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
+/**
+ * Sigma/WebGL must only load in the browser. Top-level imports break
+ * Next static prerender (WebGL2RenderingContext is not defined).
+ */
 export function ObsidianMindGraph({
   data,
   height = 560,
@@ -61,11 +61,15 @@ export function ObsidianMindGraph({
   emptyHint?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const sigmaRef = useRef<Sigma | null>(null);
-  const layoutRef = useRef<FA2Layout | null>(null);
-  const graphRef = useRef<Graph | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sigmaRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const layoutRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const graphRef = useRef<any>(null);
   const hoverRef = useRef<string | null>(null);
   const queryRef = useRef("");
+  const [engineReady, setEngineReady] = useState(false);
 
   const [selected, setSelected] = useState<MindGraphNode | null>(null);
   const [query, setQuery] = useState("");
@@ -79,194 +83,222 @@ export function ObsidianMindGraph({
     return m;
   }, [data.nodes]);
 
-  // Build graph + Sigma once per data/filter change (not on hover)
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    if (!el || typeof window === "undefined") return;
 
-    layoutRef.current?.kill();
-    layoutRef.current = null;
-    sigmaRef.current?.kill();
-    sigmaRef.current = null;
+    let cancelled = false;
+    let stopTimer: number | undefined;
 
-    if (!data.nodes.length) {
-      graphRef.current = null;
-      return;
-    }
+    async function mount() {
+      layoutRef.current?.kill?.();
+      layoutRef.current = null;
+      sigmaRef.current?.kill?.();
+      sigmaRef.current = null;
 
-    const graph = new Graph();
-
-    for (const n of data.nodes) {
-      if (n.type === "ignore") continue;
-      if (n.type !== "persona" && hiddenTypes.has(n.type)) continue;
-      if (
-        sourcesOnly &&
-        !["source", "knowledge", "persona", "layer"].includes(n.type)
-      ) {
-        continue;
+      if (!data.nodes.length) {
+        graphRef.current = null;
+        setEngineReady(true);
+        return;
       }
-      if (hideWeak && n.confidence < 0.55 && n.type === "concept") continue;
 
-      const angle = (graph.order / Math.max(data.nodes.length, 1)) * Math.PI * 2;
-      graph.addNode(n.id, {
-        label: n.label,
-        x: Math.cos(angle) * 60 + (Math.random() - 0.5) * 10,
-        y: Math.sin(angle) * 60 + (Math.random() - 0.5) * 10,
-        size: Math.max(3, Math.sqrt(n.val) * 1.85) + (isRecent(n.updatedAt) ? 2 : 0),
-        color: NODE_TYPE_COLOR[n.type] ?? "#8b9bb4",
-        nodeType: n.type,
-        confidence: n.confidence,
-        recent: isRecent(n.updatedAt),
-      });
-    }
+      const [{ default: Graph }, { default: Sigma }, forceAtlas2Mod, fa2Worker] =
+        await Promise.all([
+          import("graphology"),
+          import("sigma"),
+          import("graphology-layout-forceatlas2"),
+          import("graphology-layout-forceatlas2/worker"),
+        ]);
 
-    for (const l of data.links) {
-      if (!graph.hasNode(l.source) || !graph.hasNode(l.target)) continue;
-      if (graph.hasEdge(l.source, l.target) || graph.hasEdge(l.target, l.source)) {
-        continue;
-      }
-      graph.addEdge(l.source, l.target, {
-        size: 0.35 + l.strength * 2.4,
-        color: l.uncertain
-          ? "rgba(148,163,184,0.22)"
-          : "rgba(148,163,184,0.42)",
-        uncertain: Boolean(l.uncertain),
-        label: l.label ?? "",
-      });
-    }
+      if (cancelled || !containerRef.current) return;
 
-    graphRef.current = graph;
+      const forceAtlas2 = forceAtlas2Mod.default ?? forceAtlas2Mod;
+      const FA2Layout = fa2Worker.default ?? fa2Worker;
 
-    forceAtlas2.assign(graph, {
-      iterations: 50,
-      settings: {
-        gravity: 1.15,
-        scalingRatio: 12,
-        strongGravityMode: true,
-        slowDown: 5,
-      },
-    });
+      const graph = new Graph();
 
-    const sigma = new Sigma(graph, el, {
-      allowInvalidContainer: true,
-      renderEdgeLabels: false,
-      labelFont: "ui-sans-serif, system-ui, sans-serif",
-      labelSize: 11,
-      labelWeight: "500",
-      labelColor: { color: "rgba(232,230,227,0.9)" },
-      stagePadding: 48,
-    });
-
-    const refreshReducers = () => {
-      sigma.setSetting("nodeReducer", (node, attrs) => {
-        const res = { ...attrs };
-        const conf = Number(attrs.confidence ?? 1);
-        const base = String(attrs.color ?? "#8b9bb4");
-        const alpha = 0.32 + conf * 0.68;
-        res.color = base.startsWith("#") ? hexToRgba(base, alpha) : base;
-
-        const h = hoverRef.current;
-        const q = queryRef.current.trim().toLowerCase();
-
-        if (h) {
-          const keep =
-            node === h ||
-            graph.hasEdge(h, node) ||
-            graph.hasEdge(node, h) ||
-            graph.areNeighbors(h, node);
-          if (!keep) {
-            res.color = "rgba(71,85,105,0.14)";
-            res.label = "";
-            res.zIndex = 0;
-          } else {
-            res.zIndex = 2;
-            if (node === h && attrs.recent) {
-              res.color = hexToRgba("#5badee", 0.95);
-            }
-          }
+      for (const n of data.nodes) {
+        if (n.type === "ignore") continue;
+        if (n.type !== "persona" && hiddenTypes.has(n.type)) continue;
+        if (
+          sourcesOnly &&
+          !["source", "knowledge", "persona", "layer"].includes(n.type)
+        ) {
+          continue;
         }
+        if (hideWeak && n.confidence < 0.55 && n.type === "concept") continue;
 
-        if (q) {
-          const label = String(attrs.label ?? "").toLowerCase();
-          if (!label.includes(q) && String(attrs.nodeType) !== "persona") {
-            if (!h) {
-              res.color = "rgba(71,85,105,0.1)";
+        const angle =
+          (graph.order / Math.max(data.nodes.length, 1)) * Math.PI * 2;
+        graph.addNode(n.id, {
+          label: n.label,
+          x: Math.cos(angle) * 60 + (Math.random() - 0.5) * 10,
+          y: Math.sin(angle) * 60 + (Math.random() - 0.5) * 10,
+          size:
+            Math.max(3, Math.sqrt(n.val) * 1.85) +
+            (isRecent(n.updatedAt) ? 2 : 0),
+          color: NODE_TYPE_COLOR[n.type] ?? "#8b9bb4",
+          nodeType: n.type,
+          confidence: n.confidence,
+          recent: isRecent(n.updatedAt),
+        });
+      }
+
+      for (const l of data.links) {
+        if (!graph.hasNode(l.source) || !graph.hasNode(l.target)) continue;
+        if (
+          graph.hasEdge(l.source, l.target) ||
+          graph.hasEdge(l.target, l.source)
+        ) {
+          continue;
+        }
+        graph.addEdge(l.source, l.target, {
+          size: 0.35 + l.strength * 2.4,
+          color: l.uncertain
+            ? "rgba(148,163,184,0.22)"
+            : "rgba(148,163,184,0.42)",
+          uncertain: Boolean(l.uncertain),
+          label: l.label ?? "",
+        });
+      }
+
+      graphRef.current = graph;
+
+      forceAtlas2.assign(graph, {
+        iterations: 50,
+        settings: {
+          gravity: 1.15,
+          scalingRatio: 12,
+          strongGravityMode: true,
+          slowDown: 5,
+        },
+      });
+
+      const sigma = new Sigma(graph, containerRef.current, {
+        allowInvalidContainer: true,
+        renderEdgeLabels: false,
+        labelFont: "ui-sans-serif, system-ui, sans-serif",
+        labelSize: 11,
+        labelWeight: "500",
+        labelColor: { color: "rgba(232,230,227,0.9)" },
+        stagePadding: 48,
+      });
+
+      const refreshReducers = () => {
+        sigma.setSetting("nodeReducer", (node: string, attrs: Record<string, unknown>) => {
+          const res = { ...attrs };
+          const conf = Number(attrs.confidence ?? 1);
+          const base = String(attrs.color ?? "#8b9bb4");
+          const alpha = 0.32 + conf * 0.68;
+          res.color = base.startsWith("#") ? hexToRgba(base, alpha) : base;
+
+          const h = hoverRef.current;
+          const q = queryRef.current.trim().toLowerCase();
+
+          if (h) {
+            const keep =
+              node === h ||
+              graph.hasEdge(h, node) ||
+              graph.hasEdge(node, h) ||
+              graph.areNeighbors(h, node);
+            if (!keep) {
+              res.color = "rgba(71,85,105,0.14)";
               res.label = "";
+              res.zIndex = 0;
+            } else {
+              res.zIndex = 2;
+              if (node === h && attrs.recent) {
+                res.color = hexToRgba("#5badee", 0.95);
+              }
             }
           }
-        }
-        return res;
-      });
 
-      sigma.setSetting("edgeReducer", (edge, attrs) => {
-        const res = { ...attrs };
-        const h = hoverRef.current;
-        if (h) {
-          const [a, b] = graph.extremities(edge);
-          if (a !== h && b !== h) {
-            res.hidden = true;
-          } else {
-            res.hidden = false;
-            res.color = "rgba(91,173,238,0.6)";
-            res.size = Number(attrs.size ?? 1) * 1.4;
+          if (q) {
+            const label = String(attrs.label ?? "").toLowerCase();
+            if (!label.includes(q) && String(attrs.nodeType) !== "persona") {
+              if (!h) {
+                res.color = "rgba(71,85,105,0.1)";
+                res.label = "";
+              }
+            }
           }
-        } else if (attrs.uncertain) {
-          res.color = "rgba(148,163,184,0.2)";
-        }
-        return res;
+          return res;
+        });
+
+        sigma.setSetting("edgeReducer", (edge: string, attrs: Record<string, unknown>) => {
+          const res = { ...attrs };
+          const h = hoverRef.current;
+          if (h) {
+            const [a, b] = graph.extremities(edge);
+            if (a !== h && b !== h) {
+              res.hidden = true;
+            } else {
+              res.hidden = false;
+              res.color = "rgba(91,173,238,0.6)";
+              res.size = Number(attrs.size ?? 1) * 1.4;
+            }
+          } else if (attrs.uncertain) {
+            res.color = "rgba(148,163,184,0.2)";
+          }
+          return res;
+        });
+
+        sigma.refresh();
+      };
+
+      refreshReducers();
+
+      sigma.on("clickNode", ({ node }: { node: string }) => {
+        setSelected(nodeById.get(node) ?? null);
+      });
+      sigma.on("clickStage", () => setSelected(null));
+      sigma.on("enterNode", ({ node }: { node: string }) => {
+        hoverRef.current = node;
+        refreshReducers();
+      });
+      sigma.on("leaveNode", () => {
+        hoverRef.current = null;
+        refreshReducers();
       });
 
-      sigma.refresh();
-    };
+      sigmaRef.current = sigma;
 
-    refreshReducers();
+      const layout = new FA2Layout(graph, {
+        settings: {
+          gravity: 1,
+          scalingRatio: 15,
+          strongGravityMode: true,
+          slowDown: 7,
+          barnesHutOptimize: graph.order > 100,
+        },
+      });
+      layout.start();
+      layoutRef.current = layout;
+      stopTimer = window.setTimeout(() => {
+        layout.stop();
+        try {
+          sigma.getCamera().animatedReset({ duration: 450 });
+        } catch {
+          /* ignore */
+        }
+      }, 3000);
 
-    sigma.on("clickNode", ({ node }) => {
-      setSelected(nodeById.get(node) ?? null);
-    });
-    sigma.on("clickStage", () => setSelected(null));
-    sigma.on("enterNode", ({ node }) => {
-      hoverRef.current = node;
-      refreshReducers();
-    });
-    sigma.on("leaveNode", () => {
-      hoverRef.current = null;
-      refreshReducers();
-    });
+      setEngineReady(true);
+    }
 
-    sigmaRef.current = sigma;
-
-    const layout = new FA2Layout(graph, {
-      settings: {
-        gravity: 1,
-        scalingRatio: 15,
-        strongGravityMode: true,
-        slowDown: 7,
-        barnesHutOptimize: graph.order > 100,
-      },
-    });
-    layout.start();
-    layoutRef.current = layout;
-    const stopTimer = window.setTimeout(() => {
-      layout.stop();
-      try {
-        sigma.getCamera().animatedReset({ duration: 450 });
-      } catch {
-        /* ignore */
-      }
-    }, 3000);
+    void mount();
 
     return () => {
-      window.clearTimeout(stopTimer);
-      layout.kill();
-      sigma.kill();
+      cancelled = true;
+      if (stopTimer) window.clearTimeout(stopTimer);
+      layoutRef.current?.kill?.();
+      sigmaRef.current?.kill?.();
       layoutRef.current = null;
       sigmaRef.current = null;
       graphRef.current = null;
     };
   }, [data, hiddenTypes, hideWeak, sourcesOnly, nodeById]);
 
-  // Query changes → refresh reducers only
   useEffect(() => {
     queryRef.current = query;
     const s = sigmaRef.current;
@@ -359,6 +391,11 @@ export function ObsidianMindGraph({
           style={{ height }}
         >
           <div ref={containerRef} className="h-full w-full" />
+          {!engineReady ? (
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-[var(--muted)]">
+              Loading graph engine…
+            </div>
+          ) : null}
           <div className="pointer-events-none absolute left-3 top-3 rounded-lg border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-white/60 backdrop-blur">
             Sigma · ForceAtlas2 · {data.nodes.length} nodes · {data.links.length}{" "}
             edges

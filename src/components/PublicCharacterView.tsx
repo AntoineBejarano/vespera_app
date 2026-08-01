@@ -10,8 +10,23 @@ import { AppNav } from "@/components/AppNav";
 import { LegalFooter } from "@/components/LegalFooter";
 import { BorderBeam } from "@/components/magicui/border-beam";
 import { BlurFade, ShimmerButton } from "@/components/magicui/effects";
-import { PublicMindPreview } from "@/components/persona/PublicMindPreview";
+import dynamic from "next/dynamic";
 import type { PublicCharacterView as PublicCharacter } from "@/lib/characters/public";
+
+const PublicMindPreview = dynamic(
+  () =>
+    import("@/components/persona/PublicMindPreview").then(
+      (m) => m.PublicMindPreview,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[480px] items-center justify-center rounded-2xl border border-[var(--line)] bg-[#0b0d10]">
+        <p className="text-sm text-[var(--muted)]">Mapping their mind…</p>
+      </div>
+    ),
+  },
+);
 
 export function PublicCharacterView({
   character,
