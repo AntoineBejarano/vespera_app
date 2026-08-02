@@ -2,7 +2,9 @@ import { LEGAL_OPERATOR, LEGAL_VERSION, type LegalSlug } from "./constants";
 
 const {
   brand,
+  productHost,
   companyName,
+  companyWebsite,
   companyNumber,
   contactEmail,
   governingLaw,
@@ -13,15 +15,15 @@ const {
 
 const COMPANY_LINE = `${companyName} (Company No. ${companyNumber}), registered office: ${registeredAddress}.`;
 
-const DISCLAIMER = `${brand} is operated by ${COMPANY_LINE} These documents do not replace advice from qualified counsel. Version ${LEGAL_VERSION}.`;
+const DISCLAIMER = `${brand} (${productHost}) is a product of ${COMPANY_LINE} Company website: ${companyWebsite}. These documents do not replace advice from qualified counsel. Version ${LEGAL_VERSION}.`;
 
 export function getLegalBody(slug: LegalSlug): string[] {
   switch (slug) {
     case "terms":
       return [
         DISCLAIMER,
-        `${companyName} (“we”, “us”) provides ${brand} (the “Service”). By accessing or using the Service, you agree to these Terms of Service (“Terms”). If you do not agree, do not use the Service.`,
-        `Company details. ${COMPANY_LINE} Registered in ${jurisdiction}. Company information: ${companiesHouseUrl}`,
+        `${companyName} (“we”, “us”) operates ${brand}, a software product available at ${productHost} (the “Service”). ${brand} is not a separate company — ${companyName} (${companyWebsite}) is the legal entity. By accessing or using the Service, you agree to these Terms of Service (“Terms”). If you do not agree, do not use the Service.`,
+        `Company details. ${COMPANY_LINE} Registered in ${jurisdiction}. Companies House: ${companiesHouseUrl}. Studio site: ${companyWebsite}.`,
         "1. Eligibility. You must be old enough to use online services in your jurisdiction and able to form a binding contract. Where the Service offers adult-oriented features (Vesperer After Dark), those areas are strictly 18+ and governed by the Adult Content Notice.",
         "2. Nature of the Service. The general Service provides AI character infrastructure: identity layers, memory, relationships, voice, and channel connectors for creators, educators, and businesses. Interactions may use automated systems — see our AI transparency obligations in the Privacy Policy and product disclosures. Sexually explicit features are offered only in the separate After Dark zone, not on the general marketing site.",
         "3. Accounts. You are responsible for credentials, API keys, bot tokens, and activity under your account. Notify us promptly of unauthorized use.",
@@ -36,15 +38,15 @@ export function getLegalBody(slug: LegalSlug): string[] {
         `12. Governing law. These Terms are governed by the laws of ${governingLaw}, without regard to conflict-of-law rules. Courts in England and Wales shall have exclusive jurisdiction, subject to mandatory consumer protections in your country of residence where applicable.`,
         "13. Paid plans (apex). Paid Creator and Studio subscriptions on vesperer.com are billed under our Billing Terms and Refunds & Cancellation policy. Card payments for those SFW plans are processed by Stripe. After Dark (xxx.vesperer.com) adult offerings are not sold through Stripe and use a separate payment rail when enabled.",
         "14. Changes. We may update these Terms. Material changes will be reflected by a new legal version date. Continued use after the effective date constitutes acceptance where permitted by law.",
-        `15. Contact. ${companyName} — ${contactEmail}`,
+        `15. Contact. ${companyName} (operator of ${brand}) — ${contactEmail} · ${companyWebsite}`,
         "— Operators: see section 7 (B2B customers and channel operators).",
         "— Billing: see /legal/billing and /legal/refunds.",
       ];
     case "privacy":
       return [
         DISCLAIMER,
-        `${companyName} (“we”) explains in this Privacy Policy how personal data is processed when you use ${brand} (the “Service”).`,
-        `1. Data controller. ${companyName} (Company No. ${companyNumber}), ${registeredAddress}. For UK data-protection purposes we are the controller unless we state otherwise in a separate agreement with business customers.`,
+        `${companyName} (“we”) explains in this Privacy Policy how personal data is processed when you use the ${brand} product (the “Service”).`,
+        `1. Data controller. ${companyName} (Company No. ${companyNumber}), ${registeredAddress}. Studio: ${companyWebsite}. For UK data-protection purposes we are the controller unless we state otherwise in a separate agreement with business customers.`,
         "2. Data we process. Account identifiers (e.g. email / auth provider id), age and adult-consent attestations and timestamps, persona configuration, chat/memory data you create, Telegram bot tokens and webhook metadata you supply, peer shadow identifiers for messaging isolation, usage metrics, and technical logs.",
         "3. Purposes. Provide and secure the Service; enforce 18+ and safety rules; operate bots and memory; customer support; comply with law; prevent abuse and fraud.",
         "4. Legal bases (UK GDPR / GDPR). Contract performance; legitimate interests (security, abuse prevention, product integrity); consent (adult content access attestation and marketing if any); legal obligation.",
@@ -55,12 +57,12 @@ export function getLegalBody(slug: LegalSlug): string[] {
         "9. Your rights. Depending on jurisdiction: access, correction, deletion, restriction, portability, objection, and withdrawal of consent. UK users may complain to the Information Commissioner’s Office (ICO). Contact us using the email below.",
         "10. Children. The Service is not directed to anyone under 18. We do not knowingly collect data from minors. If you believe a minor has used the Service, contact us for deletion.",
         "11. Cookies. We use a necessary adult-access cookie after you attest you are 18+ and accept required policies. Essential auth cookies from our identity provider may also be set.",
-        `12. Contact. ${companyName} — ${contactEmail}`,
+        `12. Contact. ${companyName} — ${contactEmail} · ${companyWebsite}`,
       ];
     case "acceptable-use":
       return [
         DISCLAIMER,
-        `This Acceptable Use Policy (“AUP”) applies to all use of ${brand} operated by ${companyName} (Company No. ${companyNumber}).`,
+        `This Acceptable Use Policy (“AUP”) applies to all use of the ${brand} product operated by ${companyName} (Company No. ${companyNumber}).`,
         "You may not use the Service to:",
         "• Create, request, store, or distribute sexual content involving anyone 17 or under — including fictional, roleplay, “aged-up”, or AI-generated depictions of minors.",
         "• Engage in age-play that portrays a participant as under 18.",
@@ -75,19 +77,19 @@ export function getLegalBody(slug: LegalSlug): string[] {
     case "adult-content":
       return [
         DISCLAIMER,
-        `${brand}, operated by ${companyName}, is an adults-only service. By entering you confirm you are 18+ (or older if required where you live).`,
+        `${brand} After Dark, a product surface of ${companyName}, is an adults-only service. By entering you confirm you are 18+ (or older if required where you live).`,
         "Content may include erotic and sexually explicit material depicting and describing consenting adults. If you are offended by such material, do not enter.",
         "We use self-attestation (checkboxes / Telegram confirmation) as a gate. This is not government ID verification. Stronger age-assurance may be required in some jurisdictions; operators must not enable the Service where local law forbids this model without additional controls.",
         "Creators connecting bots must surface an 18+ notice to end users and must not knowingly allow minors to interact with adult personas.",
         "Payments. After Dark paid features are not processed through Stripe. When adult billing is enabled, it will use an adult-compatible processor and/or platform-native rails (for example Telegram Stars). A subdomain alone does not change payment-processor rules — adult purchases stay on a separate rail from SFW apex subscriptions.",
         "Zero tolerance for sexual content involving minors. Violations result in termination and may be reported to authorities.",
-        `Questions: ${companyName} — ${contactEmail}`,
+        `Questions: ${companyName} — ${contactEmail} · ${companyWebsite}`,
       ];
     case "billing":
       return [
         DISCLAIMER,
-        `These Billing Terms explain how paid plans work for ${brand}, operated by ${companyName}.`,
-        "1. Two surfaces. (a) Apex (vesperer.com): SFW AI persona infrastructure for creators, educators, and businesses — Creator, Studio, and custom Business plans. (b) After Dark (xxx.vesperer.com): adults-only features governed by the Adult Content Notice.",
+        `These Billing Terms explain how paid plans work for the ${brand} product operated by ${companyName} (${companyWebsite}).`,
+        "1. Two surfaces. (a) Apex (vesperer.com): SFW AI persona infrastructure for creators, educators, and businesses — Creator, Studio, and custom Business plans. (b) After Dark (xxx.vesperer.com): adults-only features governed by the Adult Content Notice. Both are products of Deevly Labs LTD, not separate companies.",
         "2. Stripe scope. Card and Stripe Checkout payments apply only to eligible apex SFW subscriptions (Creator / Studio and any Business invoices we expressly route through Stripe). We do not sell After Dark adult companionship or erotic content through Stripe.",
         "3. Prices. Current list prices appear on the apex marketing site and in Checkout. Taxes (including UK/EU VAT where we are registered to collect) may be added at checkout. Currency and renewal interval are shown before you pay.",
         "4. Subscriptions. Paid apex plans renew automatically each billing period until cancelled. You authorize recurring charges to your payment method for the selected plan.",
@@ -95,19 +97,19 @@ export function getLegalBody(slug: LegalSlug): string[] {
         "6. After Dark. Adult pricing shown on xxx.vesperer.com is informational until an adult payment rail is live. Those purchases, when available, will not use the same Stripe merchant flow as apex SFW plans.",
         "7. Account responsibility. You must keep billing details accurate. Failure to pay may result in downgrade to the free plan or suspension.",
         "8. Disputes. Contact us before filing a chargeback so we can help. Unresolved card disputes may lead to account review.",
-        `9. Contact. Billing questions: ${contactEmail}. Also see Refunds & Cancellation at /legal/refunds.`,
+        `9. Contact. Billing questions: ${contactEmail} · ${companyWebsite}. Also see Refunds & Cancellation at /legal/refunds.`,
       ];
     case "refunds":
       return [
         DISCLAIMER,
-        `This Refunds & Cancellation policy applies to paid apex (vesperer.com) subscriptions operated by ${companyName}.`,
+        `This Refunds & Cancellation policy applies to paid apex (vesperer.com) subscriptions for the ${brand} product operated by ${companyName}.`,
         "1. Cancel anytime. You may cancel renewal in the Stripe Customer Portal (Settings → Manage billing) or by emailing us. Cancellation stops future renewals; you keep access until the end of the period already paid.",
         "2. Cooling-off (EEA/UK consumers). If you are a consumer in the EEA or UK and purchased a digital subscription, you may have a 14-day withdrawal right. If you ask us to start the service immediately, you may lose that right for the period already supplied, to the extent permitted by law.",
         "3. Refunds. (a) Duplicate or clearly erroneous charges: full refund when confirmed. (b) Service materially unavailable for a sustained period attributable to us: pro-rata credit or refund at our discretion. (c) Change of mind after substantial use in a billing period: generally no refund of the current period, except where mandatory law requires otherwise.",
         "4. How to request. Email ${contactEmail} with your account email, approximate charge date, and reason. We aim to respond within 5 business days.",
         "5. After Dark. Adult-rail purchases (when live) follow the terms shown at that checkout; they are not Stripe apex subscriptions and may have different refund rules from the adult processor.",
         "6. Chargebacks. Please contact us first. We retain delivery evidence (account activity, plan entitlements) to respond to disputes.",
-        `7. Contact. ${companyName} — ${contactEmail}`,
+        `7. Contact. ${companyName} — ${contactEmail} · ${companyWebsite}`,
       ];
     default:
       return [DISCLAIMER];

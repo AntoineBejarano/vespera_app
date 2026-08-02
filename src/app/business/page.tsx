@@ -51,7 +51,7 @@ const jsonLd = {
       provider: {
         "@type": "Organization",
         name: "Deevly Labs LTD",
-        url: SITE_URL,
+        url: "https://deevlylabs.com",
       },
     },
     {

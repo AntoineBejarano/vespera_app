@@ -98,10 +98,18 @@ export function LegalFooter({
             ))}
           </div>
           <p className="text-xs leading-relaxed text-[var(--muted)]/80">
-            Vesperer provides tools for creating and operating AI personas with
-            persistent identity, memory and automated-interaction disclosure.
-            Adult experiences are available only through the separate After Dark
-            18+ service.
+            Vesperer is a product of{" "}
+            <a
+              href="https://deevlylabs.com"
+              className="text-[var(--ink)] underline-offset-2 hover:underline"
+              rel="noopener noreferrer"
+            >
+              Deevly Labs
+            </a>
+            . Tools for creating and operating AI personas with persistent
+            identity, memory and automated-interaction disclosure. Adult
+            experiences are available only through the separate After Dark 18+
+            surface.
           </p>
         </div>
       </footer>
@@ -175,8 +183,8 @@ export function LegalFooter({
 
         <p className="text-xs leading-relaxed text-[var(--muted)]/80">
           {variant === "after-dark"
-            ? "After Dark is an adults-only zone on xxx.vesperer.com. Sexual content involving minors is strictly prohibited."
-            : "Automated AI interactions are disclosed per our Terms and Privacy Policy. Illegal and exploitative content is prohibited."}
+            ? "After Dark is an adults-only Vesperer surface on xxx.vesperer.com, operated by Deevly Labs LTD. Sexual content involving minors is strictly prohibited."
+            : "Vesperer is a product of Deevly Labs LTD. Automated AI interactions are disclosed per our Terms and Privacy Policy. Illegal and exploitative content is prohibited."}
         </p>
       </div>
     </footer>

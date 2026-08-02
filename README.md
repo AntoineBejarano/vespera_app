@@ -1,6 +1,6 @@
 # Vesperer
 
-Plataforma de **identidades conversacionales con memoria persistente**: companions, mentores, empleados IA, creadores y After Dark (18+). Apex en `vesperer.com`; adulto en `xxx.vesperer.com`. Hosting en **Railway**.
+**Producto de [Deevly Labs](https://deevlylabs.com)** — plataforma de **identidades conversacionales con memoria persistente**: companions, mentores, empleados IA, creadores y After Dark (18+). Apex en `vesperer.com`; adulto en `xxx.vesperer.com`. Hosting en **Railway**.
 
 ## Producto
 
@@ -15,7 +15,7 @@ Plataforma de **identidades conversacionales con memoria persistente**: companio
 | `/docs` | API & CLI |
 | `/technology` | Capas de identidad y memoria |
 
-Operador: **Deevly Labs LTD**. Contacto: `legal@vesperer.com`.
+Empresa: **Deevly Labs LTD** ([deevlylabs.com](https://deevlylabs.com)). Producto: Vesperer. Contacto legal del producto: `legal@vesperer.com`.
 
 ## Stack
 

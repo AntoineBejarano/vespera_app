@@ -54,9 +54,9 @@ const jsonLd = {
   "@graph": [
     {
       "@type": "Organization",
-      "@id": `${SITE_URL}/#organization`,
-      name: SITE_NAME,
-      url: SITE_URL,
+      "@id": "https://deevlylabs.com/#organization",
+      name: "Deevly Labs LTD",
+      url: "https://deevlylabs.com",
       logo: `${SITE_URL}/brand/logo.png`,
     },
     {
@@ -65,7 +65,7 @@ const jsonLd = {
       url: SITE_URL,
       name: SITE_NAME,
       description: SITE_DESCRIPTION,
-      publisher: { "@id": `${SITE_URL}/#organization` },
+      publisher: { "@id": "https://deevlylabs.com/#organization" },
       inLanguage: "en",
     },
     {
@@ -75,6 +75,7 @@ const jsonLd = {
       operatingSystem: "Web",
       url: SITE_URL,
       description: SITE_DESCRIPTION,
+      provider: { "@id": "https://deevlylabs.com/#organization" },
       offers: {
         "@type": "Offer",
         price: "0",

@@ -4,9 +4,11 @@
 
 ## Producto
 
-**Vesperer** (`vesperer.com`) — plataforma de personajes IA con identidad persistente, memoria a largo plazo y continuidad entre canales (web, Telegram, voice, API/CLI).
+**Empresa:** [Deevly Labs LTD](https://deevlylabs.com) (Companies House 16506991) — estudio / operadora legal.
 
-Operador legal: **Deevly Labs LTD** (Companies House 16506991). Contacto: `legal@vesperer.com`.
+**Producto:** **Vesperer** (`vesperer.com`) — plataforma de personajes IA con identidad persistente, memoria a largo plazo y continuidad entre canales (web, Telegram, voice, API/CLI). After Dark vive en `xxx.vesperer.com`. Vesperer no es la empresa; es un producto de Deevly Labs.
+
+Contacto producto: `legal@vesperer.com`. Studio: `https://deevlylabs.com`.
 
 Dos superficies de marca en el **mismo deploy** (Railway):
 

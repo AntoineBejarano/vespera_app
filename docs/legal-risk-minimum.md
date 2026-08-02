@@ -27,7 +27,8 @@
 **Terms §7:** B2B customers and channel operators.
 
 
-**Deevly Labs LTD** — Company No. **16506991**  
+**Deevly Labs LTD** — Company No. **16506991** (operadora; studio [deevlylabs.com](https://deevlylabs.com))  
+**Vesperer** — producto (`vesperer.com` / `xxx.vesperer.com`), no entidad societaria aparte.  
 Registered office: 128 City Road, London, EC1V 2NX, United Kingdom  
 [Companies House](https://find-and-update.company-information.service.gov.uk/company/16506991)
 
