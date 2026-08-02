@@ -1,5 +1,5 @@
 /** Bump when legal text materially changes — invalidates access cookie + re-attest. */
-export const LEGAL_VERSION = "2026-08-02c";
+export const LEGAL_VERSION = "2026-08-02d";
 
 export const ADULT_COOKIE = "vesperer_adult";
 
@@ -37,14 +37,14 @@ export const LEGAL_OPERATOR = {
   incorporatedOn: "10 June 2025",
   companiesHouseUrl:
     "https://find-and-update.company-information.service.gov.uk/company/16506991",
-  /** Product legal inbox (may differ from company studio contact) */
+  /** Product legal inbox — Resend receiving on mail.vesperer.com */
   contactEmail:
-    process.env.LEGAL_CONTACT_EMAIL?.trim() || "legal@vesperer.com",
+    process.env.LEGAL_CONTACT_EMAIL?.trim() || "legal@mail.vesperer.com",
   /** Abuse / safety reports for the Vesperer product */
   abuseEmail:
     process.env.ABUSE_EMAIL?.trim() ||
     process.env.LEGAL_CONTACT_EMAIL?.trim() ||
-    "legal@vesperer.com",
+    "abuse@mail.vesperer.com",
 };
 
 export type LegalSlug =

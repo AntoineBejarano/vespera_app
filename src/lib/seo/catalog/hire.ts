@@ -295,7 +295,7 @@ export const HIRE_PAGES: SeoPage[] = [
       { verb: "hire", slug: "museum-guide", label: "Museum guide" },
     ],
     ctaPrimary: { label: "Build a concierge", href: "/handler/sign-up" },
-    ctaSecondary: { label: "Talk to us", href: "mailto:legal@vesperer.com?subject=Hotel%20concierge" },
+    ctaSecondary: { label: "Talk to us", href: "mailto:legal@mail.vesperer.com?subject=Hotel%20concierge" },
     roiHints: {
       label: "After-hours guest questions",
       missedLeadsPerWeek: 20,
@@ -405,7 +405,7 @@ export const HIRE_PAGES: SeoPage[] = [
     },
     ctaSecondary: {
       label: "Talk to us",
-      href: "mailto:legal@vesperer.com?subject=Dental%20receptionist",
+      href: "mailto:legal@mail.vesperer.com?subject=Dental%20receptionist",
     },
     roiHints: {
       label: "Missed booking calls",
@@ -462,7 +462,7 @@ export const HIRE_PAGES: SeoPage[] = [
     ctaPrimary: { label: "Build a museum guide", href: "/handler/sign-up" },
     ctaSecondary: {
       label: "Talk to us",
-      href: "mailto:legal@vesperer.com?subject=Museum%20guide",
+      href: "mailto:legal@mail.vesperer.com?subject=Museum%20guide",
     },
     roiHints: {
       label: "After-hours visitor questions",

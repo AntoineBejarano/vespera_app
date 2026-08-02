@@ -113,7 +113,7 @@ export const BUSINESS_FAQS = [
   },
   {
     q: "Where can I find technical documentation?",
-    a: "Public Chat API and CLI docs are available at /docs. Technology details for identity layers and memory are at /technology. For design partnerships, contact legal@vesperer.com.",
+    a: "Public Chat API and CLI docs are available at /docs. Technology details for identity layers and memory are at /technology. For design partnerships, contact legal@mail.vesperer.com.",
   },
 ] as const;
 
@@ -211,6 +211,6 @@ export const PLATFORM_FAQS = [
   },
   {
     q: "Is there a design-partner program?",
-    a: "Yes. We work with a small number of platforms and agencies on paid design partnerships for deeper integration, compliance controls and roadmap priority. Contact legal@vesperer.com.",
+    a: "Yes. We work with a small number of platforms and agencies on paid design partnerships for deeper integration, compliance controls and roadmap priority. Contact legal@mail.vesperer.com.",
   },
 ] as const;

@@ -157,7 +157,7 @@ export function BusinessDocLayout({
               Create a workspace
             </Link>
             <a
-              href="mailto:legal@vesperer.com?subject=Vesperer%20Business%20design%20partner"
+              href="mailto:legal@mail.vesperer.com?subject=Vesperer%20Business%20design%20partner"
               className="rounded-xl border border-[var(--line)] px-5 py-3 text-sm"
             >
               Contact sales

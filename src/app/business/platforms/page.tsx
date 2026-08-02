@@ -99,7 +99,7 @@ export default function BusinessPlatformsPage() {
         faqs={PLATFORM_FAQS}
         primaryCta={{ href: "/docs", label: "Open API documentation" }}
         secondaryCta={{
-          href: "mailto:legal@vesperer.com?subject=Vesperer%20Platform%20integration",
+          href: "mailto:legal@mail.vesperer.com?subject=Vesperer%20Platform%20integration",
           label: "Discuss integration",
         }}
       >

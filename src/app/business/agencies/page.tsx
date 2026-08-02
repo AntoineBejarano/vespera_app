@@ -75,7 +75,7 @@ export default function BusinessAgenciesPage() {
         capabilities={AGENCY_CAPABILITIES}
         faqs={AGENCY_FAQS}
         primaryCta={{
-          href: "mailto:legal@vesperer.com?subject=Vesperer%20Agencies%20design%20partner",
+          href: "mailto:legal@mail.vesperer.com?subject=Vesperer%20Agencies%20design%20partner",
           label: "Book a design-partner call",
         }}
         secondaryCta={{ href: "/docs", label: "Read API docs" }}

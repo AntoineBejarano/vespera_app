@@ -94,7 +94,7 @@ export default function BusinessPage() {
         faqs={BUSINESS_FAQS}
         primaryCta={{ href: "/docs", label: "API & CLI docs" }}
         secondaryCta={{
-          href: "mailto:legal@vesperer.com?subject=Vesperer%20Business",
+          href: "mailto:legal@mail.vesperer.com?subject=Vesperer%20Business",
           label: "Talk to us",
         }}
       >

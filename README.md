@@ -15,7 +15,7 @@
 | `/docs` | API & CLI |
 | `/technology` | Capas de identidad y memoria |
 
-Empresa: **Deevly Labs LTD** ([deevlylabs.com](https://deevlylabs.com)). Producto: Vesperer. Contacto legal del producto: `legal@vesperer.com`.
+Empresa: **Deevly Labs LTD** ([deevlylabs.com](https://deevlylabs.com)). Producto: Vesperer. Contacto legal del producto: `legal@mail.vesperer.com`.
 
 ## Stack
 
