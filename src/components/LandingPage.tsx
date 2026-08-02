@@ -7,6 +7,8 @@ import {
 import { AFTER_DARK_URL } from "@/lib/site";
 import type { VoiceAgentId } from "@/lib/voice/types";
 
+// Brand mark via plain <img> (avoid next/image client chunk on `/`).
+
 /** No-op wrapper — keeps markup stable without client motion (LCP). */
 function BlurFade({
   children,
@@ -322,9 +324,25 @@ export function LandingPage({
       <section className="relative flex min-h-[92dvh] flex-col">
         <RetroGrid />
         <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 pb-10 pt-12 sm:px-6 sm:pb-14 sm:pt-16">
-          <p className="mb-8 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-[-0.03em] text-[var(--ink)] sm:text-5xl">
-            Vesper<span className="text-[var(--accent-2)]">er</span>
-          </p>
+          <a
+            href="/"
+            className="mb-8 inline-flex items-center gap-2.5 sm:gap-3"
+            aria-label="Vesperer"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/mark-256.png"
+              alt=""
+              width={56}
+              height={56}
+              className="shrink-0 object-contain"
+              fetchPriority="high"
+              decoding="async"
+            />
+            <span className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-[-0.03em] text-[var(--ink)] sm:text-5xl">
+              Vesper<span className="text-[var(--accent-2)]">er</span>
+            </span>
+          </a>
           <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)] sm:text-xs sm:tracking-[0.35em]">
             They remember. They change. They stay consistent.
           </p>
