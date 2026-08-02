@@ -6,6 +6,7 @@ import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { maxCharactersForPlan } from "@/lib/monetization";
 import { countWorkspaceCharacters } from "@/lib/users";
 import { ensureRelationshipState } from "@/lib/persona/relationship";
+import { resolveSubject } from "@/lib/persona/subject";
 import { getShowcaseBySlug } from "@/lib/characters/showcase";
 import { generateChatApiKeySecret } from "@/lib/api-keys/chat-keys";
 import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
@@ -182,7 +183,12 @@ export async function POST(req: Request) {
     },
   });
 
-  await ensureRelationshipState(user.id, character.id);
+  const subject = await resolveSubject({
+    workspaceId: character.workspaceId,
+    webUserId: user.id,
+    displayName: user.name ?? user.email,
+  });
+  await ensureRelationshipState(subject.id, character.id, user.id);
   await prisma.conversation.create({
     data: {
       userId: user.id,

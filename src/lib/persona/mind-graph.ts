@@ -1,10 +1,21 @@
 /**
- * Mind graph model — Obsidian-compatible structure for persona brains.
- * Types map notes into knowledge / belief / memory / etc. (not raw dumps).
+ * Mind graph model — Mind universes vs Agency outer ring.
+ * Time is transversal metadata (updatedAt), not a universe.
  */
+
+/** Filter universes in the neural graph UI */
+export type MindUniverse =
+  | "self"
+  | "relationships"
+  | "memory"
+  | "knowledge"
+  | "affect"
+  | "intentions"
+  | "agency";
 
 export type MindNodeType =
   | "persona"
+  | "self"
   | "layer"
   | "knowledge"
   | "belief"
@@ -18,6 +29,11 @@ export type MindNodeType =
   | "tag"
   | "channel"
   | "relationship"
+  | "affect"
+  | "intention"
+  | "capability"
+  | "tool"
+  | "permission"
   | "ignore";
 
 export type MindDoc = {
@@ -30,14 +46,16 @@ export type MindDoc = {
   sourcePath?: string;
   private?: boolean;
   confidence?: number;
-  /** ISO date for recency halo */
+  /** ISO date for recency halo (Time dimension) */
   updatedAt?: string;
+  universe?: MindUniverse;
 };
 
 export type MindGraphNode = {
   id: string;
   label: string;
   type: MindNodeType;
+  universe: MindUniverse;
   detail?: string;
   /** Size / importance (centrality seed) */
   val: number;
@@ -64,8 +82,54 @@ export type MindGraphData = {
   links: MindGraphLink[];
 };
 
+export const MIND_UNIVERSES: MindUniverse[] = [
+  "self",
+  "relationships",
+  "memory",
+  "knowledge",
+  "affect",
+  "intentions",
+  "agency",
+];
+
+export function universeForType(type: MindNodeType): MindUniverse {
+  switch (type) {
+    case "persona":
+    case "self":
+    case "layer":
+    case "preference":
+      return "self";
+    case "relationship":
+    case "person":
+      return "relationships";
+    case "memory":
+    case "event":
+      return "memory";
+    case "knowledge":
+    case "belief":
+    case "source":
+    case "concept":
+    case "note":
+    case "tag":
+      return "knowledge";
+    case "affect":
+      return "affect";
+    case "intention":
+      return "intentions";
+    case "channel":
+    case "capability":
+    case "tool":
+    case "permission":
+      return "agency";
+    default:
+      return "knowledge";
+  }
+}
+
+/** Brand tokens — warm / cool accents (not template cyan). */
 export const NODE_TYPE_COLOR: Record<MindNodeType, string> = {
   persona: "#e8e6e3",
+  self: "#5badee",
   layer: "#5badee",
   knowledge: "#e8c547",
   belief: "#c4a7e7",
@@ -79,7 +143,22 @@ export const NODE_TYPE_COLOR: Record<MindNodeType, string> = {
   tag: "#6ee7b7",
   channel: "#34d399",
   relationship: "#f43f5e",
+  affect: "#f59e0b",
+  intention: "#a78bfa",
+  capability: "#2dd4bf",
+  tool: "#38bdf8",
+  permission: "#94a3b8",
   ignore: "#475569",
+};
+
+export const UNIVERSE_COLOR: Record<MindUniverse, string> = {
+  self: "#5badee",
+  relationships: "#f43f5e",
+  memory: "#f472b6",
+  knowledge: "#e8c547",
+  affect: "#f59e0b",
+  intentions: "#a78bfa",
+  agency: "#2dd4bf",
 };
 
 const STOP = new Set([
@@ -407,11 +486,17 @@ export function previewObsidianNotes(
 }
 
 function layerType(group: string): MindNodeType {
-  if (["soul", "style", "rules", "context"].includes(group)) return "layer";
+  if (["soul", "style", "rules", "context", "self"].includes(group)) return "self";
   if (group === "knowledge") return "knowledge";
+  if (group === "belief") return "belief";
   if (group === "memory") return "memory";
-  if (group === "channel") return "channel";
+  if (group === "channel" || group === "agency") return "channel";
+  if (group === "capability") return "capability";
+  if (group === "tool") return "tool";
+  if (group === "permission") return "permission";
   if (group === "relationship") return "relationship";
+  if (group === "affect") return "affect";
+  if (group === "intention") return "intention";
   if (group === "note") return "note";
   return (group as MindNodeType) || "note";
 }
@@ -431,15 +516,19 @@ export function buildMindGraph(
   const links: MindGraphLink[] = [];
   const linkKeys = new Set<string>();
 
-  function addNode(n: MindGraphNode) {
-    const prev = nodeMap.get(n.id);
+  function addNode(n: Omit<MindGraphNode, "universe"> & { universe?: MindUniverse }) {
+    const full: MindGraphNode = {
+      ...n,
+      universe: n.universe ?? universeForType(n.type),
+    };
+    const prev = nodeMap.get(full.id);
     if (prev) {
-      prev.val = Math.min(28, prev.val + n.val * 0.45);
-      prev.confidence = Math.max(prev.confidence, n.confidence);
-      if (!prev.detail && n.detail) prev.detail = n.detail;
+      prev.val = Math.min(28, prev.val + full.val * 0.45);
+      prev.confidence = Math.max(prev.confidence, full.confidence);
+      if (!prev.detail && full.detail) prev.detail = full.detail;
       return;
     }
-    nodeMap.set(n.id, n);
+    nodeMap.set(full.id, full);
   }
 
   function addLink(
@@ -504,7 +593,7 @@ export function buildMindGraph(
       label: doc.title,
       type,
       detail: body.slice(0, 420),
-      val: type === "layer" ? 14 : 10,
+      val: type === "self" || type === "layer" ? 14 : 10,
       confidence,
       sourcePath: doc.sourcePath,
       private: isPrivate,
@@ -513,7 +602,7 @@ export function buildMindGraph(
     });
     addLink(rootId, docId, {
       label: "contains",
-      strength: type === "layer" ? 0.9 : 0.65,
+      strength: type === "self" || type === "layer" ? 0.9 : 0.65,
     });
 
     for (const h of extractHeadings(body)) {
@@ -595,6 +684,7 @@ export function buildMindGraph(
   return { nodes: [...nodeMap.values()], links };
 }
 
+/** Authenticated studio — full Self layers (including rules). */
 export function layersToMindDocs(layers: {
   soulMd?: string | null;
   styleMd?: string | null;
@@ -607,10 +697,10 @@ export function layersToMindDocs(layers: {
     group: string;
     md?: string | null;
   }[] = [
-    { id: "soul", title: "Soul", group: "soul", md: layers.soulMd },
-    { id: "style", title: "Style", group: "style", md: layers.styleMd },
-    { id: "rules", title: "Rules", group: "rules", md: layers.rulesMd },
-    { id: "context", title: "Context", group: "context", md: layers.contextMd },
+    { id: "soul", title: "Soul · Identity", group: "self", md: layers.soulMd },
+    { id: "style", title: "Style", group: "self", md: layers.styleMd },
+    { id: "rules", title: "Rules · Boundaries", group: "self", md: layers.rulesMd },
+    { id: "context", title: "Context · History", group: "self", md: layers.contextMd },
   ];
   return entries
     .filter((e) => (e.md ?? "").trim().length > 0)
@@ -618,9 +708,84 @@ export function layersToMindDocs(layers: {
       id: e.id,
       title: e.title,
       group: e.group,
-      type: "layer" as const,
+      type: "self" as const,
+      universe: "self" as const,
       content: e.md!.trim(),
       confidence: 1,
       sourcePath: undefined as string | undefined,
     }));
+}
+
+/**
+ * Public allowlist only — never rulesMd, limits, prompts, or private knowledge chunks.
+ */
+export function publicLayersToMindDocs(input: {
+  name: string;
+  tagline?: string | null;
+  openingLine?: string | null;
+  categories?: string[];
+  styleMd?: string | null;
+  /** Visible traits from meta (optional) */
+  traits?: string[];
+}): MindDoc[] {
+  const docs: MindDoc[] = [];
+  const bio = [input.tagline, input.openingLine].filter(Boolean).join("\n\n");
+  if (bio.trim()) {
+    docs.push({
+      id: "public-bio",
+      title: "Public biography",
+      group: "self",
+      type: "self",
+      universe: "self",
+      content: bio.trim(),
+      confidence: 1,
+    });
+  }
+  if (input.traits?.length) {
+    docs.push({
+      id: "public-traits",
+      title: "Visible traits",
+      group: "self",
+      type: "self",
+      universe: "self",
+      content: input.traits.join(", "),
+      confidence: 0.9,
+    });
+  }
+  // Safe public style fragment only (first ~400 chars, no rules)
+  const style = (input.styleMd ?? "").trim().slice(0, 400);
+  if (style.length > 40) {
+    docs.push({
+      id: "public-style",
+      title: "Public style",
+      group: "self",
+      type: "self",
+      universe: "self",
+      content: style,
+      confidence: 0.85,
+    });
+  }
+  if (input.categories?.length) {
+    docs.push({
+      id: "public-interests",
+      title: "Declared interests",
+      group: "self",
+      type: "self",
+      universe: "self",
+      content: input.categories.join(", "),
+      confidence: 0.9,
+    });
+  }
+  if (docs.length === 0) {
+    docs.push({
+      id: "public-name",
+      title: input.name,
+      group: "self",
+      type: "self",
+      universe: "self",
+      content: `${input.name} — public persona on Vesperer.`,
+      confidence: 1,
+    });
+  }
+  return docs;
 }

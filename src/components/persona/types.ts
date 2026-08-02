@@ -43,9 +43,9 @@ export type PersonaProfile = {
 };
 
 export type PersonaTab =
-  | "overview"
   | "mind"
-  | "connections"
+  | "self"
+  | "agency"
   | "photos"
   | "publish";
 

@@ -31,40 +31,29 @@ export async function GET(req: Request) {
 
   const memories = await prisma.memory.findMany({
     where: { characterId },
+    include: { subject: true },
     orderBy: { updatedAt: "desc" },
   });
-
-  const peerUserIds = [
-    ...new Set(memories.map((m) => m.userId).filter((id) => id !== user.id)),
-  ];
-  const peers = peerUserIds.length
-    ? await prisma.telegramPeer.findMany({
-        where: { userId: { in: peerUserIds } },
-        select: {
-          userId: true,
-          telegramFirstName: true,
-          telegramUsername: true,
-          telegramUserId: true,
-        },
-      })
-    : [];
-  const peerByUser = new Map(peers.map((p) => [p.userId, p]));
 
   return Response.json({
     characterId,
     memories: memories.map((m) => {
-      const peer = peerByUser.get(m.userId);
-      const peerLabel =
-        m.userId === user.id
-          ? "admin test"
-          : peer?.telegramFirstName ||
-            (peer?.telegramUsername ? `@${peer.telegramUsername}` : null) ||
-            (peer ? `tg:${peer.telegramUserId}` : "peer");
+      const isAdmin =
+        m.userId === user.id || m.subject.webUserId === user.id;
+      const peerLabel = isAdmin
+        ? "admin test"
+        : m.subject.displayName ||
+          (m.subject.telegramUserId
+            ? `tg:${m.subject.telegramUserId}`
+            : m.subject.externalCustomerId
+              ? `peer:${m.subject.externalCustomerId}`
+              : "peer");
       return {
         id: m.id,
         type: m.type,
         content: m.content,
         createdAt: m.createdAt,
+        subjectId: m.subjectId,
         peerLabel,
       };
     }),
@@ -98,7 +87,7 @@ export async function PATCH(req: Request) {
 
   const updated = await updateMemory(
     parsed.data.id,
-    owned.userId,
+    owned.subjectId,
     parsed.data.content,
   );
   if (!updated) {
@@ -130,7 +119,7 @@ export async function DELETE(req: Request) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
-  const ok = await deleteMemory(id, owned.userId);
+  const ok = await deleteMemory(id, owned.subjectId);
   if (!ok) {
     return Response.json({ error: "Not found" }, { status: 404 });
   }

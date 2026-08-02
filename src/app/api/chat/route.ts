@@ -1,28 +1,13 @@
 import {
-  convertToModelMessages,
   createUIMessageStreamResponse,
-  streamText,
   toUIMessageStream,
   type UIMessage,
 } from "ai";
 import { prisma } from "@/lib/db";
-import { getOpenRouter } from "@/lib/ai/openrouter";
-import { resolveModel } from "@/lib/ai/models";
 import { containsProhibitedMinorContent } from "@/lib/ai/safety";
 import { checkAndIncrementDailyLimit } from "@/lib/memory/limits";
-import { appendHistory, getRecentHistory } from "@/lib/memory/history";
-import { searchMemories } from "@/lib/memory/vector";
-import { maybeExtractMemories } from "@/lib/memory/extractor";
-import {
-  getLatestSummary,
-  maybeCreateSummary,
-} from "@/lib/memory/summaries";
-import { ensureConversation, getActiveCharacter } from "@/lib/users";
-import { assemblePersonaPrompt } from "@/lib/persona/assemble";
-import {
-  ensureRelationshipState,
-  maybeUpdateRelationship,
-} from "@/lib/persona/relationship";
+import { getActiveCharacter } from "@/lib/users";
+import { streamCharacterReply } from "@/lib/chat/engine";
 import { requireAppUser } from "@/lib/session";
 
 export const maxDuration = 60;
@@ -30,9 +15,9 @@ export const maxDuration = 60;
 export async function POST(req: Request) {
   try {
     const user = await requireAppUser().catch(() => null);
-  if (!user) {
-    return Response.json({ error: "Not authenticated" }, { status: 401 });
-  }
+    if (!user) {
+      return Response.json({ error: "Not authenticated" }, { status: 401 });
+    }
     const body = await req.json();
     const messages = (body.messages ?? []) as UIMessage[];
     const characterId = body.characterId as string | undefined;
@@ -86,127 +71,30 @@ export async function POST(req: Request) {
       );
     }
 
-    const modelId = resolveModel(user.preferredModel);
-    const memories = await searchMemories({
+    const streamed = await streamCharacterReply({
       userId: user.id,
+      message: lastText,
       characterId: character.id,
-      query: lastText,
+      partner: { channel: "web" },
+      skipDailyLimit: true,
     });
 
-    const conversation = await ensureConversation(user.id, character.id);
-    const summary = await getLatestSummary(conversation.id);
-    const recent = await getRecentHistory(user.id, character.id, 25);
-    const relationship = await ensureRelationshipState(user.id, character.id);
-
-    const system = assemblePersonaPrompt({
-      persona: {
-        name: character.name,
-        intensity: character.intensity,
-        soulMd: character.soulMd,
-        styleMd: character.styleMd,
-        rulesMd: character.rulesMd,
-        contextMd: character.contextMd,
-        identityJson: character.identityJson,
-        limitsJson: character.limitsJson,
-      },
-      relationship: {
-        mood: relationship.mood,
-        trust: relationship.trust,
-        affection: relationship.affection,
-        energy: relationship.energy,
-        summary: relationship.summary ?? undefined,
-      },
-      memoryBrief: memories,
-      summary: summary?.content,
-      partner: {
-        displayName: user.name || user.email || "usuario",
-        howToAddress:
-          (
-            await prisma.userSettings.findUnique({
-              where: { userId: user.id },
-            })
-          )?.howToAddress || user.name,
-        userId: user.id,
-      },
-    });
-
-    await prisma.message.create({
-      data: {
-        conversationId: conversation.id,
-        role: "user",
-        content: lastText,
-      },
-    });
-    await appendHistory(user.id, character.id, {
-      role: "user",
-      content: lastText,
-    });
-
-    const openrouter = getOpenRouter();
-    const modelMessages =
-      recent.length > 0
-        ? [
-            ...recent.map((m) => ({
-              role: m.role as "user" | "assistant",
-              content: m.content,
-            })),
-            { role: "user" as const, content: lastText },
-          ]
-        : await convertToModelMessages(messages);
-
-    const result = streamText({
-      model: openrouter(modelId),
-      system,
-      messages: modelMessages,
-      onFinish: async ({ text }) => {
-        try {
-          const { track } = await import("@/lib/metrics");
-          track("chat_message", { model: modelId });
-          await prisma.message.create({
-            data: {
-              conversationId: conversation.id,
-              role: "assistant",
-              content: text,
-            },
-          });
-          await appendHistory(user.id, character.id, {
-            role: "assistant",
-            content: text,
-          });
-          await prisma.conversation.update({
-            where: { id: conversation.id },
-            data: { updatedAt: new Date() },
-          });
-          await maybeCreateSummary({
-            conversationId: conversation.id,
-            characterId: character.id,
-            modelId,
-          });
-          await maybeExtractMemories({
-            userId: user.id,
-            characterId: character.id,
-            userMessage: lastText,
-            assistantMessage: text,
-            modelId,
-          });
-          await maybeUpdateRelationship({
-            userId: user.id,
-            characterId: character.id,
-            userMessage: lastText,
-            assistantMessage: text,
-            modelId,
-          });
-        } catch (err) {
-          console.error("[chat onFinish]", err);
-        }
-      },
-    });
+    if (!streamed.ok) {
+      if (streamed.status === 204) {
+        return new Response(null, { status: 204 });
+      }
+      return Response.json(
+        { error: streamed.error },
+        { status: streamed.status },
+      );
+    }
 
     return createUIMessageStreamResponse({
-      stream: toUIMessageStream({ stream: result.stream }),
+      stream: toUIMessageStream({ stream: streamed.streamResult.stream }),
       headers: {
         "X-Daily-Remaining": String(limit.remaining),
-        "X-Model": modelId,
+        "X-Model": streamed.prepared.modelId,
+        "X-Subject-Id": streamed.prepared.subjectId,
       },
     });
   } catch (error) {

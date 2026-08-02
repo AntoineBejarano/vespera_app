@@ -25,7 +25,7 @@ export function PersonaDetail({
   operatorAttested?: boolean;
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<PersonaTab>("overview");
+  const [tab, setTab] = useState<PersonaTab>("mind");
   const [message, setMessage] = useState<string | null>(null);
   const [operatorAttested, setOperatorAttested] = useState(
     operatorAttestedInitial,
@@ -396,7 +396,9 @@ export function PersonaDetail({
       message={message}
       telegramPeerCount={telegramPeerCount}
     >
-      {tab === "overview" ? (
+      {tab === "mind" ? <PersonaMindGraph personaId={persona.id} /> : null}
+
+      {tab === "self" ? (
         <PersonaOverviewTab
           intensity={intensity}
           onIntensityChange={(v) => void saveIntensity(v)}
@@ -417,9 +419,7 @@ export function PersonaDetail({
         />
       ) : null}
 
-      {tab === "mind" ? <PersonaMindGraph personaId={persona.id} /> : null}
-
-      {tab === "connections" ? (
+      {tab === "agency" ? (
         <PersonaConnectionsTab
           personaId={persona.id}
           personaName={name}

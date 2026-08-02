@@ -106,6 +106,7 @@ export async function POST(req: Request) {
     characterId: character.id,
     partner: {
       channel: "web",
+      externalCustomerId: `api:${character.id}:${peerId}`,
       telegramFirstName: body.displayName
         ? String(body.displayName).slice(0, 40)
         : null,

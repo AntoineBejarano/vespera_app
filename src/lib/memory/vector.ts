@@ -36,15 +36,19 @@ function isEmbeddingUnsupportedError(error: unknown) {
   );
 }
 
+function escapeFilter(value: string) {
+  return value.replace(/'/g, "");
+}
+
 async function searchFromPostgres(params: {
-  userId: string;
+  subjectId: string;
   characterId: string;
   query: string;
   topK: number;
 }): Promise<string[]> {
   const rows = await prisma.memory.findMany({
     where: {
-      userId: params.userId,
+      subjectId: params.subjectId,
       characterId: params.characterId,
       content: {
         contains: params.query.slice(0, 40),
@@ -58,7 +62,7 @@ async function searchFromPostgres(params: {
   if (rows.length) return rows.map((r) => `[${r.type}] ${r.content}`);
 
   const recent = await prisma.memory.findMany({
-    where: { userId: params.userId, characterId: params.characterId },
+    where: { subjectId: params.subjectId, characterId: params.characterId },
     orderBy: { updatedAt: "desc" },
     take: params.topK,
   });
@@ -66,10 +70,12 @@ async function searchFromPostgres(params: {
 }
 
 export async function upsertMemory(params: {
-  userId: string;
+  subjectId: string;
   characterId: string;
   type: MemoryType;
   content: string;
+  /** Legacy bridge for Upstash filters / admin UI */
+  userId?: string | null;
   metadata?: Record<string, unknown>;
 }) {
   const vectorId = nanoid();
@@ -82,7 +88,8 @@ export async function upsertMemory(params: {
         id: vectorId,
         data: params.content,
         metadata: {
-          userId: params.userId,
+          subjectId: params.subjectId,
+          userId: params.userId ?? "",
           characterId: params.characterId,
           type: params.type,
           createdAt: new Date().toISOString(),
@@ -104,7 +111,8 @@ export async function upsertMemory(params: {
 
   return prisma.memory.create({
     data: {
-      userId: params.userId,
+      subjectId: params.subjectId,
+      userId: params.userId ?? undefined,
       characterId: params.characterId,
       type: params.type,
       content: params.content,
@@ -115,22 +123,31 @@ export async function upsertMemory(params: {
 }
 
 export async function searchMemories(params: {
-  userId: string;
+  subjectId: string;
   characterId: string;
   query: string;
   topK?: number;
+  /** Optional bridge — also match legacy vectors keyed by userId */
+  userId?: string | null;
 }): Promise<string[]> {
   const topK = params.topK ?? 6;
   const index = getIndex();
 
   if (index) {
     try {
+      const sid = escapeFilter(params.subjectId);
+      const cid = escapeFilter(params.characterId);
+      const uid = params.userId ? escapeFilter(params.userId) : null;
+      const filter = uid
+        ? `(subjectId = '${sid}' OR userId = '${uid}') AND characterId = '${cid}'`
+        : `subjectId = '${sid}' AND characterId = '${cid}'`;
+
       const result = await index.query({
         data: params.query,
         topK,
         includeMetadata: true,
         includeData: true,
-        filter: `userId = '${params.userId}' AND characterId = '${params.characterId}'`,
+        filter,
       });
       vectorEmbeddingsOk = true;
       const hits = result
@@ -150,26 +167,37 @@ export async function searchMemories(params: {
   }
 
   return searchFromPostgres({
-    userId: params.userId,
+    subjectId: params.subjectId,
     characterId: params.characterId,
     query: params.query,
     topK,
   });
 }
 
-export async function listMemories(userId: string, characterId: string) {
+export async function listMemories(subjectId: string, characterId: string) {
   return prisma.memory.findMany({
-    where: { userId, characterId },
+    where: { subjectId, characterId },
+    orderBy: { updatedAt: "desc" },
+  });
+}
+
+/** Admin UI: list by bridge userId within a character (resolves via subject when possible). */
+export async function listMemoriesForUser(userId: string, characterId: string) {
+  return prisma.memory.findMany({
+    where: {
+      characterId,
+      OR: [{ userId }, { subject: { webUserId: userId } }],
+    },
     orderBy: { updatedAt: "desc" },
   });
 }
 
 export async function updateMemory(
   id: string,
-  userId: string,
+  subjectId: string,
   content: string,
 ) {
-  const memory = await prisma.memory.findFirst({ where: { id, userId } });
+  const memory = await prisma.memory.findFirst({ where: { id, subjectId } });
   if (!memory) return null;
 
   const index = getIndex();
@@ -179,7 +207,8 @@ export async function updateMemory(
         id: memory.vectorId,
         data: content,
         metadata: {
-          userId: memory.userId,
+          subjectId: memory.subjectId,
+          userId: memory.userId ?? "",
           characterId: memory.characterId,
           type: memory.type,
           createdAt: memory.createdAt.toISOString(),
@@ -200,8 +229,8 @@ export async function updateMemory(
   });
 }
 
-export async function deleteMemory(id: string, userId: string) {
-  const memory = await prisma.memory.findFirst({ where: { id, userId } });
+export async function deleteMemory(id: string, subjectId: string) {
+  const memory = await prisma.memory.findFirst({ where: { id, subjectId } });
   if (!memory) return false;
 
   const index = getIndex();

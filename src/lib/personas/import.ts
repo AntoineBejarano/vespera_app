@@ -4,6 +4,7 @@ import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { maxCharactersForPlan } from "@/lib/monetization";
 import { countWorkspaceCharacters } from "@/lib/users";
 import { ensureRelationshipState } from "@/lib/persona/relationship";
+import { resolveSubject } from "@/lib/persona/subject";
 import {
   importRequestSchema,
   parseCharacterImport,
@@ -151,7 +152,12 @@ export async function importPersonaFromBody(
     },
   });
 
-  await ensureRelationshipState(user.id, character.id);
+  const subject = await resolveSubject({
+    workspaceId: character.workspaceId,
+    webUserId: user.id,
+    displayName: user.name ?? user.email,
+  });
+  await ensureRelationshipState(subject.id, character.id, user.id);
   await prisma.conversation.create({
     data: {
       userId: user.id,

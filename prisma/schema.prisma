@@ -68,6 +68,7 @@ model User {
   ownershipTransfersFrom WorkspaceOwnershipTransfer[] @relation("OwnershipFrom")
   ownershipTransfersTo   WorkspaceOwnershipTransfer[] @relation("OwnershipTo")
   activeWorkspace     Workspace?          @relation("UserActiveWorkspace", fields: [activeWorkspaceId], references: [id], onDelete: SetNull)
+  relationshipSubjects RelationshipSubject[] @relation("SubjectWebUser")
 
   @@index([email])
   @@index([telegramId])
@@ -93,6 +94,7 @@ model Workspace {
   telegramBots TelegramBot[]
   ownershipTransfers WorkspaceOwnershipTransfer[]
   activeForUsers User[] @relation("UserActiveWorkspace")
+  relationshipSubjects RelationshipSubject[]
 
   @@index([createdAt])
 }
@@ -292,6 +294,7 @@ model Character {
   memories        Memory[]
   summaries       Summary[]
   relationships   RelationshipState[]
+  openIntentions  OpenIntention[]
   photos          CharacterPhoto[]
   telegramBots    TelegramBot[]
   knowledgeLinks  CharacterKnowledgePack[]
@@ -307,6 +310,36 @@ model Character {
   @@index([isPublic, isAdult])
   @@index([workspaceId, archivedAt])
   @@index([isPublic, license])
+}
+
+/// Cross-channel continuity identity for a real person talking to personas.
+/// Affect, intentions, and memories key off subjectId — not raw channel user ids.
+model RelationshipSubject {
+  id                 String   @id @default(cuid())
+  workspaceId        String
+  displayName        String?
+  /// Web / Hexclave account (bridge). Prefer resolving via this when present.
+  webUserId          String?
+  telegramUserId     String?
+  phoneNumberHash    String?
+  /// API / CLI / CRM peer id (stable external string)
+  externalCustomerId String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  workspace      Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  webUser        User?               @relation("SubjectWebUser", fields: [webUserId], references: [id], onDelete: SetNull)
+  relationships  RelationshipState[]
+  openIntentions OpenIntention[]
+  memories       Memory[]
+
+  @@index([workspaceId])
+  @@index([webUserId])
+  @@index([telegramUserId])
+  @@index([externalCustomerId])
+  @@unique([workspaceId, webUserId])
+  @@unique([workspaceId, telegramUserId])
+  @@unique([workspaceId, externalCustomerId])
 }
 
 /// Immutable snapshot of a persona for the Persona Registry version history.
@@ -353,22 +386,79 @@ model CharacterPhoto {
 
 model RelationshipState {
   id          String   @id @default(cuid())
-  userId      String
+  subjectId   String
+  /// Legacy bridge during migration — prefer subjectId
+  userId      String?
   characterId String
   mood        String   @default("neutral")
+  /// Affect dims — always clamped 0–1 in application code
   trust       Float    @default(0.35)
   affection   Float    @default(0.3)
   energy      Float    @default(0.7)
+  familiarity Float    @default(0.2)
+  openness    Float    @default(0.4)
+  playfulness Float    @default(0.4)
+  /// Controlled tone enum (see CURRENT_TONES in persona/affect.ts)
+  currentTone String   @default("neutral")
   summary     String?  @db.Text
+  /// Extensible affect payload — validated with Zod before prompt inject
+  affectJson  Json?
+  /// Optimistic concurrency for async post-turn updates
+  version     Int      @default(0)
   updatedAt   DateTime @updatedAt
   createdAt   DateTime @default(now())
 
-  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  subject   RelationshipSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  character Character           @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
-  /// One relationship per (person, girl) — same girl, N people
-  @@unique([userId, characterId])
-  @@index([userId])
+  @@unique([subjectId, characterId])
+  @@index([subjectId])
   @@index([characterId])
+  @@index([userId])
+}
+
+/// Open goals / commitments / questions the persona maintains toward a subject.
+model OpenIntention {
+  id               String    @id @default(cuid())
+  subjectId        String
+  characterId      String
+  /// desire | goal | fear | commitment | question | plan
+  kind             String
+  content          String    @db.Text
+  /// open | done | dropped
+  status           String    @default("open")
+  priority         Int       @default(0)
+  dueHint          String?
+  dueAt            DateTime?
+  sourceMessageId  String?
+  confidence       Float     @default(0.7)
+  dedupeKey        String
+  lastConfirmedAt  DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  subject   RelationshipSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  character Character           @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([characterId, subjectId, dedupeKey])
+  @@index([subjectId, characterId, status])
+  @@index([characterId, status, priority])
+}
+
+/// Idempotency ledger for async post-turn jobs (memory / affect / intentions).
+model PostTurnJob {
+  id             String   @id @default(cuid())
+  conversationId String
+  upToMessageId  String
+  /// memory | affect | intentions | all
+  kind           String   @default("all")
+  status         String   @default("pending")
+  error          String?  @db.Text
+  createdAt      DateTime @default(now())
+  completedAt    DateTime?
+
+  @@unique([conversationId, upToMessageId, kind])
+  @@index([status, createdAt])
 }
 
 /// A Telegram bot token bound to one Character (the girl).
@@ -465,7 +555,9 @@ model Summary {
 
 model Memory {
   id          String   @id @default(cuid())
-  userId      String
+  subjectId   String
+  /// Legacy bridge — prefer subjectId for continuity
+  userId      String?
   characterId String
   type        String
   content     String   @db.Text
@@ -474,9 +566,11 @@ model Memory {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  subject   RelationshipSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  user      User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  character Character           @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
+  @@index([subjectId, characterId])
   @@index([userId, characterId])
   @@index([characterId, type])
 }

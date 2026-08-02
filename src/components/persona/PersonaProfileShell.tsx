@@ -9,9 +9,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { PersonaProfile, PersonaTab } from "./types";
 
 const TABS: { id: PersonaTab; label: string }[] = [
-  { id: "overview", label: "Overview" },
   { id: "mind", label: "Mind" },
-  { id: "connections", label: "Connections" },
+  { id: "self", label: "Self" },
+  { id: "agency", label: "Agency" },
   { id: "photos", label: "Photos" },
   { id: "publish", label: "Publish" },
 ];
@@ -62,7 +62,7 @@ export function PersonaProfileShell({
           </div>
           <p className="mt-1 max-w-xl text-sm text-muted-foreground">
             {persona.tagline ||
-              "Identity, memory, and every channel she lives on."}
+              "See who they are, what they know, who they remember, how relationships evolve, what they want and what they can do."}
           </p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             <Badge variant="secondary">Intensity {persona.intensity}/5</Badge>

@@ -61,6 +61,10 @@ export const relationshipStateSchema = z.object({
   trust: z.number().min(0).max(1),
   affection: z.number().min(0).max(1),
   energy: z.number().min(0).max(1),
+  familiarity: z.number().min(0).max(1).optional(),
+  openness: z.number().min(0).max(1).optional(),
+  playfulness: z.number().min(0).max(1).optional(),
+  currentTone: z.string().optional(),
   summary: z.string().optional(),
 });
 

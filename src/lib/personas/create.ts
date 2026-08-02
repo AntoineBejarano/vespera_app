@@ -5,6 +5,7 @@ import { onboardingAnswersSchema } from "@/lib/identity/schema";
 import { maxCharactersForPlan } from "@/lib/monetization";
 import { countWorkspaceCharacters } from "@/lib/users";
 import { ensureRelationshipState } from "@/lib/persona/relationship";
+import { resolveSubject } from "@/lib/persona/subject";
 import { Prisma, type User } from "@/generated/prisma/client";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
@@ -140,7 +141,12 @@ async function finalizePersona(params: {
     },
   });
 
-  await ensureRelationshipState(params.user.id, character.id);
+  const subject = await resolveSubject({
+    workspaceId: character.workspaceId,
+    webUserId: params.user.id,
+    displayName: params.user.name ?? params.user.email,
+  });
+  await ensureRelationshipState(subject.id, character.id, params.user.id);
   await prisma.conversation.create({
     data: {
       userId: params.user.id,

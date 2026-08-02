@@ -125,16 +125,26 @@ export async function POST(req: Request) {
     }
 
     if (text === "/who" || text === "/status") {
-      const rel = character
-        ? await prisma.relationshipState.findUnique({
-            where: {
-              userId_characterId: {
-                userId: peer.userId,
-                characterId: character.id,
-              },
-            },
-          })
+      const { resolveSubject } = await import("@/lib/persona/subject");
+      const subject = character
+        ? await resolveSubject({
+            workspaceId: character.workspaceId,
+            telegramUserId: String(from.id),
+            webUserId: peer.userId,
+            displayName: from.first_name ?? null,
+          }).catch(() => null)
         : null;
+      const rel =
+        character && subject
+          ? await prisma.relationshipState.findUnique({
+              where: {
+                subjectId_characterId: {
+                  subjectId: subject.id,
+                  characterId: character.id,
+                },
+              },
+            })
+          : null;
       const phase = rel ? relationshipPhase(rel.trust, rel.affection) : "—";
       await telegramSendMessage(
         chatId,
@@ -144,7 +154,7 @@ export async function POST(req: Request) {
           `bot: @${bot.username}`,
           "age: attested 18+",
           rel
-            ? `${phase} · t ${rel.trust.toFixed(2)} · a ${rel.affection.toFixed(2)} · ${rel.mood}`
+            ? `${phase} · t ${rel.trust.toFixed(2)} · a ${rel.affection.toFixed(2)} · ${rel.mood} · ${rel.currentTone}`
             : "no relationship state yet",
         ].join("\n"),
         token,

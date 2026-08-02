@@ -3,12 +3,7 @@ import { z } from "zod";
 import { getOpenRouter } from "@/lib/ai/openrouter";
 import { resolveModel } from "@/lib/ai/models";
 import { upsertMemory, type MemoryType } from "@/lib/memory/vector";
-import {
-  evaluateContentSafety,
-  isSafetyKillSwitchActive,
-  logSafetyBlock,
-  SAFETY_BLOCK_MESSAGE,
-} from "@/lib/ai/safety";
+import { evaluateContentSafety } from "@/lib/ai/safety";
 
 const extractionSchema = z.object({
   shouldSave: z.boolean(),
@@ -29,10 +24,11 @@ const extractionSchema = z.object({
 });
 
 export async function maybeExtractMemories(params: {
-  userId: string;
+  subjectId: string;
   characterId: string;
   userMessage: string;
   assistantMessage: string;
+  userId?: string | null;
   modelId?: string;
 }) {
   if (
@@ -59,8 +55,9 @@ Personaje: ${params.assistantMessage}`,
 
     for (const mem of output.memories.slice(0, 3)) {
       await upsertMemory({
-        userId: params.userId,
+        subjectId: params.subjectId,
         characterId: params.characterId,
+        userId: params.userId,
         type: mem.type as MemoryType,
         content: mem.content,
       });

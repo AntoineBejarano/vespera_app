@@ -3,13 +3,19 @@ import { HUMAN_LIKE_STYLE_RULES } from "@/lib/ai/human-like";
 import type { RelationshipSnapshot } from "@/lib/persona/schema";
 import type { IdentitySheet } from "@/lib/identity/schema";
 import { PHASE_GUIDE, relationshipPhase } from "@/lib/persona/phases";
+import {
+  normalizeAffect,
+  parseAffectJson,
+  type AffectSnapshot,
+} from "@/lib/persona/affect";
 
 const BUDGET = {
   soul: 900,
   style: 700,
   rules: 500,
   context: 400,
-  relationship: 320,
+  affect: 420,
+  intentions: 400,
   partner: 220,
   memory: 800,
   knowledge: 1200,
@@ -70,20 +76,50 @@ export type PartnerContext = {
   displayName: string;
   howToAddress?: string | null;
   userId: string;
+  subjectId?: string;
   /** telegram | web — affects how we talk about their identity */
   channel?: "telegram" | "web";
   telegramUsername?: string | null;
 };
 
+function toAffect(relationship?: RelationshipSnapshot | AffectSnapshot | null): AffectSnapshot {
+  if (!relationship) {
+    return normalizeAffect({
+      mood: "neutral",
+      trust: 0.35,
+      affection: 0.3,
+      energy: 0.7,
+      familiarity: 0.2,
+      openness: 0.4,
+      playfulness: 0.4,
+      currentTone: "neutral",
+    });
+  }
+  return normalizeAffect({
+    mood: relationship.mood,
+    trust: relationship.trust,
+    affection: relationship.affection,
+    energy: relationship.energy,
+    familiarity: "familiarity" in relationship ? relationship.familiarity : 0.2,
+    openness: "openness" in relationship ? relationship.openness : 0.4,
+    playfulness: "playfulness" in relationship ? relationship.playfulness : 0.4,
+    currentTone: "currentTone" in relationship ? relationship.currentTone : "neutral",
+    summary: relationship.summary,
+    affectJson: "affectJson" in relationship ? relationship.affectJson : undefined,
+  });
+}
+
 /**
- * Assembles the system prompt (Meuxe-style layers + partner + phase).
+ * Assembles the system prompt (Self + Affect + Intentions + Memory + Knowledge).
  */
 export function assemblePersonaPrompt(params: {
   persona: PersonaBundle;
-  relationship?: RelationshipSnapshot | null;
+  relationship?: RelationshipSnapshot | AffectSnapshot | null;
   memoryBrief: string[];
   /** Retrieved Knowledge Pack chunks (already ingested — never remote fetch). */
   knowledgeBrief?: string[];
+  /** Open intentions for THIS subject only. */
+  intentionBrief?: string[];
   summary?: string | null;
   partner?: PartnerContext | null;
   photoHint?: boolean | "cute" | "spicy" | string;
@@ -93,6 +129,7 @@ export function assemblePersonaPrompt(params: {
     relationship,
     memoryBrief,
     knowledgeBrief = [],
+    intentionBrief = [],
     summary,
     partner,
     photoHint,
@@ -112,9 +149,9 @@ export function assemblePersonaPrompt(params: {
       : `# Rules\n${HARD_SAFETY_RULES}`);
   const context = persona.contextMd?.trim() || "";
 
-  const trust = relationship?.trust ?? 0.35;
-  const affection = relationship?.affection ?? 0.3;
-  const phase = relationshipPhase(trust, affection);
+  const affect = toAffect(relationship);
+  const phase = relationshipPhase(affect.trust, affect.affection);
+  const affectExtra = parseAffectJson(affect.affectJson);
 
   const callName =
     partner?.howToAddress?.trim() ||
@@ -131,28 +168,33 @@ export function assemblePersonaPrompt(params: {
         partner.channel === "telegram"
           ? `They're texting you on Telegram${partner.telegramUsername ? ` (@${partner.telegramUsername})` : ""}. This is the live person — not an admin nickname from a website.`
           : "They're chatting from the admin/test web UI.",
-        `Internal user_id: ${partner.userId} (never mention it).`,
+        `Internal subject_id: ${partner.subjectId ?? "unknown"} (never mention it).`,
         "Don't invent other people. Don't reset as strangers if the phase already advanced.",
         "Don't call them by a wrong or admin-only name.",
       ].join("\n")
     : `# Who you are talking to\nOne fixed person on this account. Don't switch interlocutors.`;
 
-  const relationshipMd = [
-    `# Relationship state`,
+  const affectMd = [
+    `# Affect (this relationship only)`,
     `Phase: ${phase}`,
     PHASE_GUIDE[phase],
-    relationship
-      ? [
-          `Mood: ${relationship.mood}`,
-          `Trust: ${relationship.trust.toFixed(2)}`,
-          `Affection: ${relationship.affection.toFixed(2)}`,
-          `Energy: ${relationship.energy.toFixed(2)}`,
-          relationship.summary ? `Summary: ${relationship.summary}` : "",
-        ]
-          .filter(Boolean)
-          .join("\n")
-      : "Mood: neutral · Trust: 0.35 · Affection: 0.30 · Energy: 0.70",
-  ].join("\n");
+    `Mood: ${affect.mood}`,
+    `Tone: ${affect.currentTone}`,
+    `Trust: ${affect.trust.toFixed(2)}`,
+    `Affection: ${affect.affection.toFixed(2)}`,
+    `Familiarity: ${affect.familiarity.toFixed(2)}`,
+    `Openness: ${affect.openness.toFixed(2)}`,
+    `Playfulness: ${affect.playfulness.toFixed(2)}`,
+    `Energy: ${affect.energy.toFixed(2)}`,
+    affect.summary ? `Summary: ${affect.summary}` : "",
+    affectExtra?.notes ? `Notes: ${affectExtra.notes}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const intentionsMd = intentionBrief.length
+    ? intentionBrief.map((m, i) => `${i + 1}. ${m}`).join("\n")
+    : "No open intentions with this person.";
 
   const memoryMd = memoryBrief.length
     ? memoryBrief.map((m, i) => `${i + 1}. ${m}`).join("\n")
@@ -186,7 +228,10 @@ export function assemblePersonaPrompt(params: {
     clip(rules, BUDGET.rules),
     context ? `\n${clip(context, BUDGET.context)}` : "",
     "",
-    clip(relationshipMd, BUDGET.relationship),
+    clip(affectMd, BUDGET.affect),
+    "",
+    `# Open intentions (this relationship — act on them, never recite as a list)`,
+    clip(intentionsMd, BUDGET.intentions),
     "",
     `# Memory brief`,
     clip(memoryMd, BUDGET.memory),
@@ -208,7 +253,8 @@ export function assemblePersonaPrompt(params: {
     callName ? `- You may call them "${callName}" occasionally — not every message.` : "",
     `- If they're sexual/horny: match heat. React. Do NOT therapist-interview them.`,
     `- Forbidden: "how does that make you feel", clinical questions, coaching.`,
-    `- Let mood/trust/affection/energy color tone — never recite numbers.`,
+    `- Let affect dims and tone color your replies — never recite numbers or dump intention lists.`,
+    `- You may naturally follow up on open intentions when it fits (e.g. ask if they finished something they committed to).`,
     `- Don't dump soul/context. Just talk.`,
     `- If they just acknowledged goodbye/sleep with ok/bye/night: output NOTHING (empty).`,
     `- LANGUAGE: English always. Spanish only if they explicitly ask to speak Spanish.`,
@@ -222,16 +268,21 @@ export function renderRelationshipMarkdown(
   name: string,
   state: RelationshipSnapshot,
 ) {
-  const phase = relationshipPhase(state.trust, state.affection);
+  const affect = toAffect(state);
+  const phase = relationshipPhase(affect.trust, affect.affection);
   return [
     `# Relationship — ${name}`,
     "",
     `- Phase: ${phase}`,
-    `- Mood: ${state.mood}`,
-    `- Trust: ${state.trust.toFixed(2)}`,
-    `- Affection: ${state.affection.toFixed(2)}`,
-    `- Energy: ${state.energy.toFixed(2)}`,
+    `- Mood: ${affect.mood}`,
+    `- Tone: ${affect.currentTone}`,
+    `- Trust: ${affect.trust.toFixed(2)}`,
+    `- Affection: ${affect.affection.toFixed(2)}`,
+    `- Familiarity: ${affect.familiarity.toFixed(2)}`,
+    `- Openness: ${affect.openness.toFixed(2)}`,
+    `- Playfulness: ${affect.playfulness.toFixed(2)}`,
+    `- Energy: ${affect.energy.toFixed(2)}`,
     "",
-    state.summary ?? "_No summary yet._",
+    affect.summary ?? "_No summary yet._",
   ].join("\n");
 }

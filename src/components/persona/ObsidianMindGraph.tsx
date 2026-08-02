@@ -9,6 +9,7 @@ import {
 } from "@/lib/persona/mind-graph";
 
 const FILTER_TYPES: MindNodeType[] = [
+  "self",
   "layer",
   "knowledge",
   "belief",
@@ -22,6 +23,11 @@ const FILTER_TYPES: MindNodeType[] = [
   "tag",
   "channel",
   "relationship",
+  "affect",
+  "intention",
+  "capability",
+  "tool",
+  "permission",
 ];
 
 function isRecent(iso?: string) {
