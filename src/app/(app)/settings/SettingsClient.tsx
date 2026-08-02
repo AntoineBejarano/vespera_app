@@ -137,6 +137,72 @@ export default function SettingsClient() {
         }
       />
 
+      <Card className="shadow-none">
+        <CardHeader>
+          <CardTitle>Billing</CardTitle>
+          <CardDescription>
+            Apex SFW plans (Creator / Studio) bill through Stripe. After Dark
+            adult plans never use this checkout.{" "}
+            <Link href="/legal/billing" className="underline underline-offset-2">
+              Billing Terms
+            </Link>
+            {" · "}
+            <Link href="/legal/refunds" className="underline underline-offset-2">
+              Refunds
+            </Link>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              void (async () => {
+                const res = await fetch("/api/billing/portal", {
+                  method: "POST",
+                });
+                const data = (await res.json()) as {
+                  url?: string;
+                  error?: string;
+                };
+                if (res.ok && data.url) {
+                  window.location.href = data.url;
+                  return;
+                }
+                setMessage(data.error ?? "Billing portal unavailable");
+              })();
+            }}
+          >
+            Manage billing
+          </Button>
+          <Button
+            type="button"
+            onClick={() => {
+              void (async () => {
+                const res = await fetch("/api/billing/checkout", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    plan: plan === "studio" || plan === "premium" ? "studio" : "creator",
+                  }),
+                });
+                const data = (await res.json()) as {
+                  url?: string;
+                  error?: string;
+                };
+                if (res.ok && data.url) {
+                  window.location.href = data.url;
+                  return;
+                }
+                setMessage(data.error ?? "Checkout unavailable");
+              })();
+            }}
+          >
+            Upgrade plan
+          </Button>
+        </CardContent>
+      </Card>
+
       <WorkspaceMembersPanel />
 
       <Card id="api-keys" className="scroll-mt-20 shadow-none">

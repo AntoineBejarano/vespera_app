@@ -1,5 +1,5 @@
 /** Bump when legal text materially changes — invalidates access cookie + re-attest. */
-export const LEGAL_VERSION = "2026-08-02";
+export const LEGAL_VERSION = "2026-08-02b";
 
 export const ADULT_COOKIE = "vesperer_adult";
 
@@ -42,7 +42,9 @@ export type LegalSlug =
   | "terms"
   | "privacy"
   | "acceptable-use"
-  | "adult-content";
+  | "adult-content"
+  | "billing"
+  | "refunds";
 
 export const LEGAL_PAGES: {
   slug: LegalSlug;
@@ -72,5 +74,17 @@ export const LEGAL_PAGES: {
     title: "Adult Content Notice",
     description:
       "Vesperer After Dark Adult Content Notice — 18+ access rules, creator responsibilities, and zero tolerance for content involving minors.",
+  },
+  {
+    slug: "billing",
+    title: "Billing Terms",
+    description:
+      "Vesperer Billing Terms — SFW subscription plans billed via Stripe on vesperer.com; After Dark uses a separate adult payment rail.",
+  },
+  {
+    slug: "refunds",
+    title: "Refunds & Cancellation",
+    description:
+      "Vesperer refund and cancellation policy for paid apex subscriptions, cooling-off where applicable, and how to manage billing.",
   },
 ];

@@ -6,6 +6,7 @@ import { LegalFooter } from "@/components/LegalFooter";
 import { VoiceAgentWidget } from "@/components/VoiceAgentWidget";
 import { BlurFade, ShimmerButton } from "@/components/magicui/effects";
 import { useHexclaveApp } from "@hexclave/next";
+import { redirectToAppSignUp } from "@/lib/auth/redirects";
 
 const PILLARS = [
   {
@@ -139,7 +140,7 @@ export function VoiceBusinessPage() {
             Bland can sit underneath; the character layer is Vesperer.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <ShimmerButton onClick={() => app.redirectToSignUp()}>
+            <ShimmerButton onClick={() => redirectToAppSignUp(app)}>
               Build a character
             </ShimmerButton>
             <a
@@ -333,7 +334,7 @@ export function VoiceBusinessPage() {
             without rebuilding who your characters are.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <ShimmerButton onClick={() => app.redirectToSignUp()}>
+            <ShimmerButton onClick={() => redirectToAppSignUp(app)}>
               Start free
             </ShimmerButton>
             <Link

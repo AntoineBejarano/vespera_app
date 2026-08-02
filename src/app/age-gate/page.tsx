@@ -119,11 +119,11 @@ function AgeGateInner() {
       }
 
       if (!user && intent === "signup") {
-        await app.redirectToSignUp();
+        await app.redirectToSignUp({ noRedirectBack: true });
         return;
       }
       if (!user && intent === "signin") {
-        await app.redirectToSignIn();
+        await app.redirectToSignIn({ noRedirectBack: true });
         return;
       }
 

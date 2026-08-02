@@ -29,12 +29,14 @@ Operador: **Deevly Labs LTD**. Contacto: `legal@vesperer.com`.
 
 ## Arranque local
 
+**No hay base de datos local.** La única Postgres es la del proyecto Railway.
+
 1. Copia `.env.example` → `.env` y rellena al menos:
-   - `DATABASE_URL`
+   - `DATABASE_URL` = `DATABASE_PUBLIC_URL` del servicio Postgres en Railway
    - Hexclave (vía `npx @hexclave/cli dev` en desarrollo)
    - `OPENROUTER_API_KEY`
 2. `npm install`
-3. `npx prisma db push`
+3. Migraciones contra Railway: `npx prisma migrate deploy` (con esa URL)
 4. `npm run dev`
 
 Probar After Dark en local: `http://xxx.localhost:3000`
@@ -52,6 +54,6 @@ Probar After Dark en local: `http://xxx.localhost:3000`
 npm run dev
 npm run build
 npm run lint
-npm run db:push
-npm run vesperer   # CLI personas / API keys
+npx prisma migrate deploy   # contra DATABASE_URL de Railway
+npm run vesperer            # CLI personas / API keys
 ```

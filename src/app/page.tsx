@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { LandingPage } from "@/components/LandingPage";
 import { PageSpinner } from "@/components/Spinner";
+import { getAppUser } from "@/lib/session";
 import {
   SITE_DESCRIPTION,
   SITE_DOMAIN,
@@ -112,7 +114,14 @@ const jsonLd = {
   ],
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Logged-in users must never render the marketing landing (Hexclave can
+  // bounce back to `/` via after_auth_return_to). One server hop → continue.
+  const user = await getAppUser();
+  if (user) {
+    redirect("/auth/continue");
+  }
+
   return (
     <>
       <script

@@ -20,7 +20,12 @@ model User {
   externalAuthUserId String?   @unique
   /// hexclave | supabase | …
   authProvider       String?   @default("hexclave")
+  /// free | creator | studio | premium (legacy alias of studio)
   plan               String    @default("free")
+  /// Stripe Customer id — apex SFW billing only (never After Dark)
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  stripePriceId        String?
   dailyMessageCount  Int       @default(0)
   dailyResetAt       DateTime  @default(now())
   ageVerifiedAt      DateTime?

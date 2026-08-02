@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useHexclaveApp, useUser, UserButton } from "@hexclave/next";
+import {
+  redirectToAppSignIn,
+  redirectToAppSignUp,
+} from "@/lib/auth/redirects";
 import { SITE_URL } from "@/lib/site";
 
 const MARKETING_LINKS = [
@@ -170,7 +174,7 @@ export function AppNav({
               <button
                 type="button"
                 className={linkClass}
-                onClick={() => app.redirectToSignIn()}
+                onClick={() => void redirectToAppSignIn(app)}
               >
                 Sign in
               </button>
@@ -182,7 +186,7 @@ export function AppNav({
                     window.location.href = "/age-gate?zone=adult&intent=signup";
                     return;
                   }
-                  void app.redirectToSignUp();
+                  void redirectToAppSignUp(app);
                 }}
               >
                 {variant === "after-dark" ? "Enter 18+" : "Get started"}
@@ -267,7 +271,7 @@ export function AppNav({
                   className="py-2.5 text-left hover:text-[var(--ink)]"
                   onClick={() => {
                     setOpen(false);
-                    void app.redirectToSignIn();
+                    void redirectToAppSignIn(app);
                   }}
                 >
                   Sign in
@@ -282,7 +286,7 @@ export function AppNav({
                         "/age-gate?zone=adult&intent=signup";
                       return;
                     }
-                    void app.redirectToSignUp();
+                    void redirectToAppSignUp(app);
                   }}
                 >
                   {variant === "after-dark" ? "Enter 18+" : "Get started"}

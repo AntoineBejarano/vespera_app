@@ -29,12 +29,21 @@ Env: `NEXT_PUBLIC_AFTER_DARK_HOST`, `NEXT_PUBLIC_AFTER_DARK_URL` (ver `.env.exam
 - **Next.js 16** App Router + React 19 — **no asumas APIs antiguas**; lee `node_modules/next/dist/docs/`
 - En Next 16, `middleware.ts` → **`src/proxy.ts`** (runtime Node)
 - Auth: **Hexclave** (`@hexclave/next`) — primario; NextAuth legacy aún presente
-- DB: Postgres + Prisma 7 (`@prisma/adapter-pg`)
+- DB: Postgres + Prisma 7 (`@prisma/adapter-pg`) — **solo Railway** (ver abajo)
 - AI: AI SDK + OpenRouter
 - Voice: ElevenLabs (server-only)
 - Cache/memoria: Upstash Redis + Vector (con fallbacks)
 - Deploy: Railway + Docker (`Dockerfile`, `railway.toml`)
 - CLI: `npm run vesperer` (`cli/`)
+
+## Base de datos (obligatorio)
+
+**No hay Postgres local.** La única base de datos es el plugin Postgres del proyecto Railway.
+
+- No levantar Docker/`postgres` en `127.0.0.1`, no `prisma dev`, no DB de desarrollo aparte.
+- `DATABASE_URL` en `.env` local = URL **pública** de Railway (`DATABASE_PUBLIC_URL` del servicio Postgres), o usar `railway run` / variables del servicio.
+- Migraciones: `npx prisma migrate deploy` contra esa URL (nunca inventar un schema local vacío).
+- `db push` solo si counsel/ops lo pide explícitamente; el camino normal es migraciones en Railway.
 
 ## Estructura clave
 
@@ -67,11 +76,10 @@ Prohibido contenido sexual con menores / age-play. Enforcement en API + prompts 
 ## Comandos
 
 ```bash
-npm run dev          # desarrollo
+npm run dev          # desarrollo (app local; DB = Railway)
 npm run build        # prisma generate + next build
 npm run lint
-npm run db:push      # schema → DB (dev)
-npm run db:migrate
+npm run db:migrate   # preferir: DATABASE_URL=<Railway public> npx prisma migrate deploy
 npm run vesperer     # CLI personas / API keys
 ```
 

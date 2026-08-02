@@ -6,9 +6,12 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const connectionString =
-    process.env.DATABASE_URL ??
-    "postgresql://postgres:postgres@127.0.0.1:5432/vespera?schema=public";
+  const connectionString = process.env.DATABASE_URL?.trim();
+  if (!connectionString) {
+    throw new Error(
+      "DATABASE_URL is required. Vesperer uses only the Railway Postgres — set DATABASE_PUBLIC_URL from the Railway Postgres service (no local DB).",
+    );
+  }
 
   const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });

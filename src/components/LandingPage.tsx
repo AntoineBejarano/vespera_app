@@ -7,6 +7,7 @@ import { useHexclaveApp, useUser } from "@hexclave/next";
 import { AppNav } from "@/components/AppNav";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LegalFooter } from "@/components/LegalFooter";
+import { PageSpinner } from "@/components/Spinner";
 import {
   BlurFade,
   RetroGrid,
@@ -14,6 +15,10 @@ import {
 } from "@/components/magicui/effects";
 import { LivePersonasLandingSection } from "@/components/LivePersonasLandingSection";
 import { VoiceLandingSection } from "@/components/VoiceLandingSection";
+import {
+  redirectToAppSignIn,
+  redirectToAppSignUp,
+} from "@/lib/auth/redirects";
 import { AFTER_DARK_URL } from "@/lib/site";
 import type { VoiceAgentId } from "@/lib/voice/types";
 
@@ -21,10 +26,11 @@ const PATHS = [
   {
     id: "fall",
     title: "Fall for one",
-    body: "Private and fictional personalities that remember your story and grow closer over time.",
-    cta: "Meet a companion",
-    href: "/c/luna",
+    body: "Private fictional personalities with long-term memory. Adult 18+ experiences live only on After Dark — not billed through apex Stripe plans.",
+    cta: "Open After Dark 18+",
+    href: AFTER_DARK_URL,
     afterDark: true,
+    external: true,
   },
   {
     id: "learn",
@@ -220,9 +226,10 @@ const PRICING = [
       "Chat API",
       "Export and ownership",
     ],
-    cta: "Start creating",
+    cta: "Subscribe — Creator",
     highlight: true,
-    action: "signup" as const,
+    action: "checkout" as const,
+    plan: "creator" as const,
   },
   {
     name: "Studio",
@@ -236,9 +243,10 @@ const PRICING = [
       "Priority routing",
       "Export and ownership",
     ],
-    cta: "Scale to Studio",
+    cta: "Subscribe — Studio",
     highlight: false,
-    action: "signup" as const,
+    action: "checkout" as const,
+    plan: "studio" as const,
   },
   {
     name: "Business & Institutions",
@@ -326,8 +334,8 @@ export function LandingPage() {
       return;
     }
     const auth = search.get("auth");
-    if (auth === "signin") void app.redirectToSignIn();
-    if (auth === "signup") void app.redirectToSignUp();
+    if (auth === "signin") void redirectToAppSignIn(app);
+    if (auth === "signup") void redirectToAppSignUp(app);
   }, [app, search, user]);
 
   useEffect(() => {
@@ -341,6 +349,11 @@ export function LandingPage() {
     }, 80);
     return () => window.clearTimeout(t);
   }, [search, user]);
+
+  // Safety net if server redirect hasn't fired yet (e.g. client nav).
+  if (user && !search.get("hexclave_cross_domain_auth")) {
+    return <PageSpinner label="Entering Studio" />;
+  }
 
   return (
     <div className="relative overflow-hidden">
@@ -391,7 +404,7 @@ export function LandingPage() {
             </ShimmerButton>
             <button
               type="button"
-              onClick={() => app.redirectToSignUp()}
+              onClick={() => redirectToAppSignUp(app)}
               className="inline-flex w-full items-center justify-center rounded-xl border border-[var(--line)] px-6 py-3.5 text-center sm:w-auto"
             >
               Create your own
@@ -442,18 +455,15 @@ export function LandingPage() {
                 </p>
                 {path.afterDark ? (
                   <p className="mt-3 text-xs text-[var(--muted)]/80">
-                    Looking for private 18+ experiences?{" "}
-                    <a
-                      href={AFTER_DARK_URL}
-                      className="underline decoration-[var(--line)] underline-offset-2 hover:text-[var(--ink)]"
-                    >
-                      Visit After Dark
-                    </a>
-                    .
+                    Adults only (18+). Hosted on xxx.vesperer.com — separate from
+                    apex Stripe billing.
                   </p>
                 ) : null}
                 <a
                   href={path.href}
+                  {...("external" in path && path.external
+                    ? { rel: "noopener noreferrer" }
+                    : {})}
                   className="mt-4 inline-flex text-sm text-[var(--accent)] hover:underline"
                 >
                   {path.cta} →
@@ -595,7 +605,7 @@ export function LandingPage() {
           ))}
         </ol>
         <BlurFade delay={0.2} className="mt-10">
-          <ShimmerButton onClick={() => app.redirectToSignUp()}>
+          <ShimmerButton onClick={() => redirectToAppSignUp(app)}>
             Create your first persona
           </ShimmerButton>
         </BlurFade>
@@ -710,7 +720,7 @@ export function LandingPage() {
             <button
               type="button"
               className="rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
-              onClick={() => app.redirectToSignUp()}
+              onClick={() => redirectToAppSignUp(app)}
             >
               Create an institutional persona
             </button>
@@ -743,7 +753,7 @@ export function LandingPage() {
           ))}
         </ul>
         <BlurFade delay={0.1} className="mt-8">
-          <ShimmerButton onClick={() => app.redirectToSignUp()}>
+          <ShimmerButton onClick={() => redirectToAppSignUp(app)}>
             Build for your audience
           </ShimmerButton>
         </BlurFade>
@@ -850,8 +860,22 @@ npm run vesperer -- personas create --from persona.json
               Pricing
             </h2>
             <p className="mt-3 text-[var(--muted)]">
-              Start free. Paid plans unlock when billing goes live — signup
-              works today.
+              Apex plans are SFW creator tools. Card billing runs through Stripe
+              when configured — see{" "}
+              <Link
+                href="/legal/billing"
+                className="text-[var(--ink)] underline-offset-2 hover:underline"
+              >
+                Billing Terms
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/legal/refunds"
+                className="text-[var(--ink)] underline-offset-2 hover:underline"
+              >
+                Refunds
+              </Link>
+              . Adult After Dark uses a separate payment rail.
             </p>
           </BlurFade>
           <div className="mt-12 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
@@ -886,11 +910,47 @@ npm run vesperer -- personas create --from persona.json
                     >
                       {tier.cta}
                     </Link>
+                  ) : tier.action === "checkout" ? (
+                    <button
+                      type="button"
+                      className="mt-8 w-full rounded-xl bg-[var(--accent)] px-4 py-3 font-medium text-[var(--accent-ink)]"
+                      onClick={() => {
+                        void (async () => {
+                          if (!user) {
+                            redirectToAppSignUp(app);
+                            return;
+                          }
+                          const res = await fetch("/api/billing/checkout", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ plan: tier.plan }),
+                          });
+                          const data = (await res.json()) as {
+                            url?: string;
+                            error?: string;
+                            code?: string;
+                          };
+                          if (res.ok && data.url) {
+                            window.location.href = data.url;
+                            return;
+                          }
+                          if (data.code === "STRIPE_NOT_CONFIGURED") {
+                            redirectToAppSignUp(app);
+                            return;
+                          }
+                          window.alert(
+                            data.error ?? "Billing unavailable right now.",
+                          );
+                        })();
+                      }}
+                    >
+                      {tier.cta}
+                    </button>
                   ) : (
                     <button
                       type="button"
                       className="mt-8 w-full rounded-xl bg-[var(--accent)] px-4 py-3 font-medium text-[var(--accent-ink)]"
-                      onClick={() => app.redirectToSignUp()}
+                      onClick={() => redirectToAppSignUp(app)}
                     >
                       {tier.cta}
                     </button>
@@ -925,7 +985,7 @@ npm run vesperer -- personas create --from persona.json
             </ShimmerButton>
             <button
               type="button"
-              onClick={() => app.redirectToSignUp()}
+              onClick={() => redirectToAppSignUp(app)}
               className="inline-flex items-center justify-center rounded-xl border border-[var(--line)] px-6 py-3.5"
             >
               Create your own

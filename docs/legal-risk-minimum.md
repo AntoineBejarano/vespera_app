@@ -31,12 +31,20 @@
 Registered office: 128 City Road, London, EC1V 2NX, United Kingdom  
 [Companies House](https://find-and-update.company-information.service.gov.uk/company/16506991)
 
+## Pagos (Stripe vs After Dark)
+
+- **Subdominio ≠ compliance Stripe.** Adult AI / erótica es *Prohibited* en Stripe aunque viva en `xxx.vesperer.com`.
+- Apex SFW (Creator/Studio): Stripe Checkout + Portal + webhook (`src/app/api/billing/*`). Guard bloquea host After Dark.
+- After Dark: rail adult / Stars — **nunca** las keys Stripe del apex.
+- Legales: `/legal/billing`, `/legal/refunds` (+ Terms §13).
+
 ## Qué NO cubre (riesgo residual)
 
 - Verificación real de edad (ID/KYC)
 - Audit log persistente
 - Denuncias a autoridades automatizadas
 - Integradores API que mienten en `endUserAgeAttested`
+- Procesador adult After Dark aún no cableado
 
 ## Acciones recomendadas antes de escalar tráfico
 

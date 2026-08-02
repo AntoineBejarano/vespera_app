@@ -43,7 +43,7 @@ const FAQ = [
   },
   {
     q: "How many characters can I create?",
-    a: "The free Starter plan allows 1 character. Paid Creator/Studio limits will apply when billing is enabled; until then you can use the free plan and export anytime.",
+    a: "The free Starter plan allows 1 character. Creator/Studio on vesperer.com bill via Stripe when configured (see Billing Terms and Refunds). After Dark 18+ uses a separate adult payment rail — never Stripe. Export anytime.",
   },
   {
     q: "Can I import an existing character?",

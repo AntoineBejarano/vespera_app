@@ -126,6 +126,8 @@ export function LegalFooter({
                   external: true,
                 },
                 { href: "/legal/acceptable-use", label: "Safety" },
+                { href: "/legal/billing", label: "Billing" },
+                { href: "/legal/adult-content", label: "Adult notice" },
               ] as const
             ).map((link) =>
               "external" in link && link.external ? (

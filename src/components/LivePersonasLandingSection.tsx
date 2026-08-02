@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useHexclaveApp } from "@hexclave/next";
 import { BlurFade, ShimmerButton } from "@/components/magicui/effects";
+import { redirectToAppSignUp } from "@/lib/auth/redirects";
 import {
   CONVERSATION_MODES,
   IDENTITY_LAYERS,
@@ -213,7 +214,7 @@ export function LivePersonasLandingSection() {
         </BlurFade>
 
         <BlurFade delay={0.2} className="mt-10 flex flex-wrap items-center gap-4">
-          <ShimmerButton onClick={() => app.redirectToSignUp()}>
+          <ShimmerButton onClick={() => redirectToAppSignUp(app)}>
             Build a Live Persona
           </ShimmerButton>
           <Link

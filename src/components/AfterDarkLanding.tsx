@@ -7,6 +7,7 @@ import { useHexclaveApp, useUser } from "@hexclave/next";
 import { AppNav } from "@/components/AppNav";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LegalFooter } from "@/components/LegalFooter";
+import { PageSpinner } from "@/components/Spinner";
 import {
   BlurFade,
   Marquee,
@@ -94,7 +95,7 @@ const PRICING = [
     name: "Agent",
     price: "€20",
     period: "/agent /mo",
-    blurb: "One private companion that remembers.",
+    blurb: "One private companion that remembers. (Indicative — adult rail soon.)",
     features: [
       "1 agent persona",
       "Telegram bot included",
@@ -102,7 +103,7 @@ const PRICING = [
       "Photo tags + multi-bubble chat",
       "Chat API access",
     ],
-    cta: "Start with 1 agent",
+    cta: "Join waitlist — Agent",
     highlight: true,
     action: "signup" as const,
   },
@@ -110,7 +111,7 @@ const PRICING = [
     name: "Studio",
     price: "€59",
     period: "/mo",
-    blurb: "Run a small roster without losing the plot.",
+    blurb: "Run a small roster without losing the plot. (Indicative — adult rail soon.)",
     features: [
       "Up to 3 agents",
       "Multi-bot / multi-peer",
@@ -118,7 +119,7 @@ const PRICING = [
       "Priority model routing",
       "Human handoff hooks",
     ],
-    cta: "Scale to Studio",
+    cta: "Join waitlist — Studio",
     highlight: false,
     action: "signup" as const,
   },
@@ -164,6 +165,10 @@ export function AfterDarkLanding() {
       return;
     }
   }, [app, search, user]);
+
+  if (user && !search.get("hexclave_cross_domain_auth")) {
+    return <PageSpinner label="Entering Studio" variant="after-dark" />;
+  }
 
   return (
     <div className="relative overflow-hidden" data-theme="after-dark">
@@ -543,9 +548,18 @@ export function AfterDarkLanding() {
           <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
             Pricing
           </h2>
-          <p className="mt-3 text-[var(--muted)]">
-            Pay per agent. Simple. Adult-friendly billing coming via
-            creator-native rails.
+          <p className="mt-3 max-w-2xl text-[var(--muted)]">
+            Pay per agent when adult billing goes live — via an adult-compatible
+            processor and/or Telegram Stars, not Stripe. A subdomain alone does
+            not make adult purchases Stripe-eligible; After Dark stays on a
+            separate payment rail from apex SFW plans. See{" "}
+            <a
+              href="/legal/billing"
+              className="underline underline-offset-2 hover:text-[var(--ink)]"
+            >
+              Billing Terms
+            </a>
+            .
           </p>
         </BlurFade>
         <div className="mt-12 grid gap-4 lg:grid-cols-3">

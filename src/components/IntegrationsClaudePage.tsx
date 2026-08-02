@@ -10,6 +10,7 @@ import {
   TerminalTyping,
 } from "@/components/magicui/terminal";
 import { useHexclaveApp } from "@hexclave/next";
+import { redirectToAppSignUp } from "@/lib/auth/redirects";
 
 const STEPS = [
   {
@@ -160,7 +161,7 @@ export function IntegrationsClaudePage() {
             production-grade tenant isolation.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <ShimmerButton onClick={() => app.redirectToSignUp()}>
+            <ShimmerButton onClick={() => redirectToAppSignUp(app)}>
               Get a free API key
             </ShimmerButton>
             <Link
@@ -330,7 +331,7 @@ npm run vesperer -- chat --key vesp_… --message "Hello" --peer demo --age-atte
               do the rest.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <ShimmerButton onClick={() => app.redirectToSignUp()}>
+              <ShimmerButton onClick={() => redirectToAppSignUp(app)}>
                 Start free
               </ShimmerButton>
               <Link

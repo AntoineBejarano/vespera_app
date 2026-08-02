@@ -22,7 +22,11 @@ export async function checkAndIncrementDailyLimit(userId: string): Promise<{
   const limit = settings?.dailyLimit ?? DEFAULT_LIMIT;
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
-  if (user?.plan === "premium") {
+  if (
+    user?.plan === "premium" ||
+    user?.plan === "creator" ||
+    user?.plan === "studio"
+  ) {
     return { allowed: true, remaining: 9999, limit: 9999 };
   }
 
