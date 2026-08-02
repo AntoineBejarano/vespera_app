@@ -9,7 +9,8 @@
   --bg: #07090d;
   --bg-elevated: #10151d;
   --ink: #eef3f8;
-  --muted: #8a96a8;
+  /* ≥4.5:1 on --bg for WCAG AA (PageSpeed Accessibility) */
+  --muted: #9aa6b8;
   --line: #243040;
   --accent: #5badee;
   --accent-2: #aed4fa;
@@ -172,10 +173,26 @@ a {
 
 @keyframes vespera-grid {
   0% {
-    background-position: 0 0;
+    transform: translate3d(0, 0, 0);
   }
   100% {
-    background-position: 0 48px;
+    transform: translate3d(0, 48px, 0);
+  }
+}
+
+@keyframes shimmer-x {
+  0% {
+    transform: translate3d(-100%, 0, 0);
+  }
+  100% {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-\[vespera-grid_20s_linear_infinite\],
+  .motion-safe\:animate-\[shimmer-x_2\.2s_ease-in-out_infinite\] {
+    animation: none !important;
   }
 }
 

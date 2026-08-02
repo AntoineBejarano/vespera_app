@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { DM_Sans, Syne } from "next/font/google";
-import { HexclaveProvider, HexclaveTheme } from "@hexclave/next";
-import { hexclaveServerApp } from "@/hexclave/server";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
@@ -16,12 +14,14 @@ const display = Syne({
   variable: "--font-display",
   subsets: ["latin"],
   weight: ["500", "600", "700", "800"],
+  display: "swap",
 });
 
 const body = DM_Sans({
   variable: "--font-body",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -88,19 +88,17 @@ export default function RootLayout({
       <body className="min-h-full font-[family-name:var(--font-body)]">
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-NTQQWCJW1F"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
-        <Script id="google-analytics" strategy="afterInteractive">
+        <Script id="google-analytics" strategy="lazyOnload">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-NTQQWCJW1F');
+            gtag('config', 'G-NTQQWCJW1F', { send_page_view: true });
           `}
         </Script>
-        <HexclaveProvider app={hexclaveServerApp}>
-          <HexclaveTheme>{children}</HexclaveTheme>
-        </HexclaveProvider>
+        {children}
       </body>
     </html>
   );

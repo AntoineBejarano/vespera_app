@@ -60,7 +60,6 @@ export function buildApexLlmsTxt(): string {
     ]);
 
   const builders = [
-    link("Chat API & CLI docs", apexUrl("/docs"), "vesp_ persona keys and vsk_ account keys"),
     link(
       "Sitemap",
       `${SITE_URL}/sitemap.xml`,
@@ -70,6 +69,11 @@ export function buildApexLlmsTxt(): string {
       "Full LLM context",
       `${SITE_URL}/llms-full.txt`,
       "Expanded page summaries for deep agent ingestion",
+    ),
+    link(
+      "Studio sign-in",
+      `${SITE_URL}/handler/sign-in`,
+      "API & CLI docs are available inside the signed-in studio at /docs",
     ),
   ];
 

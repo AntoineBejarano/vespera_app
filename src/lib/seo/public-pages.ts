@@ -85,22 +85,6 @@ export const APEX_STATIC_PAGES: PublicPageEntry[] = [
     llms: true,
   },
   {
-    path: "/docs",
-    title: "Docs / Chat API",
-    description: "X-Api-Key auth, peer-isolated memory, CLI and Personas API",
-    changeFrequency: "monthly",
-    priority: 0.85,
-    llms: true,
-  },
-  {
-    path: "/help",
-    title: "Help & FAQ",
-    description: "Telegram, API, import, export, delete and account help",
-    changeFrequency: "monthly",
-    priority: 0.8,
-    llms: true,
-  },
-  {
     path: "/explore",
     title: "Explore",
     description: "Hub for Meet / Learn / Hire / Create programmatic SEO pages",

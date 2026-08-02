@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { LandingPage } from "@/components/LandingPage";
-import { PageSpinner } from "@/components/Spinner";
 import { getAppUser } from "@/lib/session";
 import {
   SITE_DESCRIPTION,
@@ -129,9 +127,7 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Suspense fallback={<PageSpinner />}>
-        <LandingPage />
-      </Suspense>
+      <LandingPage />
     </>
   );
 }

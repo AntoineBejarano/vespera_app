@@ -1,8 +1,20 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { hexclaveServerApp } from "@/hexclave/server";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { ensurePersonalWorkspace } from "@/lib/workspace/ensure";
+
+/** Hexclave refresh cookies look like `stack-refresh-<projectId>--…`. */
+async function hasLikelyHexclaveSession() {
+  const jar = await cookies();
+  return jar.getAll().some(
+    (c) =>
+      c.name.includes("stack-refresh") ||
+      c.name.startsWith("stack-") ||
+      c.name.includes("hexclave"),
+  );
+}
 
 /**
  * Resolve IdP session (Hexclave v1) → local Prisma User.
@@ -15,6 +27,11 @@ export async function getAppUser(opts?: {
   or?: "redirect" | "throw" | "return-null";
 }) {
   const mode = opts?.or ?? "return-null";
+
+  // Anonymous fast path: skip IdP round-trip when no session cookie (homepage TTFB).
+  if (mode === "return-null" && !(await hasLikelyHexclaveSession())) {
+    return null;
+  }
 
   let hx;
   try {

@@ -145,10 +145,10 @@ export function BusinessDocLayout({
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              href="/docs"
+              href="/handler/sign-in"
               className="rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-medium text-[var(--accent-ink)]"
             >
-              Read the docs
+              Sign in for docs
             </Link>
             <Link
               href="/register"

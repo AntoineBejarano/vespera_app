@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { LEGAL_PAGES } from "@/lib/legal/constants";
 import { AFTER_DARK_URL, SITE_URL } from "@/lib/site";
 
@@ -28,12 +27,10 @@ const MARKETING_COLUMNS: {
   {
     title: "Developers",
     links: [
-      { href: "/docs", label: "API documentation" },
       { href: "/business/platforms", label: "For platforms" },
       { href: "/#cli", label: "CLI for agents" },
-      { href: "/docs#cli", label: "CLI docs" },
       { href: "/technology", label: "Technology" },
-      { href: "/help", label: "Help" },
+      { href: "/handler/sign-in", label: "Studio · API docs" },
     ],
   },
   {
@@ -70,7 +67,7 @@ export function LegalFooter({
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
             {MARKETING_COLUMNS.map((col) => (
               <div key={col.title}>
-                <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--ink)]">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--ink)]">
                   {col.title}
                 </p>
                 <nav className="mt-3 flex flex-col gap-2">
@@ -84,20 +81,20 @@ export function LegalFooter({
                         {link.label}
                       </a>
                     ) : (
-                      <Link
+                      <a
                         key={link.label}
                         href={link.href}
                         className="hover:text-[var(--ink)]"
                       >
                         {link.label}
-                      </Link>
+                      </a>
                     ),
                   )}
                 </nav>
               </div>
             ))}
           </div>
-          <p className="text-xs leading-relaxed text-[var(--muted)]/80">
+          <p className="text-xs leading-relaxed text-[var(--muted)]">
             Vesperer is a product of{" "}
             <a
               href="https://deevlylabs.com"
@@ -147,13 +144,13 @@ export function LegalFooter({
                   {link.label}
                 </a>
               ) : (
-                <Link
+                <a
                   key={link.label}
                   href={link.href}
                   className="hover:text-[var(--ink)]"
                 >
                   {link.label}
-                </Link>
+                </a>
               ),
             )}
           </nav>
@@ -167,21 +164,21 @@ export function LegalFooter({
           </p>
           <nav className="flex flex-wrap gap-x-4 gap-y-2">
             {LEGAL_PAGES.map((p) => (
-              <Link
+              <a
                 key={p.slug}
                 href={`/legal/${p.slug}`}
                 className="hover:text-[var(--ink)]"
               >
                 {p.title}
-              </Link>
+              </a>
             ))}
-            <Link href="/report" className="hover:text-[var(--ink)]">
+            <a href="/report" className="hover:text-[var(--ink)]">
               Report abuse
-            </Link>
+            </a>
           </nav>
         </div>
 
-        <p className="text-xs leading-relaxed text-[var(--muted)]/80">
+        <p className="text-xs leading-relaxed text-[var(--muted)]">
           {variant === "after-dark"
             ? "After Dark is an adults-only Vesperer surface on xxx.vesperer.com, operated by Deevly Labs LTD. Sexual content involving minors is strictly prohibited."
             : "Vesperer is a product of Deevly Labs LTD. Automated AI interactions are disclosed per our Terms and Privacy Policy. Illegal and exploitative content is prohibited."}

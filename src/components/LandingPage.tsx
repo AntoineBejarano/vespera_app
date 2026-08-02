@@ -1,26 +1,23 @@
-"use client";
-
-import { useEffect } from "react";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useHexclaveApp, useUser } from "@hexclave/next";
-import { AppNav } from "@/components/AppNav";
-import { BrandLogo } from "@/components/BrandLogo";
+import { MarketingNav } from "@/components/MarketingNav";
 import { LegalFooter } from "@/components/LegalFooter";
-import { PageSpinner } from "@/components/Spinner";
 import {
-  BlurFade,
   RetroGrid,
-  ShimmerButton,
-} from "@/components/magicui/effects";
-import { LivePersonasLandingSection } from "@/components/LivePersonasLandingSection";
-import { VoiceLandingSection } from "@/components/VoiceLandingSection";
-import {
-  redirectToAppSignIn,
-  redirectToAppSignUp,
-} from "@/lib/auth/redirects";
+  ShimmerLink,
+} from "@/components/magicui/static-effects";
 import { AFTER_DARK_URL } from "@/lib/site";
 import type { VoiceAgentId } from "@/lib/voice/types";
+
+/** No-op wrapper — keeps markup stable without client motion (LCP). */
+function BlurFade({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  className?: string;
+}) {
+  return <div className={className}>{children}</div>;
+}
 
 const PATHS = [
   {
@@ -267,20 +264,13 @@ const PRICING = [
   },
 ];
 
-function parseVoiceAgent(value: string | null): VoiceAgentId {
-  if (value === "luna" || value === "einstein" || value === "stoic-mentor") {
-    return value;
-  }
-  return "einstein";
-}
-
 /** Hero visual — personas + memory continuity, not a support script. */
 function LandingProductPreview() {
   return (
     <div className="relative w-full overflow-hidden border-t border-[var(--line)] bg-[var(--bg-elevated)]/80">
       <div className="mx-auto grid max-w-6xl lg:grid-cols-2">
         <div className="border-b border-[var(--line)] p-5 sm:p-7 lg:border-b-0 lg:border-r">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)]">
             Meet a persona
           </p>
           <ul className="mt-4 space-y-2.5 text-sm">
@@ -298,7 +288,7 @@ function LandingProductPreview() {
           </ul>
         </div>
         <div className="p-5 sm:p-7">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--muted)]">
             A conversation that continues
           </p>
           <div className="mt-4 space-y-3 text-sm">
@@ -319,114 +309,68 @@ function LandingProductPreview() {
   );
 }
 
-export function LandingPage() {
-  const app = useHexclaveApp();
-  const user = useUser({ or: "return-null" });
-  const search = useSearchParams();
-
-  const voiceAgent = parseVoiceAgent(search.get("agent"));
-
-  useEffect(() => {
-    if (search.get("hexclave_cross_domain_auth")) return;
-
-    if (user) {
-      window.location.replace("/auth/continue");
-      return;
-    }
-    const auth = search.get("auth");
-    if (auth === "signin") void redirectToAppSignIn(app);
-    if (auth === "signup") void redirectToAppSignUp(app);
-  }, [app, search, user]);
-
-  useEffect(() => {
-    if (user) return;
-    const wantsVoice =
-      search.has("agent") ||
-      (typeof window !== "undefined" && window.location.hash === "#voice");
-    if (!wantsVoice) return;
-    const t = window.setTimeout(() => {
-      document.getElementById("voice")?.scrollIntoView({ behavior: "smooth" });
-    }, 80);
-    return () => window.clearTimeout(t);
-  }, [search, user]);
-
-  // Safety net if server redirect hasn't fired yet (e.g. client nav).
-  if (user && !search.get("hexclave_cross_domain_auth")) {
-    return <PageSpinner label="Entering Studio" />;
-  }
-
+export function LandingPage({
+  voiceAgent = "einstein",
+}: {
+  voiceAgent?: VoiceAgentId;
+}) {
   return (
     <div className="relative overflow-hidden">
-      <AppNav variant="marketing" />
+      <MarketingNav variant="marketing" />
 
-      {/* Hero */}
+      {/* Hero — painted in HTML (no client opacity:0 / Hexclave) */}
       <section className="relative flex min-h-[92dvh] flex-col">
         <RetroGrid />
         <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 pb-10 pt-12 sm:px-6 sm:pb-14 sm:pt-16">
-          <BlurFade>
-            <BrandLogo href="/" size="hero" priority className="mb-8" />
-          </BlurFade>
-          <BlurFade delay={0.05}>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)] sm:text-xs sm:tracking-[0.35em]">
-              They remember. They change. They stay consistent.
-            </p>
-          </BlurFade>
-          <BlurFade delay={0.1}>
-            <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[2.4rem] leading-[1.05] tracking-tight text-[var(--ink)] sm:text-5xl sm:leading-[1.05]">
-              Meet someone{" "}
-              <span className="italic text-[var(--accent-2)]">impossible</span>.
-            </h1>
-          </BlurFade>
-          <BlurFade delay={0.16}>
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
-              They remember what others forget. Not another chatbot — someone who
-              stays. Talk to history, fall for an original character, learn from a
-              mentor, or build a personality that becomes more real every time
-              you talk.
-            </p>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--muted)] sm:text-base">
-              Every Vesperer persona has a soul, feelings, long-term memory and
-              a voice — a stable identity and evolving relationships across chat
-              and speech.
-            </p>
-          </BlurFade>
-          <BlurFade
-            delay={0.22}
-            className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap"
-          >
-            <ShimmerButton
-              className="w-full sm:w-auto"
-              onClick={() => {
-                window.location.href = "/explore";
-              }}
-            >
+          <p className="mb-8 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-[-0.03em] text-[var(--ink)] sm:text-5xl">
+            Vesper<span className="text-[var(--accent-2)]">er</span>
+          </p>
+          <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)] sm:text-xs sm:tracking-[0.35em]">
+            They remember. They change. They stay consistent.
+          </p>
+          <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[2.4rem] leading-[1.05] tracking-tight text-[var(--ink)] sm:text-5xl sm:leading-[1.05]">
+            Meet someone{" "}
+            <span className="italic text-[var(--accent-2)]">impossible</span>.
+          </h1>
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
+            They remember what others forget. Not another chatbot — someone who
+            stays. Talk to history, fall for an original character, learn from a
+            mentor, or build a personality that becomes more real every time
+            you talk.
+          </p>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--muted)] sm:text-base">
+            Every Vesperer persona has a soul, feelings, long-term memory and
+            a voice — a stable identity and evolving relationships across chat
+            and speech.
+          </p>
+          <div className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
+            <ShimmerLink href="/explore" className="w-full sm:w-auto">
               Meet a persona
-            </ShimmerButton>
-            <button
-              type="button"
-              onClick={() => redirectToAppSignUp(app)}
+            </ShimmerLink>
+            <a
+              href="/handler/sign-up"
               className="inline-flex w-full items-center justify-center rounded-xl border border-[var(--line)] px-6 py-3.5 text-center sm:w-auto"
             >
               Create your own
-            </button>
-          </BlurFade>
+            </a>
+          </div>
           <p className="mt-4 text-xs text-[var(--muted)]">
             Free to start · No code required · Export anytime
           </p>
           <p className="mt-3 text-xs text-[var(--muted)]">
             Building for a team or platform?{" "}
-            <Link
+            <a
               href="/business"
               className="text-[var(--ink)] underline-offset-2 hover:underline"
             >
               Explore Vesperer for Business
-            </Link>
+            </a>
             .
           </p>
         </div>
-        <BlurFade delay={0.2} className="relative z-10">
+        <div className="relative z-10">
           <LandingProductPreview />
-        </BlurFade>
+        </div>
       </section>
 
       {/* Fall for / Learn / Hire / Create */}
@@ -454,7 +398,7 @@ export function LandingPage() {
                   {path.body}
                 </p>
                 {path.afterDark ? (
-                  <p className="mt-3 text-xs text-[var(--muted)]/80">
+                  <p className="mt-3 text-xs text-[var(--muted)]">
                     Adults only (18+). Hosted on xxx.vesperer.com — separate from
                     apex Stripe billing.
                   </p>
@@ -494,7 +438,7 @@ export function LandingPage() {
                   <p className="font-[family-name:var(--font-display)] text-xl font-semibold">
                     {card.name}
                   </p>
-                  <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-[var(--muted)]">
+                  <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-[var(--muted)]">
                     {card.label}
                   </p>
                   <dl className="mt-4 flex-1 space-y-2 text-sm">
@@ -544,9 +488,57 @@ export function LandingPage() {
         </div>
       </section>
 
-      <VoiceLandingSection defaultAgent={voiceAgent} />
+      {/* Voice + Live Personas — linked, not bundled on first paint */}
+      <section
+        id="voice"
+        className="scroll-mt-24 border-y border-[var(--line)] bg-[var(--bg-elevated)]/30 py-16 sm:py-24"
+      >
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
+            Vesperer Voice
+          </p>
+          <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-5xl">
+            Choose who answers.
+          </h2>
+          <p className="mt-4 max-w-xl text-[var(--muted)]">
+            Speak or type. The same identity and memories continue across chat
+            and voice.
+          </p>
+          <a
+            href={`/voice${voiceAgent !== "einstein" ? `?agent=${voiceAgent}` : ""}`}
+            className="mt-8 inline-flex rounded-xl border border-[var(--line)] px-5 py-3 text-sm hover:border-[var(--accent)]"
+          >
+            Try voice demo →
+          </a>
+        </div>
+      </section>
 
-      <LivePersonasLandingSection />
+      <section
+        id="live-personas"
+        className="scroll-mt-24 border-y border-[var(--line)] bg-[var(--bg-elevated)]/25 py-16 sm:py-24"
+      >
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
+            Live Personas
+          </p>
+          <h2 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-5xl">
+            Keep a persona current without erasing who they were.
+          </h2>
+          <p className="mt-4 max-w-2xl text-[var(--muted)]">
+            Continuous sources, temporal identity layers, and disclosure —
+            without shipping the interactive builder on the first paint.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <ShimmerLink href="/handler/sign-up">Build a Live Persona</ShimmerLink>
+            <a
+              href="/explore?filter=meet"
+              className="inline-flex rounded-xl border border-[var(--line)] px-5 py-3 text-sm hover:border-[var(--accent)]"
+            >
+              Meet examples →
+            </a>
+          </div>
+        </div>
+      </section>
 
       {/* Problem */}
       <section className="border-y border-[var(--line)] bg-[var(--bg-elevated)]/35 py-16 sm:py-24">
@@ -605,9 +597,9 @@ export function LandingPage() {
           ))}
         </ol>
         <BlurFade delay={0.2} className="mt-10">
-          <ShimmerButton onClick={() => redirectToAppSignUp(app)}>
+          <ShimmerLink href="/handler/sign-up">
             Create your first persona
-          </ShimmerButton>
+          </ShimmerLink>
         </BlurFade>
       </section>
 
@@ -627,12 +619,12 @@ export function LandingPage() {
               special without starting from zero.
             </p>
             <div className="mt-8">
-              <Link
+              <a
                 href="/bring"
                 className="inline-flex rounded-xl bg-[var(--accent)] px-6 py-3.5 font-medium text-[var(--accent-ink)]"
               >
                 Bring my character
-              </Link>
+              </a>
             </div>
             <p className="mt-4 text-xs text-[var(--muted)]">
               Only import characters and content you created or have permission
@@ -668,18 +660,18 @@ export function LandingPage() {
             across chat, voice and every returning conversation.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link
+            <a
               href="/business"
               className="inline-flex rounded-xl bg-[var(--accent)] px-6 py-3.5 text-sm font-medium text-[var(--accent-ink)]"
             >
               Explore Vesperer for Business
-            </Link>
-            <Link
+            </a>
+            <a
               href="/explore?filter=hire"
               className="inline-flex rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
             >
               Meet AI employees
-            </Link>
+            </a>
           </div>
         </BlurFade>
       </section>
@@ -717,13 +709,12 @@ export function LandingPage() {
             accounts.
           </p>
           <BlurFade delay={0.1} className="mt-8">
-            <button
-              type="button"
-              className="rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
-              onClick={() => redirectToAppSignUp(app)}
+            <a
+              href="/handler/sign-up"
+              className="inline-flex rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
             >
               Create an institutional persona
-            </button>
+            </a>
           </BlurFade>
         </div>
       </section>
@@ -753,9 +744,9 @@ export function LandingPage() {
           ))}
         </ul>
         <BlurFade delay={0.1} className="mt-8">
-          <ShimmerButton onClick={() => redirectToAppSignUp(app)}>
+          <ShimmerLink href="/handler/sign-up">
             Build for your audience
-          </ShimmerButton>
+          </ShimmerLink>
         </BlurFade>
       </section>
 
@@ -809,30 +800,30 @@ export function LandingPage() {
                 no click-ops required.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link
+                <a
                   href="/integrations/claude"
                   className="inline-flex rounded-xl bg-[var(--accent)] px-6 py-3.5 text-sm font-medium text-[var(--accent-ink)]"
                 >
                   Vibecode with Claude
-                </Link>
-                <Link
-                  href="/docs#cli"
+                </a>
+                <a
+                  href="/handler/sign-in"
                   className="inline-flex rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
                 >
                   CLI docs
-                </Link>
-                <Link
-                  href="/docs"
+                </a>
+                <a
+                  href="/handler/sign-in"
                   className="inline-flex rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
                 >
                   API documentation
-                </Link>
-                <Link
+                </a>
+                <a
                   href="/settings"
                   className="inline-flex rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
                 >
                   Get an API key
-                </Link>
+                </a>
               </div>
             </BlurFade>
             <BlurFade delay={0.08}>
@@ -862,19 +853,19 @@ npm run vesperer -- personas create --from persona.json
             <p className="mt-3 text-[var(--muted)]">
               Apex plans are SFW creator tools. Card billing runs through Stripe
               when configured — see{" "}
-              <Link
+              <a
                 href="/legal/billing"
                 className="text-[var(--ink)] underline-offset-2 hover:underline"
               >
                 Billing Terms
-              </Link>{" "}
+              </a>{" "}
               and{" "}
-              <Link
+              <a
                 href="/legal/refunds"
                 className="text-[var(--ink)] underline-offset-2 hover:underline"
               >
                 Refunds
-              </Link>
+              </a>
               . Adult After Dark uses a separate payment rail.
             </p>
           </BlurFade>
@@ -904,56 +895,19 @@ npm run vesperer -- personas create --from persona.json
                     ))}
                   </ul>
                   {tier.action === "business" ? (
-                    <Link
+                    <a
                       href="/business"
                       className="mt-8 block w-full rounded-xl border border-[var(--line)] px-4 py-3 text-center font-medium text-[var(--ink)]"
                     >
                       {tier.cta}
-                    </Link>
-                  ) : tier.action === "checkout" ? (
-                    <button
-                      type="button"
-                      className="mt-8 w-full rounded-xl bg-[var(--accent)] px-4 py-3 font-medium text-[var(--accent-ink)]"
-                      onClick={() => {
-                        void (async () => {
-                          if (!user) {
-                            redirectToAppSignUp(app);
-                            return;
-                          }
-                          const res = await fetch("/api/billing/checkout", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ plan: tier.plan }),
-                          });
-                          const data = (await res.json()) as {
-                            url?: string;
-                            error?: string;
-                            code?: string;
-                          };
-                          if (res.ok && data.url) {
-                            window.location.href = data.url;
-                            return;
-                          }
-                          if (data.code === "STRIPE_NOT_CONFIGURED") {
-                            redirectToAppSignUp(app);
-                            return;
-                          }
-                          window.alert(
-                            data.error ?? "Billing unavailable right now.",
-                          );
-                        })();
-                      }}
-                    >
-                      {tier.cta}
-                    </button>
+                    </a>
                   ) : (
-                    <button
-                      type="button"
-                      className="mt-8 w-full rounded-xl bg-[var(--accent)] px-4 py-3 font-medium text-[var(--accent-ink)]"
-                      onClick={() => redirectToAppSignUp(app)}
+                    <a
+                      href="/handler/sign-up"
+                      className="mt-8 block w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-center font-medium text-[var(--accent-ink)]"
                     >
                       {tier.cta}
-                    </button>
+                    </a>
                   )}
                 </div>
               </BlurFade>
@@ -976,20 +930,13 @@ npm run vesperer -- personas create --from persona.json
             companion, mentor, historical mind, creator or AI employee.
           </p>
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-            <ShimmerButton
-              onClick={() => {
-                window.location.href = "/explore";
-              }}
-            >
-              Meet a persona
-            </ShimmerButton>
-            <button
-              type="button"
-              onClick={() => redirectToAppSignUp(app)}
+            <ShimmerLink href="/explore">Meet a persona</ShimmerLink>
+            <a
+              href="/handler/sign-up"
               className="inline-flex items-center justify-center rounded-xl border border-[var(--line)] px-6 py-3.5"
             >
               Create your own
-            </button>
+            </a>
           </div>
         </BlurFade>
       </section>

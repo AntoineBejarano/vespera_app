@@ -80,8 +80,18 @@ export const APP_NAV_GROUPS: NavGroup[] = [
 ];
 
 export const APP_RESOURCE_LINKS: NavItem[] = [
-  { id: "help", label: "Help", href: "/help", external: true },
-  { id: "docs", label: "Docs", href: "/docs", external: true },
+  {
+    id: "help",
+    label: "Help",
+    href: "/help",
+    match: (p) => p === "/help" || p.startsWith("/help/"),
+  },
+  {
+    id: "docs",
+    label: "Docs",
+    href: "/docs",
+    match: (p) => p === "/docs" || p.startsWith("/docs/"),
+  },
   {
     id: "claude",
     label: "Claude · vibecode",

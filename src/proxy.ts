@@ -36,10 +36,6 @@ function isAgeExempt(pathname: string) {
     pathname.startsWith("/business/") ||
     pathname === "/technology" ||
     pathname === "/voice" ||
-    pathname === "/docs" ||
-    pathname.startsWith("/docs/") ||
-    pathname === "/help" ||
-    pathname.startsWith("/help/") ||
     pathname === "/explore" ||
     pathname.startsWith("/meet/") ||
     pathname.startsWith("/learn/") ||
@@ -101,6 +97,17 @@ export async function proxy(request: NextRequest) {
   const host = normalizeHost(
     request.headers.get("x-forwarded-host") || request.headers.get("host"),
   );
+
+  // Soft ?auth= on homepage → handler (no client Hexclave on `/`)
+  if (pathname === "/") {
+    const auth = request.nextUrl.searchParams.get("auth");
+    if (auth === "signin" || auth === "signup") {
+      const url = publicNextUrl(request);
+      url.pathname = auth === "signup" ? "/handler/sign-up" : "/handler/sign-in";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+  }
 
   // Legacy auth routes → same-domain Hexclave handler pages
   if (pathname === "/login" || pathname === "/register") {

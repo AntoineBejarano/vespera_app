@@ -113,7 +113,7 @@ export const BUSINESS_FAQS = [
   },
   {
     q: "Where can I find technical documentation?",
-    a: "Public Chat API and CLI docs are available at /docs. Technology details for identity layers and memory are at /technology. For design partnerships, contact legal@mail.vesperer.com.",
+    a: "API & CLI docs live inside the signed-in studio at /docs. Technology overview for identity layers and memory is at /technology. For design partnerships, contact legal@mail.vesperer.com.",
   },
 ] as const;
 

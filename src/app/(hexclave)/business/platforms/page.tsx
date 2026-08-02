@@ -97,7 +97,7 @@ export default function BusinessPlatformsPage() {
         ]}
         capabilities={PLATFORM_CAPABILITIES}
         faqs={PLATFORM_FAQS}
-        primaryCta={{ href: "/docs", label: "Open API documentation" }}
+        primaryCta={{ href: "/handler/sign-in", label: "Sign in for API docs" }}
         secondaryCta={{
           href: "mailto:legal@mail.vesperer.com?subject=Vesperer%20Platform%20integration",
           label: "Discuss integration",
@@ -144,10 +144,10 @@ export default function BusinessPlatformsPage() {
           </ul>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              href="/docs"
+              href="/handler/sign-in"
               className="rounded-xl border border-[var(--line)] px-5 py-3 text-sm"
             >
-              Docs
+              Studio docs
             </Link>
             <Link
               href="/integrations/claude"

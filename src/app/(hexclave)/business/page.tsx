@@ -92,7 +92,7 @@ export default function BusinessPage() {
           body: c.body,
         }))}
         faqs={BUSINESS_FAQS}
-        primaryCta={{ href: "/docs", label: "API & CLI docs" }}
+        primaryCta={{ href: "/handler/sign-in", label: "Sign in for API docs" }}
         secondaryCta={{
           href: "mailto:legal@mail.vesperer.com?subject=Vesperer%20Business",
           label: "Talk to us",
@@ -189,8 +189,11 @@ export default function BusinessPage() {
           </h2>
           <ul className="mt-6 space-y-3 text-sm text-[var(--muted)]">
             <li>
-              <Link href="/docs" className="text-[var(--ink)] hover:underline">
-                /docs
+              <Link
+                href="/handler/sign-in"
+                className="text-[var(--ink)] hover:underline"
+              >
+                studio /docs
               </Link>
               {" — "}Chat API, CLI and key model for agents and backends.
             </li>

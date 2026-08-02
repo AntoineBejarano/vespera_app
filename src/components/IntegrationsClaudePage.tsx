@@ -165,7 +165,7 @@ export function IntegrationsClaudePage() {
               Get a free API key
             </ShimmerButton>
             <Link
-              href="/docs#cli"
+              href="/handler/sign-in"
               className="rounded-xl border border-[var(--line)] px-5 py-3.5 text-sm hover:border-[var(--accent)]"
             >
               Read the CLI docs
@@ -341,10 +341,10 @@ npm run vesperer -- chat --key vesp_… --message "Hello" --peer demo --age-atte
                 Settings → API keys
               </Link>
               <Link
-                href="/docs"
+                href="/handler/sign-in"
                 className="rounded-xl border border-[var(--line)] px-5 py-3.5 text-sm"
               >
-                Full API reference
+                Sign in for API docs
               </Link>
             </div>
           </BlurFade>

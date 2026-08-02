@@ -78,7 +78,7 @@ export default function BusinessAgenciesPage() {
           href: "mailto:legal@mail.vesperer.com?subject=Vesperer%20Agencies%20design%20partner",
           label: "Book a design-partner call",
         }}
-        secondaryCta={{ href: "/docs", label: "Read API docs" }}
+        secondaryCta={{ href: "/handler/sign-in", label: "Sign in for API docs" }}
       >
         <section className="mt-14">
           <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold sm:text-3xl">

@@ -7,9 +7,9 @@ export const BRAND_SHORT = "vesperer";
 
 export type BrandVariant = "default" | "after-dark";
 
-/** Tight crops — full logo.png has too much padding and disappears in the nav. */
+/** Prefer 256px marks for LCP — full mark.png is 487² / ~110KB. */
 const MARK_SRC: Record<BrandVariant, string> = {
-  default: "/brand/mark.png",
+  default: "/brand/mark-256.png",
   "after-dark": "/brand/mark-after-dark.png",
 };
 

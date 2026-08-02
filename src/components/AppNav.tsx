@@ -61,7 +61,7 @@ function Wordmark({
         <span className={accentClass}>er</span>
       </span>
       {subtitle ? (
-        <span className="mt-0.5 block text-[9px] uppercase tracking-[0.28em] text-[var(--muted)]">
+        <span className="mt-0.5 block text-[11px] uppercase tracking-[0.28em] text-[var(--muted)]">
           {subtitle}
         </span>
       ) : null}
@@ -133,7 +133,7 @@ export function AppNav({
                         href={item.href}
                         className={`block px-4 py-2 text-[13px] transition hover:bg-white/[0.03] hover:text-[var(--ink)] ${
                           i === EXPLORE_LINKS.length - 1
-                            ? "mt-1 border-t border-white/[0.06] pt-3 text-[var(--muted)]/80"
+                            ? "mt-1 border-t border-white/[0.06] pt-3 text-[var(--muted)]"
                             : "text-[var(--muted)]"
                         }`}
                       >

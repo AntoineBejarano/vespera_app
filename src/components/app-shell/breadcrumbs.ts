@@ -9,6 +9,8 @@ const SEGMENT_LABELS: Record<string, string> = {
   invites: "Invite",
   memory: "Memory",
   new: "New",
+  docs: "Docs",
+  help: "Help",
 };
 
 export function getAppBreadcrumbs(pathname: string): Crumb[] {
