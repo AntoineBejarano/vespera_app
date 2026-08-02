@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useHexclaveApp } from "@hexclave/next";
 import { ALLOWED_MODELS, MODEL_LABELS } from "@/lib/ai/models";
 import { WorkspaceMembersPanel } from "@/components/WorkspaceMembersPanel";
@@ -29,6 +30,7 @@ type ApiKeyRow = {
 
 export default function SettingsClient() {
   const app = useHexclaveApp();
+  const search = useSearchParams();
   const [model, setModel] = useState("");
   const [usage, setUsage] = useState<{
     used: number;
@@ -47,18 +49,36 @@ export default function SettingsClient() {
     if (res.ok) setKeys(data.keys ?? []);
   }
 
+  async function refreshSettings() {
+    const res = await fetch("/api/user/settings");
+    const data = await res.json();
+    if (res.ok) {
+      setModel(data.preferredModel);
+      setUsage(data.usage);
+      setPlan(data.plan);
+    }
+  }
+
   useEffect(() => {
     void (async () => {
-      const res = await fetch("/api/user/settings");
-      const data = await res.json();
-      if (res.ok) {
-        setModel(data.preferredModel);
-        setUsage(data.usage);
-        setPlan(data.plan);
-      }
+      await refreshSettings();
       await refreshKeys();
+      if (search.get("billing") === "success") {
+        const sync = await fetch("/api/billing/sync", { method: "POST" });
+        const body = (await sync.json()) as { plan?: string; error?: string };
+        if (sync.ok) {
+          setPlan(body.plan ?? "free");
+          setMessage(`Billing updated — plan: ${body.plan ?? "free"}`);
+        } else {
+          setMessage(
+            body.error ??
+              "Payment received; plan sync is catching up. Use Sync billing if needed.",
+          );
+        }
+        await refreshSettings();
+      }
     })();
-  }, []);
+  }, [search]);
 
   async function saveModel() {
     const res = await fetch("/api/user/settings", {
@@ -200,7 +220,36 @@ export default function SettingsClient() {
           >
             Upgrade plan
           </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              void (async () => {
+                const res = await fetch("/api/billing/sync", { method: "POST" });
+                const data = (await res.json()) as {
+                  plan?: string;
+                  error?: string;
+                  stripeStatus?: string;
+                };
+                if (res.ok) {
+                  setPlan(data.plan ?? "free");
+                  setMessage(
+                    `Synced — plan ${data.plan ?? "free"}${
+                      data.stripeStatus ? ` (${data.stripeStatus})` : ""
+                    }`,
+                  );
+                  return;
+                }
+                setMessage(data.error ?? "Sync failed");
+              })();
+            }}
+          >
+            Sync billing
+          </Button>
         </CardContent>
+        {message ? (
+          <p className="px-6 pb-4 text-sm text-[var(--muted)]">{message}</p>
+        ) : null}
       </Card>
 
       <WorkspaceMembersPanel />
