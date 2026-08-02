@@ -57,6 +57,9 @@ function isAgeExempt(pathname: string) {
     pathname === "/robots.txt" ||
     pathname === "/sitemap.xml" ||
     pathname.startsWith("/sitemap/") ||
+    pathname === "/llms.txt" ||
+    pathname === "/llm.txt" ||
+    pathname === "/llms-full.txt" ||
     pathname === "/opengraph-image" ||
     pathname === "/twitter-image" ||
     pathname === "/age-gate" ||

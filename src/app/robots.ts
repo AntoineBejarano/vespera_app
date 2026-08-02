@@ -1,47 +1,14 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "@/lib/site";
+import {
+  buildApexRobots,
+  buildAfterDarkRobots,
+} from "@/lib/seo/build-robots";
+import { getRequestSurface } from "@/lib/seo/request-surface";
 
-export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: [
-      {
-        userAgent: "*",
-        allow: [
-          "/",
-          "/bring",
-          "/technology",
-          "/voice",
-          "/docs",
-          "/help",
-          "/explore",
-          "/meet/",
-          "/learn/",
-          "/hire/",
-          "/create/",
-          "/characters/",
-          "/historical-figures/",
-          "/use-cases/",
-          "/c/",
-          "/legal/",
-          "/llms.txt",
-          "/llm.txt",
-        ],
-        disallow: [
-          "/api/",
-          "/handler/",
-          "/personas",
-          "/chat",
-          "/memory",
-          "/settings",
-          "/age-gate",
-          "/underage",
-          "/login",
-          "/register",
-          "/report",
-        ],
-      },
-    ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
-    host: SITE_URL,
-  };
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const surface = await getRequestSurface();
+  if (surface.surface === "after-dark") {
+    return buildAfterDarkRobots(surface);
+  }
+  return buildApexRobots(surface);
 }
