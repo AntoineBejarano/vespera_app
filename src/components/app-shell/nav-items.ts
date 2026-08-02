@@ -64,6 +64,12 @@ export const APP_NAV_GROUPS: NavGroup[] = [
     label: "Configure",
     items: [
       {
+        id: "workspaces",
+        label: "Workspaces",
+        href: "/workspaces",
+        match: (p) => p === "/workspaces" || p.startsWith("/workspaces/"),
+      },
+      {
         id: "settings",
         label: "Settings",
         href: "/settings",

@@ -94,7 +94,7 @@ export function PersonaProfileShell({
           <Button asChild variant="ghost" size="sm">
             <Link href={`/knowledge?characterId=${persona.id}`}>
               <BookOpen className="size-3.5" />
-              Sources
+              Teach / Sources
             </Link>
           </Button>
         </div>

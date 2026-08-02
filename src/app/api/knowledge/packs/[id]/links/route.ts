@@ -9,7 +9,9 @@ import { prisma } from "@/lib/db";
 type Params = { params: Promise<{ id: string }> };
 
 const linkSchema = z.object({
-  characterIds: z.array(z.string()).min(1),
+  /** Exact set of personas this pack should teach (empty = assigned to nobody). */
+  characterIds: z.array(z.string()),
+  replace: z.boolean().optional().default(true),
 });
 
 export async function GET(_req: Request, { params }: Params) {
@@ -57,6 +59,7 @@ export async function POST(req: Request, { params }: Params) {
       userId: user.id,
       knowledgePackId: id,
       characterIds: parsed.data.characterIds,
+      replace: parsed.data.replace,
     });
     return Response.json({ characterIds });
   } catch (error) {

@@ -3,6 +3,7 @@ import { hasPlatformOperatorAttestation } from "@/lib/legal/operator";
 import { prisma } from "@/lib/db";
 import { PersonaDetail } from "@/components/PersonaDetail";
 import { formatPersonaVersion } from "@/lib/personas/license";
+import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
 import { redirect, notFound } from "next/navigation";
 
 type Params = { params: Promise<{ id: string }> };
@@ -12,8 +13,10 @@ export default async function PersonaPage({ params }: Params) {
   const user = await getAppUser({ or: "redirect" });
   if (!user) redirect("/handler/sign-in");
 
+  const workspaceId = await getOrCreateActiveWorkspaceId(user);
+
   const character = await prisma.character.findFirst({
-    where: { id, userId: user.id },
+    where: { id, workspaceId, archivedAt: null },
     include: {
       telegramBots: {
         include: { _count: { select: { peers: true } } },
@@ -44,6 +47,7 @@ export default async function PersonaPage({ params }: Params) {
         id: character.id,
         name: character.name,
         intensity: character.intensity,
+        preferredModel: character.preferredModel,
         active: character.active,
         hasApiKey: Boolean(character.apiKey || character.apiKeyHash),
         soulMd: character.soulMd ?? "",

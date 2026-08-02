@@ -17,6 +17,7 @@ import {
   REGISTRY_CHANNELS,
   personaLicenseSchema,
 } from "@/lib/personas/license";
+import { ALLOWED_MODELS } from "@/lib/ai/models";
 import {
   layersChanged,
   snapshotAndBumpVersion,
@@ -25,6 +26,8 @@ import {
 export const personaPatchSchema = z.object({
   active: z.boolean().optional(),
   intensity: z.number().int().min(1).max(5).optional(),
+  /** OpenRouter model for this persona only. null clears to account default. */
+  preferredModel: z.string().nullable().optional(),
   name: z.string().min(1).max(80).optional(),
   /** Accept soul / soulMd aliases */
   soul: z.string().max(20000).optional(),
@@ -69,6 +72,7 @@ export type PersonaUpdateResult =
         isAdult: boolean;
         active: boolean;
         intensity: number;
+        preferredModel: string | null;
         license: string;
         channels: string[];
         versionMajor: number;
@@ -144,6 +148,14 @@ export async function updateOwnedPersona(params: {
 
   if (data.license !== undefined && !PERSONA_LICENSES.includes(data.license)) {
     return { ok: false, status: 400, error: "Invalid license." };
+  }
+
+  if (
+    data.preferredModel !== undefined &&
+    data.preferredModel !== null &&
+    !ALLOWED_MODELS.includes(data.preferredModel)
+  ) {
+    return { ok: false, status: 400, error: "Model not allowed." };
   }
 
   if (data.isAdult !== undefined) {
@@ -284,6 +296,10 @@ export async function updateOwnedPersona(params: {
       updatedByUserId: params.user.id,
       active: data.active ?? character.active,
       intensity: data.intensity ?? character.intensity,
+      preferredModel:
+        data.preferredModel !== undefined
+          ? data.preferredModel
+          : character.preferredModel,
       name: nextLayers.name,
       soulMd: nextLayers.soulMd,
       styleMd: nextLayers.styleMd,
@@ -318,6 +334,7 @@ export async function updateOwnedPersona(params: {
       isAdult: updated.isAdult,
       active: updated.active,
       intensity: updated.intensity,
+      preferredModel: updated.preferredModel,
       license: updated.license,
       channels: updated.channels,
       versionMajor: updated.versionMajor,

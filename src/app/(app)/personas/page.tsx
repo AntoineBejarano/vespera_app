@@ -1,14 +1,17 @@
 import { getAppUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { PersonasList } from "@/components/PersonasList";
+import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
 import { redirect } from "next/navigation";
 
 export default async function PersonasPage() {
   const user = await getAppUser({ or: "redirect" });
   if (!user) redirect("/handler/sign-in");
 
+  const workspaceId = await getOrCreateActiveWorkspaceId(user);
+
   const characters = await prisma.character.findMany({
-    where: { userId: user.id },
+    where: { workspaceId, archivedAt: null },
     orderBy: { updatedAt: "desc" },
     include: {
       telegramBots: {

@@ -290,6 +290,12 @@ export async function linkPackToCharacters(params: {
   workspaceId?: string;
   knowledgePackId: string;
   characterIds: string[];
+  /**
+   * When true, the pack is taught exactly to `characterIds`
+   * (unlinks anyone not in the list, including empty = nobody).
+   * Default false keeps additive CLI/API behavior.
+   */
+  replace?: boolean;
 }) {
   const pack = await prisma.knowledgePack.findFirst({
     where: {
@@ -310,18 +316,49 @@ export async function linkPackToCharacters(params: {
     },
     select: { id: true },
   });
+  const ids = characters.map((c) => c.id);
+
+  if (params.replace) {
+    await prisma.$transaction([
+      prisma.characterKnowledgePack.deleteMany({
+        where: {
+          knowledgePackId: pack.id,
+          ...(ids.length ? { characterId: { notIn: ids } } : {}),
+        },
+      }),
+      ...ids.map((characterId) =>
+        prisma.characterKnowledgePack.upsert({
+          where: {
+            characterId_knowledgePackId: {
+              characterId,
+              knowledgePackId: pack.id,
+            },
+          },
+          create: {
+            characterId,
+            knowledgePackId: pack.id,
+            active: true,
+          },
+          update: { active: true },
+        }),
+      ),
+    ]);
+    return ids;
+  }
+
+  if (!ids.length) return [];
 
   await prisma.$transaction(
-    characters.map((c) =>
+    ids.map((characterId) =>
       prisma.characterKnowledgePack.upsert({
         where: {
           characterId_knowledgePackId: {
-            characterId: c.id,
+            characterId,
             knowledgePackId: pack.id,
           },
         },
         create: {
-          characterId: c.id,
+          characterId,
           knowledgePackId: pack.id,
           active: true,
         },
@@ -330,7 +367,7 @@ export async function linkPackToCharacters(params: {
     ),
   );
 
-  return characters.map((c) => c.id);
+  return ids;
 }
 
 export async function unlinkPackFromCharacter(params: {

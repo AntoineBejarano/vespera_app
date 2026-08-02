@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useHexclaveApp } from "@hexclave/next";
 import { ALLOWED_MODELS, MODEL_LABELS } from "@/lib/ai/models";
-import { WorkspaceMembersPanel } from "@/components/WorkspaceMembersPanel";
 import { PageHeader } from "@/components/app-shell/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -252,7 +251,23 @@ export default function SettingsClient() {
         ) : null}
       </Card>
 
-      <WorkspaceMembersPanel />
+      <Card className="shadow-none">
+        <CardHeader>
+          <CardTitle>Team & workspaces</CardTitle>
+          <CardDescription>
+            Invite people, create workspaces, and manage the active studio under{" "}
+            <Link href="/workspaces" className="underline underline-offset-2">
+              Workspaces
+            </Link>
+            .
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <Link href="/workspaces">Open workspaces</Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card id="api-keys" className="scroll-mt-20 shadow-none">
         <CardHeader>
@@ -333,9 +348,11 @@ export default function SettingsClient() {
 
       <Card className="shadow-none">
         <CardHeader>
-          <CardTitle>OpenRouter model</CardTitle>
+          <CardTitle>Default OpenRouter model</CardTitle>
           <CardDescription>
-            Default model for persona generation and chat.
+            Account fallback for persona generation and for personas that do not
+            set their own model under Self. Chat uses each persona&apos;s model
+            first.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -354,7 +371,7 @@ export default function SettingsClient() {
             ))}
           </select>
           <Button type="button" onClick={() => void saveModel()}>
-            Save model
+            Save default
           </Button>
         </CardContent>
       </Card>

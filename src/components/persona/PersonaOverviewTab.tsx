@@ -9,11 +9,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ALLOWED_MODELS, MODEL_LABELS } from "@/lib/ai/models";
 import { DOC_FIELDS, type DocKey } from "./types";
 
 export function PersonaOverviewTab({
   intensity,
   onIntensityChange,
+  preferredModel,
+  onPreferredModelChange,
   name,
   onNameChange,
   docs,
@@ -29,6 +32,8 @@ export function PersonaOverviewTab({
 }: {
   intensity: number;
   onIntensityChange: (value: number) => void;
+  preferredModel: string | null;
+  onPreferredModelChange: (value: string | null) => void;
   name: string;
   onNameChange: (value: string) => void;
   docs: Record<DocKey, string>;
@@ -48,7 +53,7 @@ export function PersonaOverviewTab({
         <CardHeader>
           <CardTitle>Presence</CardTitle>
           <CardDescription>
-            How intense she feels in every channel.
+            Intensity and which OpenRouter model powers this persona only.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -63,6 +68,27 @@ export function PersonaOverviewTab({
               className="flex-1 accent-[var(--accent)]"
             />
             <span className="w-4 text-foreground">{intensity}</span>
+          </label>
+          <label className="block space-y-1.5 text-sm">
+            <span className="text-muted-foreground">Chat model</span>
+            <select
+              className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground"
+              value={preferredModel ?? ""}
+              onChange={(e) =>
+                onPreferredModelChange(e.target.value ? e.target.value : null)
+              }
+            >
+              <option value="">Account default (Settings)</option>
+              {ALLOWED_MODELS.map((id) => (
+                <option key={id} value={id}>
+                  {MODEL_LABELS[id] ?? id}
+                </option>
+              ))}
+            </select>
+            <span className="block text-[11px] text-muted-foreground">
+              Per persona — Tatiana can use Hermes while Pepe stays on a lighter
+              model.
+            </span>
           </label>
           {editingDocs ? (
             <label className="block space-y-1.5 text-sm">

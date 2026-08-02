@@ -150,7 +150,14 @@ export function KnowledgePacksPanel({
       const linked = (data.links ?? []).map(
         (l: { character: { id: string } }) => l.character.id,
       );
-      setLinkIds(characterId ? [...new Set([characterId, ...linked])] : linked);
+      // Prefer real links; if opened from a persona with none yet, pre-select that persona.
+      setLinkIds(
+        linked.length
+          ? linked
+          : characterId
+            ? [characterId]
+            : [],
+      );
     }
   }
 
@@ -330,20 +337,21 @@ export function KnowledgePacksPanel({
   }
 
   async function saveLinks() {
-    if (!selected || !linkIds.length) return;
+    if (!selected) return;
     setBusy(true);
     const res = await fetch(`/api/knowledge/packs/${selected.id}/links`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ characterIds: linkIds }),
+      body: JSON.stringify({ characterIds: linkIds, replace: true }),
     });
     setBusy(false);
     if (!res.ok) {
       const data = await res.json();
-      setError(data.error ?? "Could not link personas");
+      setError(data.error ?? "Could not assign personas");
       return;
     }
     await load();
+    await loadCharactersForPack(selected.id);
   }
 
   async function onUpload(file: File) {
@@ -382,7 +390,7 @@ export function KnowledgePacksPanel({
     <div className="px-4 py-6 sm:px-6 sm:py-8">
       <PageHeader
         title="Sources"
-        description="Snapshot and index approved material so chat retrieves evidence — never by re-fetching remotes at conversation time."
+        description="Upload knowledge once, then assign which personas can use it. Chat only retrieves packs you assign — Tatiana can know Plato while Fernando does not."
         actions={
           characterId ? (
             <Button asChild variant="outline" size="sm">
@@ -391,6 +399,14 @@ export function KnowledgePacksPanel({
           ) : null
         }
       />
+
+      {characterId ? (
+        <p className="mt-3 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          Assigning packs for this persona. Toggle names under{" "}
+          <span className="font-medium text-foreground">Teach to personas</span>{" "}
+          and save — or manage the same list from the persona&apos;s Agency tab.
+        </p>
+      ) : null}
 
       {error ? (
         <p className="mt-4 text-sm text-destructive">{error}</p>
@@ -455,6 +471,9 @@ export function KnowledgePacksPanel({
                 <div className="font-medium">{p.name}</div>
                 <div className="text-[10px] opacity-70">
                   {p.chunkCount} chunks · {p.sources.length} sources
+                  {p.characters.length
+                    ? ` · ${p.characters.length} persona${p.characters.length === 1 ? "" : "s"}`
+                    : " · unassigned"}
                 </div>
               </button>
             ))
@@ -487,6 +506,68 @@ export function KnowledgePacksPanel({
                 </button>
               </div>
             </header>
+
+            <section className="space-y-3 rounded-xl border border-border bg-card p-4">
+              <div>
+                <h3 className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+                  Teach to personas
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  This pack is stored once. Only selected personas retrieve it in
+                  chat. Leave someone off the list and they will not see it.
+                </p>
+              </div>
+              {characters.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Create a persona first, then assign this pack.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {characters.map((c) => {
+                    const on = linkIds.includes(c.id);
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() =>
+                          setLinkIds((prev) =>
+                            on
+                              ? prev.filter((x) => x !== c.id)
+                              : [...prev, c.id],
+                          )
+                        }
+                        className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                          on
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+                        }`}
+                      >
+                        {on ? "✓ " : ""}
+                        {c.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void saveLinks()}
+                  size="sm"
+                >
+                  Save assignments
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  {linkIds.length === 0
+                    ? "Assigned to nobody"
+                    : `Will teach ${linkIds.length} persona${linkIds.length === 1 ? "" : "s"}`}
+                  {selected.characters.length
+                    ? ` · currently: ${selected.characters.map((c) => c.character.name).join(", ")}`
+                    : ""}
+                </p>
+              </div>
+            </section>
 
             <section className="space-y-3">
               <h3 className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
@@ -657,51 +738,6 @@ export function KnowledgePacksPanel({
                   />
                 </label>
               </div>
-            </section>
-
-            <section className="space-y-3">
-              <h3 className="text-xs uppercase tracking-[0.22em] text-[var(--muted)]">
-                Link to personas
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {characters.map((c) => {
-                  const on = linkIds.includes(c.id);
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() =>
-                        setLinkIds((prev) =>
-                          on
-                            ? prev.filter((x) => x !== c.id)
-                            : [...prev, c.id],
-                        )
-                      }
-                      className={`rounded-lg border px-3 py-1 text-xs ${
-                        on
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border text-muted-foreground"
-                      }`}
-                    >
-                      {c.name}
-                    </button>
-                  );
-                })}
-              </div>
-              <button
-                type="button"
-                disabled={busy || !linkIds.length}
-                onClick={() => void saveLinks()}
-                className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-sm"
-              >
-                Save links
-              </button>
-              {selected.characters.length ? (
-                <p className="text-xs text-[var(--muted)]">
-                  Linked:{" "}
-                  {selected.characters.map((c) => c.character.name).join(", ")}
-                </p>
-              ) : null}
             </section>
 
             <section className="space-y-3">

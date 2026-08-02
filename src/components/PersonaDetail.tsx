@@ -33,6 +33,9 @@ export function PersonaDetail({
   const [operatorAck, setOperatorAck] = useState(false);
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [intensity, setIntensity] = useState(persona.intensity);
+  const [preferredModel, setPreferredModel] = useState<string | null>(
+    persona.preferredModel,
+  );
   const [name, setName] = useState(persona.name);
   const [docs, setDocs] = useState({
     soulMd: persona.soulMd,
@@ -154,6 +157,26 @@ export function PersonaDetail({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ intensity: value }),
     });
+  }
+
+  async function savePreferredModel(value: string | null) {
+    setPreferredModel(value);
+    const res = await fetch(`/api/characters/${persona.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ preferredModel: value }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data.error ?? "Could not save model");
+      setPreferredModel(persona.preferredModel);
+      return;
+    }
+    setMessage(
+      value
+        ? "Chat model saved for this persona"
+        : "Using account default model for this persona",
+    );
   }
 
   async function saveDefinition() {
@@ -378,6 +401,7 @@ export function PersonaDetail({
 
   const shellPersona: PersonaProfile = {
     ...persona,
+    preferredModel,
     photos,
     bots,
     isPublic,
@@ -402,6 +426,8 @@ export function PersonaDetail({
         <PersonaOverviewTab
           intensity={intensity}
           onIntensityChange={(v) => void saveIntensity(v)}
+          preferredModel={preferredModel}
+          onPreferredModelChange={(v) => void savePreferredModel(v)}
           name={name}
           onNameChange={setName}
           docs={docs}

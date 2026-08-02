@@ -259,7 +259,9 @@ export async function prepareCharacterTurn(params: {
     },
   });
 
-  const modelId = resolveModel(user.preferredModel);
+  const modelId = resolveModel(
+    character.preferredModel ?? user.preferredModel,
+  );
   const systemBase = assemblePersonaPrompt({
     persona: mind.persona,
     relationship: mind.affect,

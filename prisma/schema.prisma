@@ -254,6 +254,8 @@ model Character {
   contextMd    String?  @db.Text
   metaJson     Json?
   intensity    Int      @default(3)
+  /// OpenRouter model id for this persona (falls back to User.preferredModel)
+  preferredModel String?
   limitsJson   Json?
   active       Boolean  @default(false)
   /// Chat key secret — prefer hash lookup; kept for legacy keys until rotated

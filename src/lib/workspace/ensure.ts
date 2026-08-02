@@ -10,8 +10,8 @@ function personalWorkspaceName(user: Pick<User, "name" | "email">) {
 }
 
 /**
- * Ensure a non-peer user has a personal workspace and is Owner.
- * Idempotent. Does not create remote Hexclave teams (adapter may sync later).
+ * Ensure a non-peer user has at least one owned workspace.
+ * Idempotent. Never overwrites a valid activeWorkspaceId.
  */
 export async function ensurePersonalWorkspace(user: User): Promise<Workspace> {
   if (user.isTelegramPeer) {
@@ -24,12 +24,22 @@ export async function ensurePersonalWorkspace(user: User): Promise<Workspace> {
     orderBy: { createdAt: "asc" },
   });
   if (existing) {
-    if (user.activeWorkspaceId !== existing.workspaceId) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { activeWorkspaceId: existing.workspaceId },
+    // Only set active when missing or pointing at a workspace the user left
+    if (user.activeWorkspaceId) {
+      const stillMember = await prisma.workspaceMember.findUnique({
+        where: {
+          workspaceId_userId: {
+            workspaceId: user.activeWorkspaceId,
+            userId: user.id,
+          },
+        },
       });
+      if (stillMember) return existing.workspace;
     }
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { activeWorkspaceId: existing.workspaceId },
+    });
     return existing.workspace;
   }
 
@@ -49,6 +59,40 @@ export async function ensurePersonalWorkspace(user: User): Promise<Workspace> {
     where: { id: user.id },
     data: { activeWorkspaceId: workspace.id },
   });
+
+  return workspace;
+}
+
+/** Create an additional workspace; caller becomes Owner. */
+export async function createWorkspace(params: {
+  user: User;
+  name: string;
+  switchTo?: boolean;
+}): Promise<Workspace> {
+  if (params.user.isTelegramPeer) {
+    throw new Error("TELEGRAM_PEER_NO_WORKSPACE");
+  }
+  const name = params.name.trim().slice(0, 80);
+  if (!name) throw new Error("Workspace name required");
+
+  const workspace = await prisma.workspace.create({
+    data: {
+      name,
+      members: {
+        create: {
+          userId: params.user.id,
+          role: "owner",
+        },
+      },
+    },
+  });
+
+  if (params.switchTo !== false) {
+    await prisma.user.update({
+      where: { id: params.user.id },
+      data: { activeWorkspaceId: workspace.id },
+    });
+  }
 
   return workspace;
 }

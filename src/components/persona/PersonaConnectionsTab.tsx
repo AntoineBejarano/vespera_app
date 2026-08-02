@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { PersonaBot } from "./types";
+import { PersonaTaughtFrom } from "./PersonaTaughtFrom";
 
 export function PersonaConnectionsTab({
   personaId,
@@ -71,18 +72,22 @@ export function PersonaConnectionsTab({
   return (
     <div className="space-y-5">
       <p className="max-w-2xl text-sm text-muted-foreground">
-        Every channel she lives on. Connect Telegram, wire the Chat API, or hand
-        Claude a prompt so it installs itself via the Vesperer CLI.
+        What this persona can do and where they exist: knowledge they are taught,
+        Telegram, Chat API, and CLI install for Claude.
       </p>
 
       <div className="grid gap-5 lg:grid-cols-2">
+        <PersonaTaughtFrom personaId={personaId} />
+
         <Card className="shadow-none">
           <CardHeader>
             <div className="flex items-start justify-between gap-3">
               <div>
                 <CardTitle>Telegram</CardTitle>
                 <CardDescription>
-                  Link N BotFather tokens. Each peer gets isolated memory.
+                  Link BotFather tokens. For a group with several personas, add
+                  each bot to the same Telegram group and disable privacy mode
+                  in BotFather. 1:1 peers keep isolated memory.
                 </CardDescription>
               </div>
               <StatusDot on={bots.some((b) => b.active)} />

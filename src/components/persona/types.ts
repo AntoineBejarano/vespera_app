@@ -19,6 +19,8 @@ export type PersonaProfile = {
   id: string;
   name: string;
   intensity: number;
+  /** OpenRouter model for this persona; null = use account default */
+  preferredModel: string | null;
   active: boolean;
   hasApiKey: boolean;
   soulMd: string;

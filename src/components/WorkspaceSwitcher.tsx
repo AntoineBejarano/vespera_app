@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type WorkspaceRow = {
@@ -25,8 +26,6 @@ export function WorkspaceSwitcher() {
     void load();
   }, []);
 
-  const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
-
   async function onChange(workspaceId: string) {
     setBusy(true);
     try {
@@ -46,43 +45,46 @@ export function WorkspaceSwitcher() {
 
   if (workspaces.length === 0) {
     return (
-      <div className="rounded-lg border border-border px-2.5 py-2 text-[12px] text-muted-foreground">
-        Workspace
-      </div>
-    );
-  }
-
-  if (workspaces.length === 1) {
-    return (
-      <div className="rounded-lg border border-border px-2.5 py-2">
-        <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">
+      <div className="space-y-1.5">
+        <div className="rounded-lg border border-border px-2.5 py-2 text-[12px] text-muted-foreground">
           Workspace
-        </p>
-        <p className="mt-0.5 truncate text-[13px] font-medium text-foreground">
-          {active?.name ?? "Personal"}
-        </p>
+        </div>
+        <Link
+          href="/workspaces"
+          className="block px-1 text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+        >
+          Manage workspaces
+        </Link>
       </div>
     );
   }
 
   return (
-    <label className="block min-w-0">
-      <span className="mb-1 block text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">
-        Workspace
-      </span>
-      <select
-        className="w-full truncate rounded-lg border border-input bg-background px-2.5 py-2 text-[13px] text-foreground"
-        value={activeId ?? ""}
-        disabled={busy}
-        onChange={(e) => void onChange(e.target.value)}
-        aria-label="Active workspace"
+    <div className="space-y-1.5">
+      <label className="block min-w-0">
+        <span className="mb-1 block text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">
+          Workspace
+        </span>
+        <select
+          className="w-full truncate rounded-lg border border-input bg-background px-2.5 py-2 text-[13px] text-foreground"
+          value={activeId ?? ""}
+          disabled={busy}
+          onChange={(e) => void onChange(e.target.value)}
+          aria-label="Active workspace"
+        >
+          {workspaces.map((w) => (
+            <option key={w.id} value={w.id}>
+              {w.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <Link
+        href="/workspaces"
+        className="block px-1 text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
       >
-        {workspaces.map((w) => (
-          <option key={w.id} value={w.id}>
-            {w.name}
-          </option>
-        ))}
-      </select>
-    </label>
+        Manage · invite · create
+      </Link>
+    </div>
   );
 }

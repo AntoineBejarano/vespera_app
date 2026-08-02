@@ -101,8 +101,9 @@ export function WorkspaceMembersPanel() {
       <CardHeader>
         <CardTitle>Team</CardTitle>
         <CardDescription>
-          Your role: <span className="text-foreground">{role}</span>. Owner
-          controls admins and After Dark for the workspace.
+          Your role: <span className="text-foreground">{role}</span>. Invite
+          colleagues as Editor/Admin, or guests as Viewer (read-only). Owner
+          controls admins and After Dark.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -156,7 +157,7 @@ export function WorkspaceMembersPanel() {
                   setInviteRole(e.target.value as "viewer" | "editor" | "admin")
                 }
               >
-                <option value="viewer">Viewer</option>
+                <option value="viewer">Guest (Viewer)</option>
                 <option value="editor">Editor</option>
                 {canInviteAdmin ? <option value="admin">Admin</option> : null}
               </select>

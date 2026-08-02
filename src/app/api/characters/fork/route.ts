@@ -62,6 +62,7 @@ export async function POST(req: Request) {
     identityJson: Prisma.InputJsonValue;
     metaJson: Prisma.InputJsonValue | undefined;
     intensity: number;
+    preferredModel: string | null;
     tagline: string | null;
     openingLine: string | null;
     categories: string[];
@@ -104,6 +105,7 @@ export async function POST(req: Request) {
         forkedFromShowcase: showcase.slug,
       },
       intensity: showcase.intensity,
+      preferredModel: null,
       tagline: showcase.tagline,
       openingLine: showcase.openingLine,
       categories: showcase.categories,
@@ -136,6 +138,7 @@ export async function POST(req: Request) {
         | Prisma.InputJsonValue
         | undefined,
       intensity: original.intensity,
+      preferredModel: original.preferredModel,
       tagline: original.tagline,
       openingLine: original.openingLine,
       categories: original.categories,
@@ -167,6 +170,7 @@ export async function POST(req: Request) {
       contextMd: source.contextMd,
       metaJson: source.metaJson,
       intensity: source.intensity,
+      preferredModel: source.preferredModel,
       tagline: source.tagline,
       openingLine: source.openingLine,
       categories: source.categories,
