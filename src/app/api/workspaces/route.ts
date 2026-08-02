@@ -33,6 +33,11 @@ export async function GET() {
     (await prisma.user.findUnique({ where: { id: user.id } })) ?? user;
 
   const memberships = await listUserWorkspaces(refreshed.id);
+  const realOwned = await prisma.workspaceMember.findMany({
+    where: { userId: refreshed.id, role: "owner" },
+    select: { workspaceId: true },
+  });
+  const ownedIds = new Set(realOwned.map((m) => m.workspaceId));
   const workspaces = memberships.map((m) => {
     const role = isWorkspaceRole(m.role) ? m.role : "viewer";
     return {
@@ -40,6 +45,7 @@ export async function GET() {
       name: m.workspace.name,
       adultEnabled: m.workspace.adultEnabled,
       role,
+      isOwned: ownedIds.has(m.workspace.id),
       capabilities: capabilitiesForRole(role) as WorkspaceCapability[],
     };
   });
@@ -52,6 +58,7 @@ export async function GET() {
   return Response.json({
     workspaces,
     activeWorkspaceId: activeId,
+    ownedWorkspaceCount: ownedIds.size,
     isSuperadmin: isSuperadminUser(refreshed),
     debugRole: isSuperadminUser(refreshed)
       ? await getDebugRoleOverride()

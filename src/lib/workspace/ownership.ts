@@ -179,6 +179,21 @@ export async function acceptOwnershipTransfer(params: {
   return { workspaceId: transfer.workspaceId };
 }
 
+function normalizeWorkspaceConfirm(value: string) {
+  return value
+    .normalize("NFKC")
+    .replace(/[\u2018\u2019\u201A\u2032]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function confirmMatchesWorkspace(confirmName: string, workspaceName: string) {
+  const confirm = normalizeWorkspaceConfirm(confirmName);
+  if (!confirm) return false;
+  if (confirm.toUpperCase() === "DELETE") return true;
+  return confirm === normalizeWorkspaceConfirm(workspaceName);
+}
+
 export async function deleteWorkspace(params: {
   actorUserId: string;
   workspaceId: string;
@@ -195,13 +210,50 @@ export async function deleteWorkspace(params: {
   if (!workspace) {
     throw new WorkspaceAuthError("Workspace not found", 404, "NOT_FOUND");
   }
-  if (params.confirmName.trim() !== workspace.name) {
+  if (!confirmMatchesWorkspace(params.confirmName, workspace.name)) {
     throw new WorkspaceAuthError(
-      "Type the workspace name to confirm deletion",
+      'Type DELETE or the exact workspace name to confirm',
       400,
       "NAME_MISMATCH",
     );
   }
 
-  await prisma.workspace.delete({ where: { id: params.workspaceId } });
+  const membership = await prisma.workspaceMember.findUnique({
+    where: {
+      workspaceId_userId: {
+        workspaceId: params.workspaceId,
+        userId: params.actorUserId,
+      },
+    },
+  });
+  if (membership?.role === "owner") {
+    const ownedCount = await prisma.workspaceMember.count({
+      where: { userId: params.actorUserId, role: "owner" },
+    });
+    if (ownedCount <= 1) {
+      throw new WorkspaceAuthError(
+        "You need at least one workspace. Create another before deleting this one.",
+        400,
+        "LAST_WORKSPACE",
+      );
+    }
+  }
+
+  const fallback = await prisma.workspaceMember.findFirst({
+    where: {
+      userId: params.actorUserId,
+      workspaceId: { not: params.workspaceId },
+      role: "owner",
+    },
+    orderBy: { createdAt: "asc" },
+    select: { workspaceId: true },
+  });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.user.updateMany({
+      where: { activeWorkspaceId: params.workspaceId },
+      data: { activeWorkspaceId: fallback?.workspaceId ?? null },
+    });
+    await tx.workspace.delete({ where: { id: params.workspaceId } });
+  });
 }

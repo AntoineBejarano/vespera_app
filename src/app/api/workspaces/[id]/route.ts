@@ -91,10 +91,16 @@ export async function DELETE(req: Request, { params }: Params) {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
   const { id: workspaceId } = await params;
-  const parsed = deleteSchema.safeParse(await req.json().catch(() => null));
+  const url = new URL(req.url);
+  const body = await req.json().catch(() => null);
+  const confirmName =
+    (typeof body?.confirmName === "string" && body.confirmName) ||
+    url.searchParams.get("confirmName") ||
+    "";
+  const parsed = deleteSchema.safeParse({ confirmName });
   if (!parsed.success) {
     return Response.json(
-      { error: "confirmName required (exact workspace name)" },
+      { error: "confirmName required (type DELETE or the workspace name)" },
       { status: 400 },
     );
   }
@@ -109,6 +115,8 @@ export async function DELETE(req: Request, { params }: Params) {
   } catch (err) {
     const res = workspaceAuthResponse(err);
     if (res) return res;
-    throw err;
+    const message = err instanceof Error ? err.message : "Could not delete";
+    console.error("[workspaces.delete]", workspaceId, err);
+    return Response.json({ error: message }, { status: 500 });
   }
 }

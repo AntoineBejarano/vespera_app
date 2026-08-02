@@ -19,16 +19,26 @@ type WorkspaceRow = {
   id: string;
   name: string;
   role: string;
+  isOwned?: boolean;
   adultEnabled?: boolean;
   capabilities?: string[];
 };
 
+function confirmReady(confirm: string, workspaceName: string) {
+  const value = confirm.trim();
+  if (!value) return false;
+  if (value.toUpperCase() === "DELETE") return true;
+  return value === workspaceName;
+}
+
 export function WorkspacesManageClient() {
   const [workspaces, setWorkspaces] = useState<WorkspaceRow[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [ownedWorkspaceCount, setOwnedWorkspaceCount] = useState(0);
   const [newName, setNewName] = useState("");
   const [rename, setRename] = useState("");
   const [confirmDelete, setConfirmDelete] = useState("");
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [personaCount, setPersonaCount] = useState<number | null>(null);
@@ -39,6 +49,7 @@ export function WorkspacesManageClient() {
     const data = await res.json();
     setWorkspaces(data.workspaces ?? []);
     setActiveId(data.activeWorkspaceId ?? null);
+    setOwnedWorkspaceCount(data.ownedWorkspaceCount ?? 0);
     const active =
       (data.workspaces ?? []).find(
         (w: WorkspaceRow) => w.id === data.activeWorkspaceId,
@@ -64,7 +75,13 @@ export function WorkspacesManageClient() {
   const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
   const caps = new Set(active?.capabilities ?? []);
   const canUpdate = caps.has("workspace.update");
-  const canDelete = caps.has("workspace.delete");
+  const canDeleteActive = caps.has("workspace.delete");
+  const deleteTarget =
+    workspaces.find((w) => w.id === deleteTargetId) ??
+    (canDeleteActive ? active : undefined);
+  const isLastOwnedTarget = Boolean(
+    deleteTarget?.isOwned && ownedWorkspaceCount <= 1,
+  );
 
   async function switchTo(workspaceId: string) {
     setBusy(true);
@@ -129,15 +146,19 @@ export function WorkspacesManageClient() {
     }
   }
 
-  async function removeWorkspace() {
-    if (!active || !canDelete) return;
-    if (confirmDelete !== active.name) {
-      setMessage("Type the exact workspace name to confirm delete");
+  async function removeWorkspace(workspace: WorkspaceRow) {
+    const capsForTarget = new Set(workspace.capabilities ?? []);
+    if (!capsForTarget.has("workspace.delete")) {
+      setMessage("Only the workspace owner can delete it");
+      return;
+    }
+    if (!confirmReady(confirmDelete, workspace.name)) {
+      setMessage('Type DELETE or the exact workspace name to confirm');
       return;
     }
     if (
       !confirm(
-        `Delete “${active.name}” permanently? Personas and knowledge in this workspace will be removed.`,
+        `Delete “${workspace.name}” permanently? Personas and knowledge in this workspace will be removed.`,
       )
     ) {
       return;
@@ -145,10 +166,10 @@ export function WorkspacesManageClient() {
     setBusy(true);
     setMessage(null);
     try {
-      const res = await fetch(`/api/workspaces/${active.id}`, {
+      const res = await fetch(`/api/workspaces/${workspace.id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ confirmName: confirmDelete }),
+        body: JSON.stringify({ confirmName: confirmDelete.trim() || "DELETE" }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -184,6 +205,9 @@ export function WorkspacesManageClient() {
           <ul className="space-y-2">
             {workspaces.map((w) => {
               const isActive = w.id === active?.id;
+              const canDeleteRow = (w.capabilities ?? []).includes(
+                "workspace.delete",
+              );
               return (
                 <li
                   key={w.id}
@@ -203,21 +227,38 @@ export function WorkspacesManageClient() {
                       {w.role === "viewer" ? " · guest / read-only" : ""}
                     </p>
                   </div>
-                  {!isActive ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() => void switchTo(w.id)}
-                    >
-                      Switch here
-                    </Button>
-                  ) : (
-                    <Button asChild size="sm" variant="ghost">
-                      <Link href="/personas">Open personas</Link>
-                    </Button>
-                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {!isActive ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        onClick={() => void switchTo(w.id)}
+                      >
+                        Switch here
+                      </Button>
+                    ) : (
+                      <Button asChild size="sm" variant="ghost">
+                        <Link href="/personas">Open personas</Link>
+                      </Button>
+                    )}
+                    {canDeleteRow ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        disabled={busy}
+                        onClick={() => {
+                          setDeleteTargetId(w.id);
+                          setConfirmDelete("");
+                          setMessage(null);
+                        }}
+                      >
+                        Delete…
+                      </Button>
+                    ) : null}
+                  </div>
                 </li>
               );
             })}
@@ -275,32 +316,49 @@ export function WorkspacesManageClient() {
               </div>
             ) : null}
 
-            {canDelete ? (
+            {deleteTarget ? (
               <div className="space-y-2 rounded-lg border border-destructive/30 p-3">
                 <p className="text-xs text-muted-foreground">
-                  Delete requires typing the exact name:{" "}
+                  Delete{" "}
                   <span className="font-medium text-foreground">
-                    {active.name}
+                    {deleteTarget.name}
                   </span>
+                  : type{" "}
+                  <span className="font-medium text-foreground">DELETE</span> or
+                  the exact name.
+                  {isLastOwnedTarget ? (
+                    <>
+                      {" "}
+                      You only own one workspace — create another first, or this
+                      delete will be blocked.
+                    </>
+                  ) : null}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <Input
                     value={confirmDelete}
                     onChange={(e) => setConfirmDelete(e.target.value)}
-                    placeholder={active.name}
+                    placeholder="DELETE"
                     className="min-w-[12rem] flex-1"
+                    autoComplete="off"
                   />
                   <Button
                     type="button"
                     variant="destructive"
-                    disabled={busy || confirmDelete !== active.name}
-                    onClick={() => void removeWorkspace()}
+                    disabled={
+                      busy || !confirmReady(confirmDelete, deleteTarget.name)
+                    }
+                    onClick={() => void removeWorkspace(deleteTarget)}
                   >
                     Delete workspace
                   </Button>
                 </div>
               </div>
-            ) : null}
+            ) : canDeleteActive ? null : (
+              <p className="text-xs text-muted-foreground">
+                Only the workspace owner can delete it.
+              </p>
+            )}
           </CardContent>
         </Card>
       ) : null}
