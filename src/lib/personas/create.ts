@@ -11,6 +11,12 @@ import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
 import { requireWorkspacePermission } from "@/lib/workspace/permissions";
 import { generateChatApiKeySecret } from "@/lib/api-keys/chat-keys";
+import {
+  clampIntensityForWorkspace,
+  ContentPolicyError,
+} from "@/lib/content-policy";
+import { assertCapability } from "@/lib/content-policy/runtime";
+import { containsProhibitedPersonaConfig } from "@/lib/ai/safety";
 
 export const personaDirectCreateSchema = z.object({
   name: z.string().min(1).max(80),
@@ -98,13 +104,68 @@ async function finalizePersona(params: {
       isPublic = false;
     }
   }
+
+  const ws = await prisma.workspace.findUnique({
+    where: { id: params.workspaceId },
+  });
+  const adultConfigOk = Boolean(ws?.adultEnabled);
+
   if (isAdult) {
-    const ws = await prisma.workspace.findUnique({
-      where: { id: params.workspaceId },
-    });
-    if (!ws?.adultEnabled) {
-      isAdult = false;
+    try {
+      await assertCapability({
+        workspaceId: params.workspaceId,
+        characterAdult: true,
+        subjectAgeVerified: false,
+        channel: "web",
+        requestedCapability: "persona_adult_config",
+        isDelivery: false,
+      });
+    } catch (err) {
+      if (err instanceof ContentPolicyError) {
+        isAdult = false;
+      } else {
+        throw err;
+      }
     }
+  }
+
+  if (isAdult && isPublic) {
+    try {
+      await assertCapability({
+        workspaceId: params.workspaceId,
+        characterAdult: true,
+        subjectAgeVerified: false,
+        channel: "public",
+        requestedCapability: "publish_adult",
+        isDelivery: true,
+      });
+    } catch {
+      // Partner may configure adult personas privately — never publish adult without HEAA
+      isPublic = false;
+    }
+  }
+
+  const intensity = clampIntensityForWorkspace(
+    params.intensity,
+    adultConfigOk && isAdult,
+  );
+
+  const safetyBlob = [
+    params.name,
+    params.soulMd,
+    params.styleMd,
+    params.rulesMd,
+    params.contextMd,
+    params.tagline,
+    params.openingLine,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  if (containsProhibitedPersonaConfig(safetyBlob)) {
+    throw new ContentPolicyError(
+      "Persona config blocked: real-person, minor, or non-consent policy violation",
+      "PERSONA_HARD_BLOCK",
+    );
   }
 
   await prisma.character.updateMany({
@@ -127,7 +188,7 @@ async function finalizePersona(params: {
       rulesMd: params.rulesMd,
       contextMd: params.contextMd,
       metaJson: params.metaJson,
-      intensity: params.intensity,
+      intensity,
       limitsJson: params.limitsJson,
       active: true,
       apiKey: chatApiKey,

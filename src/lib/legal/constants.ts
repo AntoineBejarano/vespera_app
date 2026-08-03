@@ -1,5 +1,5 @@
 /** Bump when legal text materially changes — invalidates access cookie + re-attest. */
-export const LEGAL_VERSION = "2026-08-02d";
+export const LEGAL_VERSION = "2026-08-02e";
 
 export const ADULT_COOKIE = "vesperer_adult";
 
@@ -40,6 +40,9 @@ export const LEGAL_OPERATOR = {
   /** Product legal inbox — Resend receiving on mail.vesperer.com */
   contactEmail:
     process.env.LEGAL_CONTACT_EMAIL?.trim() || "legal@mail.vesperer.com",
+  /** After Dark / B2B partner applications */
+  partnersEmail:
+    process.env.PARTNERS_EMAIL?.trim() || "partners@vesperer.com",
   /** Abuse / safety reports for the Vesperer product */
   abuseEmail:
     process.env.ABUSE_EMAIL?.trim() ||

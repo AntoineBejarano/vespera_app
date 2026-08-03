@@ -8,6 +8,7 @@ import {
   redirectToAppSignUp,
 } from "@/lib/auth/redirects";
 import { SITE_URL } from "@/lib/site";
+import { PARTNERS_MAILTO } from "@/lib/adult/partners";
 
 const MARKETING_LINKS = [
   { href: "/registry", label: "Registry" },
@@ -183,13 +184,15 @@ export function AppNav({
                 className="ml-1 border border-[var(--ink)]/20 px-3.5 py-1.5 text-[13px] font-medium tracking-[0.01em] text-[var(--ink)] transition hover:border-[var(--accent)]/50 hover:bg-[var(--accent-soft)]"
                 onClick={() => {
                   if (variant === "after-dark") {
-                    window.location.href = "/age-gate?zone=adult&intent=signup";
+                    window.location.href = PARTNERS_MAILTO;
                     return;
                   }
                   void redirectToAppSignUp(app);
                 }}
               >
-                {variant === "after-dark" ? "Enter 18+" : "Get started"}
+                {variant === "after-dark"
+                  ? "Apply for partner access"
+                  : "Get started"}
               </button>
             </>
           )}
@@ -282,14 +285,15 @@ export function AppNav({
                   onClick={() => {
                     setOpen(false);
                     if (variant === "after-dark") {
-                      window.location.href =
-                        "/age-gate?zone=adult&intent=signup";
+                      window.location.href = PARTNERS_MAILTO;
                       return;
                     }
                     void redirectToAppSignUp(app);
                   }}
                 >
-                  {variant === "after-dark" ? "Enter 18+" : "Get started"}
+                  {variant === "after-dark"
+                    ? "Apply for partner access"
+                    : "Get started"}
                 </button>
               </>
             )}

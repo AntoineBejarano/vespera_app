@@ -207,9 +207,16 @@ export function ChatPanel({
       <div className="mt-3 flex-1 overflow-hidden rounded-xl border border-border bg-card">
         <div className="h-full space-y-1 overflow-y-auto px-4 py-5">
           {messages.length === 0 ? (
-            <p className="pt-16 text-center text-sm text-muted-foreground">
-              Test chat for this persona — same multi-bubble pacing as Telegram.
-            </p>
+            <>
+              <p className="pt-4 text-center text-xs text-muted-foreground">
+                AI persona — automated replies. Not a human operator unless a
+                handoff is clearly stated.
+              </p>
+              <p className="pt-2 text-center text-sm text-muted-foreground">
+                Test chat for this persona — same multi-bubble pacing as
+                Telegram.
+              </p>
+            </>
           ) : (
             <AnimatedList instant delay={60} className="gap-2.5">
               {messages.map((message) => (

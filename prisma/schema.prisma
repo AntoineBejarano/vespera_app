@@ -30,6 +30,13 @@ model User {
   dailyResetAt       DateTime  @default(now())
   ageVerifiedAt      DateTime?
   adultConsentAt     DateTime?
+  /// HEAA stub — result/token from age-assurance provider (never store ID docs)
+  ageAssuranceStatus   String?
+  ageAssuranceProvider String?
+  ageAssuredAt         DateTime?
+  ageAssuranceExpiresAt DateTime?
+  ageBand              String?
+  countryCode          String?
   /// When user accepted current Terms (clickwrap)
   tosAcceptedAt      DateTime?
   /// When user accepted current Privacy Policy (clickwrap)
@@ -69,6 +76,7 @@ model User {
   ownershipTransfersTo   WorkspaceOwnershipTransfer[] @relation("OwnershipTo")
   activeWorkspace     Workspace?          @relation("UserActiveWorkspace", fields: [activeWorkspaceId], references: [id], onDelete: SetNull)
   relationshipSubjects RelationshipSubject[] @relation("SubjectWebUser")
+  adultApprovalsGiven AdultWorkspaceApproval[] @relation("AdultApprovalApprover")
 
   @@index([email])
   @@index([telegramId])
@@ -82,7 +90,22 @@ model Workspace {
   name               String
   /// Hexclave Team id (v1) — mapping only, never used as domain PK
   externalAuthTeamId String?  @unique
+  /// Denormalized: true only while an approved, non-revoked, non-expired approval exists.
+  /// Authorizes CONFIG of adult capabilities — never end-user adult delivery alone.
   adultEnabled       Boolean  @default(false)
+  adultApprovedAt    DateTime?
+  adultApprovedBy    String?
+  adultPolicyVersion String?
+  adultTermsAcceptedAt DateTime?
+  /// none | pending | approved | revoked | expired | restricted
+  adultRiskStatus    String   @default("none")
+  /// JSON string array of allowed capability ids
+  adultAllowedCapabilities String?
+  /// JSON string array of ISO country codes (empty/null = unset)
+  adultAllowedCountries    String?
+  adultAgeAssuranceRequired Boolean @default(true)
+  adultAgeAssuranceProvider String?
+  adultApprovalExpiresAt DateTime?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
@@ -95,8 +118,40 @@ model Workspace {
   ownershipTransfers WorkspaceOwnershipTransfer[]
   activeForUsers User[] @relation("UserActiveWorkspace")
   relationshipSubjects RelationshipSubject[]
+  adultApprovals AdultWorkspaceApproval[]
 
   @@index([createdAt])
+  @@index([adultEnabled])
+}
+
+/// Audited After Dark partner approval. Source of truth for adult config access.
+model AdultWorkspaceApproval {
+  id                     String    @id @default(cuid())
+  workspaceId            String
+  /// pending | approved | revoked | expired
+  status                 String    @default("pending")
+  approvedByUserId       String?
+  approvedAt             DateTime?
+  reason                 String
+  policyVersion          String
+  /// JSON string array of capability ids granted
+  capabilities           String    @default("[]")
+  /// JSON string array of ISO country codes
+  allowedCountries       String    @default("[]")
+  ageAssuranceRequired   Boolean   @default(true)
+  ageAssuranceProvider   String?
+  expiresAt              DateTime?
+  revokedAt              DateTime?
+  revokeReason           String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  workspace  Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  approvedBy User?     @relation("AdultApprovalApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, status])
+  @@index([approvedByUserId])
+  @@index([expiresAt])
 }
 
 model WorkspaceMember {

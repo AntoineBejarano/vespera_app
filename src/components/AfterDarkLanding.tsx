@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useHexclaveApp, useUser } from "@hexclave/next";
+import { useUser } from "@hexclave/next";
 import { AppNav } from "@/components/AppNav";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LegalFooter } from "@/components/LegalFooter";
@@ -14,8 +14,9 @@ import {
   RetroGrid,
   ShimmerButton,
 } from "@/components/magicui/effects";
-import { VoiceAgentWidget } from "@/components/VoiceAgentWidget";
 import { SITE_URL } from "@/lib/site";
+import { PARTNERS_EMAIL } from "@/lib/adult/constants";
+import { PARTNERS_MAILTO } from "@/lib/adult/partners";
 
 const INTEGRATIONS = [
   "OnlyFans",
@@ -93,81 +94,56 @@ const COMPETE_BOARD = [
 const PRICING = [
   {
     name: "Agent",
-    price: "€20",
-    period: "/agent /mo",
-    blurb: "One private companion that remembers. (Indicative — adult rail soon.)",
+    price: "Custom",
+    period: "",
+    blurb: "Partner-only companion stack for verified adult operators.",
     features: [
-      "1 agent persona",
-      "Telegram bot included",
-      "Persistent memory",
-      "Photo tags + multi-bubble chat",
-      "Chat API access",
+      "1+ agent personas",
+      "Memory & voice",
+      "Channel connectors",
+      "Contracted rollout",
     ],
-    cta: "Join waitlist — Agent",
-    highlight: true,
-    action: "signup" as const,
+    cta: "Apply for partner access",
   },
   {
-    name: "Studio",
-    price: "€59",
-    period: "/mo",
-    blurb: "Run a small roster without losing the plot. (Indicative — adult rail soon.)",
+    name: "Roster",
+    price: "Custom",
+    period: "",
+    blurb: "Multi-persona ops for agencies — audited After Dark approval.",
     features: [
-      "Up to 3 agents",
-      "Multi-bot / multi-peer",
-      "Shared photo libraries",
-      "Priority model routing",
-      "Human handoff hooks",
+      "Workspace approval",
+      "Ops tooling",
+      "Policy controls",
+      "Dedicated onboarding",
     ],
-    cta: "Join waitlist — Studio",
-    highlight: false,
-    action: "signup" as const,
+    cta: "Apply for partner access",
   },
   {
     name: "House",
-    price: "€179",
-    period: "/mo",
-    blurb: "One identity or an entire roster. Every conversation stays consistent.",
+    price: "Design partner",
+    period: "",
+    blurb: "Platform / large roster — talk to us.",
     features: [
-      "Up to 12 agents",
-      "Connector pack (OF / Fansly / Fanvue)",
-      "Team seats (soon)",
-      "SLA + private Slack",
-      "Custom handoff workflows",
+      "Custom limits",
+      "Integration support",
+      "Roadmap priority",
+      "Commercial terms",
     ],
-    cta: "Talk to sales",
-    highlight: false,
-    action: "sales" as const,
+    cta: "Apply for partner access",
   },
 ];
 
-/** Adult creator landing — moved from the main homepage. */
 export function AfterDarkLanding() {
-  const app = useHexclaveApp();
-  const user = useUser({ or: "return-null" });
   const search = useSearchParams();
+  const user = useUser({ or: "return-null" });
 
   useEffect(() => {
-    if (search.get("hexclave_cross_domain_auth")) return;
+    // Invite-only: never auto-route guests into adult signup.
+    void search.get("auth");
+  }, [search]);
 
-    if (user) {
-      window.location.replace("/auth/continue");
-      return;
-    }
-    const auth = search.get("auth");
-    // Adult clickwrap once, then Hexclave; /auth/continue persists cookie→account.
-    if (auth === "signin") {
-      window.location.replace("/age-gate?zone=adult&intent=signin");
-      return;
-    }
-    if (auth === "signup") {
-      window.location.replace("/age-gate?zone=adult&intent=signup");
-      return;
-    }
-  }, [app, search, user]);
-
-  if (user && !search.get("hexclave_cross_domain_auth")) {
-    return <PageSpinner label="Entering Studio" variant="after-dark" />;
+  if (user && search.get("hexclave_cross_domain_auth")) {
+    return <PageSpinner label="Continuing" variant="after-dark" />;
   }
 
   return (
@@ -183,102 +159,64 @@ export function AfterDarkLanding() {
               priority
               variant="after-dark"
               className="mb-2"
-              subtitle="After Dark · 18+"
+              subtitle="After Dark · Partner access"
             />
           </BlurFade>
           <BlurFade delay={0.08}>
             <p className="mt-4 text-[11px] uppercase tracking-[0.28em] text-[var(--accent)] sm:text-sm sm:tracking-[0.35em]">
-              18+ · Private · Persistent
+              Invite-only · B2B · 18+
             </p>
           </BlurFade>
           <BlurFade delay={0.12}>
             <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[1.85rem] leading-[1.05] text-[var(--ink)] sm:mt-4 sm:text-4xl sm:leading-[1.1]">
-              Someone who remembers exactly{" "}
-              <span className="italic text-[var(--accent)]">what you like</span>
+              Adult companion infrastructure —{" "}
+              <span className="italic text-[var(--accent)]">
+                by arrangement
+              </span>
               .
             </h1>
           </BlurFade>
           <BlurFade delay={0.18}>
             <p className="mt-4 max-w-xl text-base leading-relaxed text-[var(--muted)] sm:mt-5 sm:text-lg">
-              Private, persistent and entirely yours. The chemistry stays. The
-              memory does too — it doesn&apos;t reset when the conversation gets
-              interesting.
+              After Dark is not self-service. Partners get audited workspace
+              approval, policy controls, and contracted rollout. Consumer adult
+              delivery requires highly effective age assurance — not a checkbox.
             </p>
           </BlurFade>
           <BlurFade
             delay={0.26}
             className="mt-8 flex w-full flex-col gap-3 sm:mt-10 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-4"
           >
-            <ShimmerButton
-              className="w-full sm:w-auto"
-              onClick={() => {
-                window.location.href = "/age-gate?zone=adult&intent=signup";
-              }}
-            >
-              Enter 18+ — from €20/mo
-            </ShimmerButton>
-            <button
-              type="button"
-              className="w-full rounded-xl border border-[var(--line)] px-6 py-3 sm:w-auto"
-              onClick={() => {
-                window.location.href = "/age-gate?zone=adult&intent=signin";
-              }}
-            >
-              Sign in
-            </button>
-            <Link
-              href="/"
-              className="w-full rounded-xl border border-[var(--line)] px-6 py-3 text-center text-sm text-[var(--muted)] sm:w-auto"
-            >
-              ← Back to Vesperer
-            </Link>
-          </BlurFade>
-          <p className="mt-4 text-xs text-[var(--muted)]">
-            18+ only. By continuing you already attested age and accepted our{" "}
-            <a href="/legal/terms" className="text-[var(--accent)]">
-              Terms
+            <a href={PARTNERS_MAILTO} className="w-full sm:w-auto">
+              <ShimmerButton className="w-full sm:w-auto">
+                Apply for partner access
+              </ShimmerButton>
             </a>
-            .
-          </p>
-
-          <BlurFade delay={0.35} className="mt-12 w-full max-w-md sm:mt-16">
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/90 p-3 shadow-[0_0_60px_rgba(255,77,109,0.12)] sm:p-4">
-              <p className="text-xs uppercase tracking-wider text-[var(--muted)]">
-                Live vibe · example
-              </p>
-              <div className="mt-4 space-y-3 text-sm">
-                <p className="ml-8 rounded bg-[var(--accent-soft)] px-3 py-2 text-right">
-                  can&apos;t stop thinking about you rn
-                </p>
-                <p className="mr-8 rounded bg-[var(--bg)] px-3 py-2 text-[var(--ink)]">
-                  fuck — say that again
-                </p>
-                <p className="mr-8 rounded bg-[var(--bg)] px-3 py-2 text-[var(--ink)]">
-                  wish i was there instead of your hand
-                </p>
-                <p className="ml-8 rounded bg-[var(--accent-soft)] px-3 py-2 text-right">
-                  send me something
-                </p>
-                <p className="mr-8 text-[var(--muted)]">[photo · tagged: face]</p>
-                <p className="mr-8 rounded bg-[var(--bg)] px-3 py-2">
-                  here. don&apos;t be gentle
-                </p>
-              </div>
-              <p className="mt-3 text-xs text-[var(--muted)]">
-                Explicit · multi-bubble · memory that doesn&apos;t kill the
-                chemistry.
-              </p>
-            </div>
+            <Link
+              href={SITE_URL}
+              className="w-full rounded-xl border border-[var(--line)] px-6 py-3 text-center sm:w-auto"
+            >
+              Vesperer SFW (main site)
+            </Link>
+            {user ? (
+              <Link
+                href={`${SITE_URL}/personas`}
+                className="w-full rounded-xl border border-[var(--line)] px-6 py-3 text-center sm:w-auto"
+              >
+                Open Studio
+              </Link>
+            ) : null}
           </BlurFade>
+          <p className="mt-4 text-sm text-[var(--muted)]">{PARTNERS_EMAIL}</p>
         </div>
       </section>
 
-      <section className="border-y border-[var(--line)] py-8">
-        <Marquee className="px-4">
+      <section className="border-y border-[var(--line)] py-4">
+        <Marquee className="[--duration:40s]">
           {INTEGRATIONS.map((name) => (
             <span
               key={name}
-              className="whitespace-nowrap text-sm uppercase tracking-[0.25em] text-[var(--muted)]"
+              className="mx-6 text-sm uppercase tracking-[0.2em] text-[var(--muted)]"
             >
               {name}
             </span>
@@ -286,296 +224,105 @@ export function AfterDarkLanding() {
         </Marquee>
       </section>
 
-      <section
-        id="voice"
-        className="scroll-mt-24 border-b border-[var(--line)] bg-[var(--bg-elevated)]/30 py-16 sm:py-24"
-      >
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-          <BlurFade>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
-              After Dark Voice · 18+
-            </p>
-            <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-5xl">
-              Talk to Tatiana — she remembers what you like.
-            </h2>
-            <p className="mt-4 max-w-xl text-[var(--muted)]">
-              Adult companions with a dedicated voice and the same memory layer
-              as chat — intimacy that compounds instead of resetting every
-              session.
-            </p>
-            <ul className="mt-6 space-y-2 text-sm text-[var(--muted)]">
-              <li>· Dedicated voice for Tatiana</li>
-              <li>· Per-user relationship memory</li>
-              <li>· Voice + chat continuity for creator lines</li>
-            </ul>
-          </BlurFade>
-          <BlurFade delay={0.08}>
-            <VoiceAgentWidget
-              compact
-              catalog="after-dark"
-              defaultAgent="tatiana"
-            />
-          </BlurFade>
-        </div>
-      </section>
-
-      <section
-        id="compete"
-        className="scroll-mt-24 border-b border-[var(--line)] py-16 sm:py-24"
-      >
-        <div className="mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.05fr] lg:items-start">
-          <BlurFade>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
-              Friend heat · 18+
-            </p>
-            <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold leading-[1.05] sm:text-5xl">
-              Who in your group actually{" "}
-              <span className="italic text-[var(--accent)]">lands her</span>?
-            </h2>
-            <p className="mt-4 max-w-xl text-[var(--muted)]">
-              Create a competition with your friends. Everyone chats Tatiana in
-              private — she keeps a separate memory for each of you, then ranks
-              who’s winning based on how she feels about the conversation.
-            </p>
-            <ol className="mt-8 space-y-5">
-              {COMPETE_STEPS.map((step) => (
-                <li key={step.n} className="flex gap-4">
-                  <span className="font-[family-name:var(--font-display)] text-sm text-[var(--accent)]">
-                    {step.n}
-                  </span>
-                  <div>
-                    <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
-                      {step.t}
-                    </p>
-                    <p className="mt-1 text-sm text-[var(--muted)]">{step.d}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <ShimmerButton
-                onClick={() => {
-                  window.location.href = "/age-gate?zone=adult&intent=signup";
-                }}
-              >
-                Start a competition
-              </ShimmerButton>
-              <a
-                href="#voice"
-                className="inline-flex items-center rounded-xl border border-[var(--line)] px-5 py-3.5 text-sm"
-              >
-                Practice with Tatiana first
-              </a>
-            </div>
-            <p className="mt-4 text-xs text-[var(--muted)]">
-              Private chats only. She never leaks your friends’ messages — just
-              the scoreboard and her verdict.
-            </p>
-          </BlurFade>
-
-          <BlurFade delay={0.1}>
-            <div className="border border-[var(--line)] bg-[var(--bg-elevated)]/80 p-5 sm:p-6">
-              <div className="flex items-end justify-between gap-3 border-b border-[var(--line)] pb-4">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-[var(--muted)]">
-                    Live board · Friday night heat
-                  </p>
-                  <p className="mt-1 font-[family-name:var(--font-display)] text-xl font-semibold">
-                    Tatiana’s ranking
-                  </p>
-                </div>
-                <p className="text-xs text-[var(--accent-2)]">updating…</p>
-              </div>
-              <ul className="mt-2 divide-y divide-[var(--line)]">
-                {COMPETE_BOARD.map((row) => (
-                  <li
-                    key={row.name}
-                    className={`py-4 ${row.lead ? "bg-[var(--accent-soft)]/40 px-3 -mx-3 sm:px-4 sm:-mx-4" : ""}`}
-                  >
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className="font-[family-name:var(--font-display)] text-lg font-semibold">
-                        <span className="mr-2 text-[var(--muted)]">
-                          {row.place}
-                        </span>
-                        {row.name}
-                        {row.lead ? (
-                          <span className="ml-2 text-xs uppercase tracking-[0.18em] text-[var(--accent)]">
-                            leading
-                          </span>
-                        ) : null}
-                      </p>
-                      <p className="font-[family-name:var(--font-display)] text-2xl tabular-nums text-[var(--accent-2)]">
-                        {row.score}
-                      </p>
-                    </div>
-                    <p className="mt-2 text-sm italic leading-relaxed text-[var(--muted)]">
-                      {row.note}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-5 border-t border-[var(--line)] pt-4 text-xs text-[var(--muted)]">
-                Scores from chemistry, wit, listening, and whether she’d keep
-                talking — judged in-character by Tatiana.
-              </p>
-            </div>
-          </BlurFade>
-        </div>
-      </section>
-
-      <section
-        id="pipeline"
-        className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24"
-      >
+      <section id="voice" className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
         <BlurFade>
-          <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            Platform → persona → continuity
+          <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
+            Voice
+          </p>
+          <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
+            Demo voice (SFW preview)
           </h2>
-          <p className="mt-3 max-w-2xl text-[var(--muted)]">
-            Integrations feed the connector. The character engine keeps her
-            consistent. Memory keeps the chemistry. Human handoff when you want
-            the real you to take over.
+          <p className="mt-3 max-w-xl text-[var(--muted)]">
+            Public demos stay non-explicit. Full adult voice delivery is partner
+            + age-assurance gated.
           </p>
         </BlurFade>
-        <div className="mt-12 flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
-          {["OnlyFans", "Fansly", "Fanvue", "Telegram"].map((s, i) => (
-            <BlurFade key={s} delay={i * 0.05}>
-              <span className="inline-block border border-[var(--line)] px-4 py-2 text-sm">
-                {s}
-              </span>
+        <div className="mt-8 rounded-xl border border-[var(--line)] p-6 text-sm text-[var(--muted)]">
+          Adult voice demos are disabled on the public partner landing until
+          highly effective age assurance is live. Apply for partner access to
+          discuss contracted previews.
+        </div>
+      </section>
+
+      <section id="compete" className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
+        <BlurFade>
+          <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
+            Compete
+          </p>
+          <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
+            Private heats — partner roadmaps
+          </h2>
+        </BlurFade>
+        <div className="mt-10 grid gap-6 sm:grid-cols-3">
+          {COMPETE_STEPS.map((s) => (
+            <BlurFade key={s.n}>
+              <p className="text-xs text-[var(--accent)]">{s.n}</p>
+              <h3 className="mt-2 text-lg text-[var(--ink)]">{s.t}</h3>
+              <p className="mt-2 text-sm text-[var(--muted)]">{s.d}</p>
             </BlurFade>
           ))}
         </div>
-        <div className="mt-4 text-[var(--muted)]">↓</div>
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          {PIPELINE.map((step, i) => (
-            <BlurFade
+        <div className="mt-12 space-y-3">
+          {COMPETE_BOARD.map((row) => (
+            <div
+              key={row.place}
+              className={`flex items-start justify-between gap-4 border-b border-[var(--line)] py-3 ${
+                row.lead ? "text-[var(--accent)]" : "text-[var(--muted)]"
+              }`}
+            >
+              <div>
+                <p className="font-medium text-[var(--ink)]">
+                  {row.place} · {row.name}
+                </p>
+                <p className="mt-1 text-sm">{row.note}</p>
+              </div>
+              <p className="shrink-0 text-lg tabular-nums">{row.score}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="pipeline" className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
+        <BlurFade>
+          <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
+            How it works
+          </p>
+          <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
+            Same engine. Partner controls.
+          </h2>
+        </BlurFade>
+        <div className="mt-10 flex flex-wrap gap-3">
+          {PIPELINE.map((step) => (
+            <span
               key={step}
-              delay={0.1 + i * 0.06}
-              className="flex items-center gap-3"
+              className="rounded-full border border-[var(--line)] px-4 py-2 text-sm text-[var(--ink)]"
             >
-              <span className="border border-[var(--accent)]/50 bg-[var(--accent-soft)] px-4 py-3 text-sm text-[var(--ink)]">
-                {step}
-              </span>
-              {i < PIPELINE.length - 1 ? (
-                <span className="hidden text-[var(--muted)] sm:inline">→</span>
-              ) : null}
-            </BlurFade>
+              {step}
+            </span>
           ))}
+        </div>
+        <div className="mt-10">
+          <a href={PARTNERS_MAILTO}>
+            <ShimmerButton>Apply for partner access</ShimmerButton>
+          </a>
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-16">
+      <section id="pricing" className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
         <BlurFade>
-          <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            Nothing breaks the chemistry
-          </h2>
-          <p className="mt-3 max-w-2xl text-[var(--muted)]">
-            Filtered models kill the scene mid-sentence. After Dark stays
-            explicit, teasing and human — with memory that compounds instead of
-            resetting every night.
-          </p>
-        </BlurFade>
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {[
-            {
-              t: "Stay in the fantasy",
-              d: "Heat matches the moment instead of lecturing you out of it.",
-            },
-            {
-              t: "Memory that flirts back",
-              d: "She remembers what you like — and what you asked for last night.",
-            },
-            {
-              t: "Human when it matters",
-              d: "Handoff to a real operator without breaking the character frame.",
-            },
-          ].map((card, i) => (
-            <BlurFade key={card.t} delay={i * 0.08}>
-              <div className="h-full rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-5">
-                <h3 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
-                  {card.t}
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
-                  {card.d}
-                </p>
-              </div>
-            </BlurFade>
-          ))}
-        </div>
-      </section>
-
-      <section
-        id="adult-features"
-        className="mx-auto max-w-5xl px-4 py-14 sm:px-6 sm:py-16"
-      >
-        <BlurFade>
-          <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
-            Built for adult creators
-          </h2>
-          <p className="mt-3 max-w-2xl text-[var(--muted)]">
-            Same character core as Vesperer — with tone controls, private
-            infrastructure and strict prohibition of minors and non-consensual
-            personas.
-          </p>
-        </BlurFade>
-        <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            "Adult tone controls",
-            "Relationship progression",
-            "Long-term memory",
-            "Creator-owned characters",
-            "Private infrastructure",
-            "Human handoff",
-            "Agency workspace",
-            "Analytics",
-            "Age assurance",
-          ].map((item, i) => (
-            <BlurFade key={item} delay={i * 0.04}>
-              <li className="rounded-xl border border-[var(--line)] bg-[var(--bg-elevated)] px-4 py-3 text-sm">
-                {item}
-              </li>
-            </BlurFade>
-          ))}
-        </ul>
-      </section>
-
-      <section
-        id="pricing"
-        className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24"
-      >
-        <BlurFade>
-          <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-4xl">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
             Pricing
-          </h2>
-          <p className="mt-3 max-w-2xl text-[var(--muted)]">
-            Pay per agent when adult billing goes live — via an adult-compatible
-            processor and/or Telegram Stars, not Stripe. A subdomain alone does
-            not make adult purchases Stripe-eligible; After Dark stays on a
-            separate payment rail from apex SFW plans. See{" "}
-            <a
-              href="/legal/billing"
-              className="underline underline-offset-2 hover:text-[var(--ink)]"
-            >
-              Billing Terms
-            </a>
-            .
           </p>
+          <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
+            Partner terms — not self-serve checkout
+          </h2>
         </BlurFade>
-        <div className="mt-12 grid gap-4 lg:grid-cols-3">
-          {PRICING.map((tier, i) => (
-            <BlurFade key={tier.name} delay={i * 0.08}>
-              <div
-                className={
-                  tier.highlight
-                    ? "flex h-full flex-col rounded-2xl border border-[var(--accent)] bg-[var(--accent-soft)] p-6"
-                    : "flex h-full flex-col rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)] p-6"
-                }
-              >
-                <p className="text-xs uppercase tracking-[0.25em] text-[var(--muted)]">
-                  {tier.name}
-                </p>
-                <p className="mt-4 font-[family-name:var(--font-display)] text-5xl">
+        <div className="mt-10 grid gap-6 lg:grid-cols-3">
+          {PRICING.map((tier) => (
+            <BlurFade key={tier.name}>
+              <div className="flex h-full flex-col border border-[var(--line)] p-6">
+                <h3 className="text-xl text-[var(--ink)]">{tier.name}</h3>
+                <p className="mt-4 font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
                   {tier.price}
                   <span className="text-base text-[var(--muted)]">
                     {tier.period}
@@ -587,25 +334,12 @@ export function AfterDarkLanding() {
                     <li key={f}>· {f}</li>
                   ))}
                 </ul>
-                {tier.action === "sales" ? (
-                  <a
-                    href={`${SITE_URL}/business/agencies`}
-                    className="mt-8 block w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-center font-medium text-[var(--accent-ink)]"
-                  >
-                    {tier.cta}
-                  </a>
-                ) : (
-                  <button
-                    type="button"
-                    className="mt-8 w-full rounded-xl bg-[var(--accent)] px-4 py-3 font-medium text-[var(--accent-ink)]"
-                    onClick={() => {
-                      window.location.href =
-                        "/age-gate?zone=adult&intent=signup";
-                    }}
-                  >
-                    {tier.cta}
-                  </button>
-                )}
+                <a
+                  href={PARTNERS_MAILTO}
+                  className="mt-8 block w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-center font-medium text-[var(--accent-ink)]"
+                >
+                  {tier.cta}
+                </a>
               </div>
             </BlurFade>
           ))}
@@ -614,7 +348,7 @@ export function AfterDarkLanding() {
 
       <section className="mx-auto max-w-5xl px-4 pb-10 sm:px-6">
         <p className="text-center text-xs text-[var(--muted)]">
-          Running a roster or integrating a platform?{" "}
+          Agencies & platforms:{" "}
           <a
             href={`${SITE_URL}/business/agencies`}
             className="text-[var(--ink)] underline-offset-2 hover:underline"
@@ -632,7 +366,7 @@ export function AfterDarkLanding() {
       </section>
       <LegalFooter variant="after-dark" />
       <p className="px-6 pb-8 text-center text-xs text-[var(--muted)]">
-        * Roadmap connectors. Telegram live today.
+        * Roadmap connectors. Partner access only — no public adult signup.
       </p>
     </div>
   );

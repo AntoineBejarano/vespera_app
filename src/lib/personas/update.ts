@@ -22,6 +22,12 @@ import {
   layersChanged,
   snapshotAndBumpVersion,
 } from "@/lib/personas/versions";
+import {
+  clampIntensityForWorkspace,
+  ContentPolicyError,
+} from "@/lib/content-policy";
+import { assertCapability } from "@/lib/content-policy/runtime";
+import { containsProhibitedPersonaConfig } from "@/lib/ai/safety";
 
 export const personaPatchSchema = z.object({
   active: z.boolean().optional(),
@@ -159,17 +165,96 @@ export async function updateOwnedPersona(params: {
   }
 
   if (data.isAdult !== undefined) {
-    const ws = await prisma.workspace.findUnique({
-      where: { id: character.workspaceId },
-    });
-    if (data.isAdult && !ws?.adultEnabled) {
-      return {
-        ok: false,
-        status: 403,
-        error: "After Dark is not enabled for this workspace (Owner only).",
-        code: "ADULT_DISABLED",
-      };
+    if (data.isAdult) {
+      try {
+        await assertCapability({
+          workspaceId: character.workspaceId,
+          characterAdult: true,
+          subjectAgeVerified: false,
+          channel: "web",
+          requestedCapability: "persona_adult_config",
+          isDelivery: false,
+        });
+        await requireWorkspacePermission(
+          params.user.id,
+          character.workspaceId,
+          "adult.manage_content",
+        );
+      } catch (err) {
+        if (err instanceof ContentPolicyError) {
+          return {
+            ok: false,
+            status: 403,
+            error: err.message,
+            code: err.code,
+          };
+        }
+        return {
+          ok: false,
+          status: 403,
+          error:
+            "After Dark partner approval required to mark personas adult. Apply via partners@vesperer.com.",
+          code: "ADULT_DISABLED",
+        };
+      }
     }
+  }
+
+  if (data.isPublic === true && (data.isAdult === true || character.isAdult)) {
+    try {
+      await assertCapability({
+        workspaceId: character.workspaceId,
+        characterAdult: true,
+        subjectAgeVerified: false,
+        channel: "public",
+        requestedCapability: "publish_adult",
+        isDelivery: true,
+      });
+    } catch (err) {
+      if (err instanceof ContentPolicyError) {
+        return {
+          ok: false,
+          status: 403,
+          error: err.message,
+          code: err.code,
+        };
+      }
+      throw err;
+    }
+  }
+
+  const ws = await prisma.workspace.findUnique({
+    where: { id: character.workspaceId },
+    select: { adultEnabled: true },
+  });
+  if (data.intensity !== undefined) {
+    data.intensity = clampIntensityForWorkspace(
+      data.intensity,
+      Boolean(ws?.adultEnabled) &&
+        (data.isAdult === true ||
+          (data.isAdult !== false && character.isAdult)),
+    );
+  }
+
+  const configBlob = [
+    data.name,
+    data.soul ?? data.soulMd,
+    data.style ?? data.styleMd,
+    data.rules ?? data.rulesMd,
+    data.context ?? data.contextMd,
+    data.tagline,
+    data.openingLine,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  if (configBlob && containsProhibitedPersonaConfig(configBlob)) {
+    return {
+      ok: false,
+      status: 400,
+      error:
+        "Persona update blocked: real-person, minor, or non-consent policy violation",
+      code: "PERSONA_HARD_BLOCK",
+    };
   }
 
   if (data.active) {

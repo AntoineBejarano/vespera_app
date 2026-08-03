@@ -1,8 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { requireUser } from "@/lib/users";
 import { normalizeTags, PHOTO_TAG_OPTIONS } from "@/lib/chat/photos";
-import { requireAppUser, getAppUser } from "@/lib/session";
+import { requireAppUser } from "@/lib/session";
+import {
+  loadWorkspacePolicyFields,
+} from "@/lib/content-policy/runtime";
+import { ContentPolicyError, EXPLICIT_PHOTO_TAGS } from "@/lib/content-policy";
+
+function rejectExplicitTags(tags: string[]) {
+  const explicit = tags.some((t) => EXPLICIT_PHOTO_TAGS.has(t));
+  if (!explicit) return;
+  // Deny-by-default until HEAA + image moderation are live
+  throw new ContentPolicyError(
+    "Explicit image capability blocked until age assurance and moderation",
+    "IMAGE_EXPLICIT_BLOCKED",
+  );
+}
 
 export async function GET(
   _req: Request,
@@ -25,7 +38,11 @@ export async function GET(
     where: { characterId: id },
     orderBy: { createdAt: "desc" },
   });
-  return NextResponse.json({ photos, tagOptions: PHOTO_TAG_OPTIONS });
+  const fields = await loadWorkspacePolicyFields(character.workspaceId);
+  const tagOptions = fields?.workspaceAdultEnabled
+    ? PHOTO_TAG_OPTIONS
+    : PHOTO_TAG_OPTIONS.filter((t) => !EXPLICIT_PHOTO_TAGS.has(t.id));
+  return NextResponse.json({ photos, tagOptions });
 }
 
 export async function POST(
@@ -60,6 +77,18 @@ export async function POST(
       { error: "Need a public http(s) image URL" },
       { status: 400 },
     );
+  }
+
+  try {
+    rejectExplicitTags(tags.length ? tags : [kind]);
+  } catch (err) {
+    if (err instanceof ContentPolicyError) {
+      return NextResponse.json(
+        { error: err.message, code: err.code },
+        { status: 403 },
+      );
+    }
+    throw err;
   }
 
   const photo = await prisma.characterPhoto.create({
@@ -107,6 +136,20 @@ export async function PATCH(
     body.caption !== undefined
       ? String(body.caption).trim() || null
       : undefined;
+
+  if (tags) {
+    try {
+      rejectExplicitTags(tags);
+    } catch (err) {
+      if (err instanceof ContentPolicyError) {
+        return NextResponse.json(
+          { error: err.message, code: err.code },
+          { status: 403 },
+        );
+      }
+      throw err;
+    }
+  }
 
   const photo = await prisma.characterPhoto.updateMany({
     where: { id: photoId, characterId: id },

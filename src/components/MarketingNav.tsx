@@ -1,4 +1,5 @@
 import { AFTER_DARK_URL, SITE_URL } from "@/lib/site";
+import { PARTNERS_MAILTO } from "@/lib/adult/partners";
 
 const MARKETING_LINKS = [
   { href: "/registry", label: "Registry" },
@@ -47,9 +48,7 @@ export function MarketingNav({
   const linkClass =
     "text-[13px] tracking-[0.01em] text-[var(--muted)] transition-colors hover:text-[var(--ink)]";
   const signUpHref =
-    variant === "after-dark"
-      ? "/age-gate?zone=adult&intent=signup"
-      : "/handler/sign-up";
+    variant === "after-dark" ? PARTNERS_MAILTO : "/handler/sign-up";
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[var(--bg)]/70 backdrop-blur-xl">
@@ -120,7 +119,7 @@ export function MarketingNav({
             href={signUpHref}
             className="ml-1 border border-[var(--ink)]/20 px-3.5 py-1.5 text-[13px] font-medium tracking-[0.01em] text-[var(--ink)] transition hover:border-[var(--accent)]/50 hover:bg-[var(--accent-soft)]"
           >
-            {variant === "after-dark" ? "Enter 18+" : "Get started"}
+            {variant === "after-dark" ? "Apply for partner access" : "Get started"}
           </a>
         </nav>
 
@@ -172,7 +171,7 @@ export function MarketingNav({
                 href={signUpHref}
                 className="mt-3 border border-[var(--ink)]/20 px-4 py-3 text-left font-medium text-[var(--ink)]"
               >
-                {variant === "after-dark" ? "Enter 18+" : "Get started"}
+                {variant === "after-dark" ? "Apply for partner access" : "Get started"}
               </a>
             </div>
           </nav>

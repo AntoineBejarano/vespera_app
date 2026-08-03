@@ -102,6 +102,17 @@ export async function POST(req: Request) {
     return Response.json({ error: "Unknown agent" }, { status: 404 });
   }
 
+  if (profile.isAdult || profile.catalog === "after-dark") {
+    return Response.json(
+      {
+        error:
+          "Adult voice delivery is partner + age-assurance gated and not available on public demos.",
+        code: "VOICE_ADULT_BLOCKED",
+      },
+      { status: 403 },
+    );
+  }
+
   const memory = await loadMemory(peerId, agent);
   const memoryBlock = memory.facts.length
     ? `Long-term memory about this caller (never forget these):\n${memory.facts.map((f) => `- ${f}`).join("\n")}`

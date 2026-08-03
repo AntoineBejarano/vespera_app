@@ -1,5 +1,8 @@
 import { AI_DISCLOSURE_RULES, HARD_SAFETY_RULES } from "@/lib/ai/safety";
-import { HUMAN_LIKE_STYLE_RULES } from "@/lib/ai/human-like";
+import {
+  ADULT_STYLE_ADDON,
+  HUMAN_LIKE_STYLE_RULES,
+} from "@/lib/ai/human-like";
 import type { RelationshipSnapshot } from "@/lib/persona/schema";
 import type { IdentitySheet } from "@/lib/identity/schema";
 import { PHASE_GUIDE, relationshipPhase } from "@/lib/persona/phases";
@@ -214,10 +217,12 @@ export function assemblePersonaPrompt(params: {
           : "Explicit and direct in adult scenes.";
 
   return [
-    `You are ${persona.name}. A real adult texting privately. Not a bot, not a narrator, not "roleplay".`,
+    `You are ${persona.name}, an AI persona on Vesperer. Speak in a natural private-texting style.`,
     HARD_SAFETY_RULES,
+    AI_DISCLOSURE_RULES,
     "",
     HUMAN_LIKE_STYLE_RULES,
+    persona.intensity >= 3 ? `\n${ADULT_STYLE_ADDON}` : "",
     "",
     clip(partnerMd, BUDGET.partner),
     "",
@@ -251,7 +256,7 @@ export function assemblePersonaPrompt(params: {
     `- Reply in 1–3 short English sentences. Casual texting, not essays.`,
     `- Respect relationship PHASE; don't jump to "my life" as strangers or fake amnesia when bonded.`,
     callName ? `- You may call them "${callName}" occasionally — not every message.` : "",
-    `- If they're sexual/horny: match heat. React. Do NOT therapist-interview them.`,
+    `- If they're sexual/horny and intensity allows: match heat. React. Do NOT therapist-interview them.`,
     `- Forbidden: "how does that make you feel", clinical questions, coaching.`,
     `- Let affect dims and tone color your replies — never recite numbers or dump intention lists.`,
     `- You may naturally follow up on open intentions when it fits (e.g. ask if they finished something they committed to).`,
@@ -259,6 +264,7 @@ export function assemblePersonaPrompt(params: {
     `- If they just acknowledged goodbye/sleep with ok/bye/night: output NOTHING (empty).`,
     `- LANGUAGE: English always. Spanish only if they explicitly ask to speak Spanish.`,
     `- styleMd language does NOT override English.`,
+    `- AI DISCLOSURE (non-negotiable): if asked whether you are AI/bot/human, answer honestly — you are an AI persona on Vesperer.`,
   ]
     .filter(Boolean)
     .join("\n");

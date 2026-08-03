@@ -11,6 +11,7 @@ type Params = { params: Promise<{ id: string }> };
 
 const patchSchema = z.object({
   name: z.string().min(1).max(80).optional(),
+  /** Rejected — adult enablement is ops-only via AdultWorkspaceApproval. */
   adultEnabled: z.boolean().optional(),
 });
 
@@ -53,6 +54,16 @@ export async function PATCH(req: Request, { params }: Params) {
   }
 
   try {
+    if (parsed.data.adultEnabled !== undefined) {
+      return Response.json(
+        {
+          error:
+            "After Dark partner access cannot be self-enabled. Contact partners@vesperer.com.",
+          code: "ADULT_SELF_ENABLE_FORBIDDEN",
+        },
+        { status: 403 },
+      );
+    }
     if (parsed.data.name !== undefined) {
       await requireWorkspacePermission(
         user.id,
@@ -60,21 +71,11 @@ export async function PATCH(req: Request, { params }: Params) {
         "workspace.update",
       );
     }
-    if (parsed.data.adultEnabled !== undefined) {
-      await requireWorkspacePermission(
-        user.id,
-        workspaceId,
-        "adult.enable_workspace",
-      );
-    }
 
     const workspace = await prisma.workspace.update({
       where: { id: workspaceId },
       data: {
         ...(parsed.data.name !== undefined ? { name: parsed.data.name } : {}),
-        ...(parsed.data.adultEnabled !== undefined
-          ? { adultEnabled: parsed.data.adultEnabled }
-          : {}),
       },
     });
     return Response.json({ workspace });

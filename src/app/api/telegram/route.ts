@@ -16,7 +16,6 @@ import { resolveBotByWebhookSecret } from "@/lib/telegram/bots";
 import {
   attestTelegramPeerAge,
   ensureTelegramPeer,
-  isAgeAttestMessage,
   type TelegramFrom,
 } from "@/lib/telegram/peers";
 import { resolveVoiceForCharacter } from "@/lib/voice/characters";
@@ -40,20 +39,23 @@ type TelegramUpdate = {
   };
 };
 
-const AGE_GATE_MSG = [
-  "Adults only (18+).",
-  "This chat can include sexual content between consenting adults.",
-  "Sexual content involving minors is forbidden.",
+const AI_DISCLOSURE_MSG = [
+  "Vesperer AI disclosure: you are chatting with an automated AI persona, not a human operator (unless a human handoff is clearly stated).",
+  "Commands: /about — disclosure · /who — status",
+].join("\n");
+
+const ADULT_DELIVERY_BLOCKED_MSG = [
+  "This persona is marked adult. End-user adult delivery is not available until highly effective age assurance is enabled for this channel.",
+  "If you are a partner, configure personas in the Studio on vesperer.com — do not route adult consumers here yet.",
   "",
-  "If you are 18 or older, reply: I am 18",
-  "If you are under 18, leave now — we cannot chat.",
+  AI_DISCLOSURE_MSG,
 ].join("\n");
 
 /**
  * Multi-tenant Telegram webhook.
- * N bots (DB or env) → same Character (girl) → N peers with isolated memory.
+ * N bots (DB or env) → same Character → N peers with isolated memory.
  * Bot resolved by x-telegram-bot-api-secret-token.
- * Peers must self-attest 18+ before character replies.
+ * AI disclosure on first contact; adult end-user delivery denied without HEAA.
  */
 export async function POST(req: Request) {
   const header = req.headers.get("x-telegram-bot-api-secret-token");
@@ -82,46 +84,57 @@ export async function POST(req: Request) {
       where: { id: bot.characterId },
     });
 
-    if (text.startsWith("/start")) {
-      const hi = from.first_name ? `hey ${from.first_name}` : "hey";
-      if (!peer.ageAttestedAt) {
-        await telegramSendMessage(
-          chatId,
-          [
-            character
-              ? `${hi} — before we talk, age check.`
-              : `${hi} — age check first.`,
-            "",
-            AGE_GATE_MSG,
-          ].join("\n"),
-          token,
-        );
-        return Response.json({ ok: true });
-      }
+    if (text === "/about") {
       await telegramSendMessage(
         chatId,
-        character
-          ? `${hi} — it's ${character.name}. text me whenever`
-          : `${hi}. talk soon`,
+        [
+          character
+            ? `${character.name} is an AI persona on Vesperer.`
+            : "This is an AI persona on Vesperer.",
+          AI_DISCLOSURE_MSG,
+          character?.isAdult
+            ? "18+ partner persona — consumer adult delivery requires age assurance (not enabled on this channel yet)."
+            : null,
+        ]
+          .filter(Boolean)
+          .join("\n"),
         token,
       );
       return Response.json({ ok: true });
     }
 
-    if (!peer.ageAttestedAt) {
-      if (isAgeAttestMessage(text)) {
-        await attestTelegramPeerAge(peer.peerId, peer.userId);
-        await telegramSendMessage(
-          chatId,
+    if (text.startsWith("/start")) {
+      const hi = from.first_name ? `hey ${from.first_name}` : "hey";
+      await telegramSendMessage(
+        chatId,
+        [
           character
-            ? `got it — you're in. i'm ${character.name}. text me whenever`
-            : "got it — you're in. text me whenever",
-          token,
-        );
-        return Response.json({ ok: true });
+            ? `${hi} — i'm ${character.name}, an AI persona on Vesperer.`
+            : `${hi} — AI persona on Vesperer.`,
+          "",
+          AI_DISCLOSURE_MSG,
+          character?.isAdult ? `\n${ADULT_DELIVERY_BLOCKED_MSG}` : null,
+        ]
+          .filter(Boolean)
+          .join("\n"),
+        token,
+      );
+      // Soft-attest peer for SFW continuity (not HEAA)
+      if (!peer.ageAttestedAt && !character?.isAdult) {
+        await attestTelegramPeerAge(peer.peerId, peer.userId);
       }
-      await telegramSendMessage(chatId, AGE_GATE_MSG, token);
       return Response.json({ ok: true });
+    }
+
+    if (character?.isAdult) {
+      await telegramSendMessage(chatId, ADULT_DELIVERY_BLOCKED_MSG, token);
+      return Response.json({ ok: true });
+    }
+
+    if (!peer.ageAttestedAt) {
+      // First non-/start message: disclose AI then continue
+      await attestTelegramPeerAge(peer.peerId, peer.userId);
+      await telegramSendMessage(chatId, AI_DISCLOSURE_MSG, token);
     }
 
     if (text === "/who" || text === "/status") {
@@ -152,7 +165,8 @@ export async function POST(req: Request) {
           `telegram: ${from.first_name ?? "—"}${from.username ? ` @${from.username}` : ""}`,
           `girl: ${character?.name ?? "none"}`,
           `bot: @${bot.username}`,
-          "age: attested 18+",
+          "ai: automated Vesperer persona",
+          "age: soft peer record (not HEAA)",
           rel
             ? `${phase} · t ${rel.trust.toFixed(2)} · a ${rel.affection.toFixed(2)} · ${rel.mood} · ${rel.currentTone}`
             : "no relationship state yet",

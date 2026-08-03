@@ -7,7 +7,9 @@ type MetricEvent =
   | "memory_deleted"
   | "daily_limit_hit"
   | "safety_block"
-  | "openrouter_error";
+  | "openrouter_error"
+  | "adult_approval"
+  | "content_policy_deny";
 
 const counters = new Map<string, number>();
 

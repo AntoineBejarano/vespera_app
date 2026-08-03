@@ -26,6 +26,14 @@ import { shouldStaySilent } from "@/lib/chat/closing";
 import { resolvePartnerName } from "@/lib/telegram/profile";
 import { loadMindContext, type MindActivityHit } from "@/lib/chat/mind-context";
 import { enqueuePostTurn } from "@/lib/chat/post-turn";
+import {
+  assertCapability,
+  isEndUserAgeAssured,
+} from "@/lib/content-policy/runtime";
+import {
+  ContentPolicyError,
+  looksLikeAdultSexualRequest,
+} from "@/lib/content-policy";
 
 export type ChatPhotoPayload = {
   url: string;
@@ -167,8 +175,8 @@ export async function prepareCharacterTurn(params: {
     where: { id: params.userId },
     include: { settings: true },
   });
-  if (!user?.ageVerifiedAt) {
-    return { ok: false, error: "User not age-verified 18+", status: 403 };
+  if (!user) {
+    return { ok: false, error: "User not found", status: 404 };
   }
 
   const character = params.characterId
@@ -192,6 +200,39 @@ export async function prepareCharacterTurn(params: {
       error: "No active persona. Create one in /personas/new.",
       status: 400,
     };
+  }
+
+  // Content policy: adult delivery deny-by-default without HEAA
+  const policyChannel =
+    params.partner?.channel === "telegram"
+      ? "telegram"
+      : params.partner?.externalCustomerId
+        ? "api"
+        : "web";
+  const adultIntent =
+    character.isAdult || looksLikeAdultSexualRequest(text);
+  if (adultIntent) {
+    const ageAssured = isEndUserAgeAssured(user);
+    // Studio operator testing adult persona on web: config path (not end-user delivery)
+    const operatorWebTest =
+      policyChannel === "web" &&
+      !user.isTelegramPeer &&
+      character.userId === user.id;
+    try {
+      await assertCapability({
+        workspaceId: character.workspaceId,
+        characterAdult: character.isAdult,
+        subjectAgeVerified: ageAssured,
+        channel: policyChannel,
+        requestedCapability: "chat_adult",
+        isDelivery: !operatorWebTest,
+      });
+    } catch (err) {
+      if (err instanceof ContentPolicyError) {
+        return { ok: false, error: err.message, status: 403 };
+      }
+      throw err;
+    }
   }
 
   let dailyRemaining = 999;
@@ -266,7 +307,8 @@ export async function prepareCharacterTurn(params: {
     conversationId: conversation.id,
     identities: {
       // Peers key by telegramUserId; fall back to stub user id only if tg id missing.
-      webUserId: user.isTelegramPeer && telegramUserId ? null : user.id,
+      webUserId:
+        user.isTelegramPeer && telegramUserId ? null : user.id,
       telegramUserId,
       externalCustomerId: params.partner?.externalCustomerId,
       displayName: partnerName.displayName,

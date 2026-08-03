@@ -86,11 +86,6 @@ export const config = {
         scope: "team",
         containedPermissionIds: {},
       },
-      "adult.enable_workspace": {
-        description: "Enable After Dark for the workspace",
-        scope: "team",
-        containedPermissionIds: {},
-      },
       "billing.manage": {
         description: "Manage billing and seats",
         scope: "team",
@@ -155,7 +150,6 @@ export const config = {
         containedPermissionIds: {
           admin: true,
           "members.manage_admins": true,
-          "adult.enable_workspace": true,
           "billing.manage": true,
           "workspace.update": true,
           "workspace.delete": true,

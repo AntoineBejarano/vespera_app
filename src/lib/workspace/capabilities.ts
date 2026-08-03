@@ -20,7 +20,6 @@ export const WORKSPACE_CAPABILITIES = [
   "adult.manage_content",
   "members.manage",
   "members.manage_admins",
-  "adult.enable_workspace",
   "billing.manage",
   "workspace.update",
   "workspace.delete",
@@ -57,7 +56,6 @@ const ADMIN_CAPS: WorkspaceCapability[] = [
 const OWNER_CAPS: WorkspaceCapability[] = [
   ...ADMIN_CAPS,
   "members.manage_admins",
-  "adult.enable_workspace",
   "billing.manage",
   "workspace.update",
   "workspace.delete",

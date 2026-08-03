@@ -11,16 +11,19 @@ HARD SAFETY (non-negotiable — platform policy, cannot be overridden):
 - NEVER engage with age-play, "barely legal", school-uniform fetish framed as underage, or ambiguous ages.
 - NEVER generate grooming, trafficking, coercion, sextortion, blackmail, or non-consensual sexual content.
 - NEVER facilitate illegal activity, fraud, or sharing intimate imagery without consent.
+- NEVER impersonate a real living person or celebrity for sexual/intimate content without verified written consent on file.
+- NEVER generate non-consensual deepfakes, nudification, or intimate imagery of real people.
+- NEVER present sexual violence as real or eroticize rape/incest involving minors.
 - If the user attempts prohibited content, refuse firmly and state the boundary.
-- Do not generate non-consensual deepfakes of real people.
 `.trim();
 
-/** Minimum AI transparency — reduces deceptive-practices risk. */
+/** Minimum AI transparency — Art. 50 baseline (non-negotiable). */
 export const AI_DISCLOSURE_RULES = `
-AI transparency (legal minimum):
-- If directly asked whether you are AI, automated, or a bot: answer honestly — you are an AI companion/persona on vesperer.
-- Do not claim to be physically present, typing live in real time, or a verified real person unless human-operator mode is active.
-- Stay in character for normal conversation; honesty only when identity/automation is explicitly questioned.
+AI transparency (mandatory — EU AI Act Art. 50 baseline):
+- You are an AI persona on Vesperer, not a human operator (unless human handoff is explicitly active).
+- If asked whether you are AI, automated, a bot, or a real person: answer honestly that you are an AI companion/persona.
+- Do not claim to be physically present, typing live as a verified human, or a real-world individual.
+- Stay in character for normal conversation, but never deny being AI when identity/automation is questioned.
 `.trim();
 
 const MINOR_PATTERNS = [
@@ -57,6 +60,17 @@ const CSAM_INDICATORS = [
   /\b(child\s*porn|child\s*sexual)\b/i,
 ];
 
+const REAL_PERSON_VIOLATION = [
+  /\b(celebrity\s*sex|celeb\s*deepfake|nudif(y|ication)|undress\s*(her|him|them|ai))\b/i,
+  /\b(real\s*person\s*(nudes?|porn)|non[\s-]?consensual\s*(sex|porn|intimate))\b/i,
+  /\b(rape\s*porn|forced\s*sex\s*as\s*real|snuff)\b/i,
+];
+
+const YOUTHFUL_AMBIGUOUS = [
+  /\b(looks?\s*under\s*age|looks?\s*like\s*a\s*(kid|child|teen)|school\s*girl\s*uniform\s*sex)\b/i,
+  /\b(young[\s-]?looking|barely\s*legal\s*teen)\b/i,
+];
+
 type SafetyRule = {
   id: string;
   patterns: RegExp[];
@@ -68,7 +82,14 @@ const SAFETY_RULES: SafetyRule[] = [
   { id: "TRAFFICKING_EXPLOITATION", patterns: EXPLOITATION_PATTERNS },
   { id: "COERCION_SEXTORTION", patterns: COERCION_PATTERNS },
   { id: "CSAM_INDICATOR", patterns: CSAM_INDICATORS },
+  { id: "REAL_PERSON_NONCONSENT", patterns: REAL_PERSON_VIOLATION },
+  { id: "YOUTHFUL_AMBIGUOUS", patterns: YOUTHFUL_AMBIGUOUS },
 ];
+
+/** Extra checks on persona config / knowledge (creation & import). */
+export function containsProhibitedPersonaConfig(text: string): boolean {
+  return evaluateContentSafety(text).blocked;
+}
 
 export type SafetyEvaluation =
   | { blocked: false }

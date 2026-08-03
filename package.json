@@ -13,6 +13,7 @@
     "build": "prisma generate && next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "test:policy": "tsx --test src/lib/content-policy/__tests__/policy.test.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",

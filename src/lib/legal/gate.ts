@@ -1,10 +1,8 @@
-import { LEGAL_VERSION } from "./constants";
-
-export function needsAccountAgeGate(user: {
+export function needsAccountAgeGate(_user: {
   ageVerifiedAt: Date | null;
   legalVersionAccepted?: string | null;
 }) {
-  if (!user.ageVerifiedAt) return true;
-  if (user.legalVersionAccepted !== LEGAL_VERSION) return true;
+  // SFW self-service no longer requires age clickwrap before create.
+  // Adult delivery uses HEAA fields (ageAssuredAt) via content-policy.
   return false;
 }

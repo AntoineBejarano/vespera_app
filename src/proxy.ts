@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ADULT_COOKIE, LEGAL_VERSION } from "@/lib/legal/constants";
 import {
   AFTER_DARK_URL,
   isAfterDarkHost,
@@ -8,10 +7,6 @@ import {
   normalizeHost,
 } from "@/lib/hosts";
 import { publicOrigin } from "@/lib/request-origin";
-
-function hasValidAdultCookie(request: NextRequest) {
-  return request.cookies.get(ADULT_COOKIE)?.value === LEGAL_VERSION;
-}
 
 function isAgeExempt(pathname: string) {
   if (
@@ -79,9 +74,9 @@ function afterDarkPublicUrl(pathname: string, search: string) {
 }
 
 /**
- * Soft auth redirects + hard adult access wall (cookie = current legal version).
- * Host routing: xxx.vesperer.com serves After Dark; apex redirects /after-dark → XXX.
- * Page/API layers still call getAppUser / ageVerifiedAt for account-level gates.
+ * Soft auth redirects + host routing.
+ * Apex SFW: no mandatory age-gate cookie (AI transparency is in-product).
+ * After Dark host: public partner landing only; app routes bounce to landing.
  */
 function publicNextUrl(request: NextRequest) {
   // Rebuild from public origin so Docker/Railway HOSTNAME=0.0.0.0 never leaks
@@ -139,19 +134,21 @@ export async function proxy(request: NextRequest) {
       url.pathname = "/after-dark";
       return NextResponse.rewrite(url);
     }
+
+    // Partner invite-only: keep legal/report/brand public; send app routes to landing
+    if (
+      !isAgeExempt(pathname) &&
+      !pathname.startsWith("/handler") &&
+      !pathname.startsWith("/auth/")
+    ) {
+      const url = publicNextUrl(request);
+      url.pathname = "/";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
   }
 
-  if (!isAgeExempt(pathname) && !hasValidAdultCookie(request)) {
-    const url = publicNextUrl(request);
-    url.pathname = "/age-gate";
-    url.searchParams.set("zone", "standard");
-    const next = `${pathname}${request.nextUrl.search}`;
-    url.search = "";
-    if (next && next !== "/") {
-      url.searchParams.set("next", next);
-    }
-    return NextResponse.redirect(url);
-  }
+  // Apex: no mandatory access-cookie wall (AI transparency is in-product).
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-vesperer-path", `${pathname}${search}`);
