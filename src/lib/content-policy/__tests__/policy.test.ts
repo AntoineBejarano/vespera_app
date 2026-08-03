@@ -169,6 +169,15 @@ describe("hard blocks", () => {
     );
   });
 
+  it("allows rules that ban age-play without treating the ban as a violation", () => {
+    assert.equal(
+      containsProhibitedPersonaConfig(
+        "Adults 18+ only. Never imply minors or age-play.",
+      ),
+      false,
+    );
+  });
+
   it("still blocks underage sexual framing in persona config", () => {
     assert.equal(
       containsProhibitedPersonaConfig("she is a sexualized 16 year old"),

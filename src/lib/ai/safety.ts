@@ -99,11 +99,14 @@ const SAFETY_RULES: SafetyRule[] = [
  * real-person deepfake premises.
  */
 const PERSONA_CONFIG_UNDERAGE_SEX = [
-  /\b(loli|shota|age[\s-]?play|barely[\s-]?legal|jailbait|under\s*18|underage\s*sex)\b/i,
+  /\b(loli|shota|barely[\s-]?legal|jailbait|under\s*18|underage\s*sex)\b/i,
   /\b(11|12|13|14|15|16|17)[\s-]?years?[\s-]?old\b/i,
   /\b(11|12|13|14|15|16|17)\s*años\b/i,
   /\b(child|children|kid|kids|minor|underage|preteen|toddler|infant|niñ[oa]s?|menor(?:es)?).{0,48}(sex|sexual|nude|nudes|porn|erotic|intimate)\b/i,
   /\b(sex|sexual|nude|nudes|porn|erotic|intimate).{0,48}(child|children|kid|kids|minor|underage|preteen|toddler|infant|niñ[oa]s?|menor(?:es)?)\b/i,
+  // Affirmative age-play / schoolgirl fetish — not "never do age-play" bans
+  /\b(do|does|doing|enjoy|into|love|likes?|kink|fetish|roleplay|rp)\b.{0,40}\bage[\s-]?play\b/i,
+  /\bage[\s-]?play\b.{0,40}\b(sex|sexual|kink|fetish|roleplay|rp)\b/i,
   /\bschoolgirl\b/i,
   /\bschool\s*girl\s*uniform\s*sex\b/i,
 ];

@@ -28,6 +28,7 @@ import {
 } from "@/lib/content-policy";
 import { assertCapability } from "@/lib/content-policy/runtime";
 import { evaluatePersonaConfigSafety } from "@/lib/ai/safety";
+import { isSuperadminUser } from "@/lib/platform/superadmin";
 
 export const personaPatchSchema = z.object({
   active: z.boolean().optional(),
@@ -250,13 +251,19 @@ export async function updateOwnedPersona(params: {
   const configSafety = configBlob
     ? evaluatePersonaConfigSafety(configBlob)
     : ({ blocked: false } as const);
-  if (configSafety.blocked) {
+  if (configSafety.blocked && !isSuperadminUser(params.user)) {
     return {
       ok: false,
       status: 400,
       error: `Persona update blocked: real-person, minor, or non-consent policy violation (${configSafety.rule})`,
       code: "PERSONA_HARD_BLOCK",
     };
+  }
+  if (configSafety.blocked && isSuperadminUser(params.user)) {
+    console.warn("[persona_config] superadmin bypass PERSONA_HARD_BLOCK", {
+      rule: configSafety.rule,
+      characterId: params.characterId,
+    });
   }
 
   if (data.active) {

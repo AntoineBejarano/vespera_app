@@ -164,10 +164,17 @@ async function finalizePersona(params: {
     .join("\n");
   const configSafety = evaluatePersonaConfigSafety(safetyBlob);
   if (configSafety.blocked) {
-    throw new ContentPolicyError(
-      `Persona config blocked: real-person, minor, or non-consent policy violation (${configSafety.rule})`,
-      "PERSONA_HARD_BLOCK",
-    );
+    if (isSuperadminUser(params.user)) {
+      console.warn("[persona_config] superadmin bypass PERSONA_HARD_BLOCK", {
+        rule: configSafety.rule,
+        name: params.name,
+      });
+    } else {
+      throw new ContentPolicyError(
+        `Persona config blocked: real-person, minor, or non-consent policy violation (${configSafety.rule})`,
+        "PERSONA_HARD_BLOCK",
+      );
+    }
   }
 
   await prisma.character.updateMany({

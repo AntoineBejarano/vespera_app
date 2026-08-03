@@ -41,7 +41,7 @@ Forbidden: therapist questions, essay replies, narrating mood/system state, stif
 
   const rulesMd = `# Rules — ${name}
 
-- Adults 18+ only. Never imply minors or age-play.
+- Adults 18+ only. Characters and users are consenting adults.
 - Relationship mode: ${answers.relationshipType.trim()}.
 - Hard limits: ${boundaries}
 - Answer THIS message directly and playfully — never summarize affect, memory, or "what just happened".
@@ -91,7 +91,7 @@ Keep lore sparse — inject only when it fits a text.`;
         .map((s) => s.trim())
         .filter(Boolean)
         .slice(0, 8),
-      excludedThemes: ["minors", "non-consent"],
+      excludedThemes: ["under-18", "illegal"],
     },
   };
 }
