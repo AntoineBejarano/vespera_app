@@ -195,6 +195,7 @@ export async function POST(req: Request) {
       systemAddon: voiceAsk ? VOICE_NOTE_SYSTEM_ADDON : undefined,
       partner: {
         channel: "telegram",
+        telegramUserId: String(from.id),
         telegramFirstName: from.first_name ?? null,
         telegramLastName: from.last_name ?? null,
         telegramUsername: from.username ?? null,

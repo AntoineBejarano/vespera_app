@@ -51,6 +51,8 @@ export type ChatEngineResult =
 
 export type ChatPartnerOverride = {
   channel: "telegram" | "web";
+  /** Telegram numeric user id — required for peer subjects (User.telegramId is only for linked accounts). */
+  telegramUserId?: string | null;
   telegramFirstName?: string | null;
   telegramLastName?: string | null;
   telegramUsername?: string | null;
@@ -246,14 +248,26 @@ export async function prepareCharacterTurn(params: {
     accountName: user.name,
   });
 
+  // Peers store tg id on TelegramPeer, not User.telegramId (reserved for linked accounts).
+  let telegramUserId =
+    params.partner?.telegramUserId?.trim() || user.telegramId || null;
+  if (!telegramUserId && user.isTelegramPeer) {
+    const peer = await prisma.telegramPeer.findFirst({
+      where: { userId: user.id },
+      select: { telegramUserId: true },
+    });
+    telegramUserId = peer?.telegramUserId ?? null;
+  }
+
   const mind = await loadMindContext({
     workspaceId: character.workspaceId,
     character,
     query: text,
     conversationId: conversation.id,
     identities: {
-      webUserId: user.isTelegramPeer ? null : user.id,
-      telegramUserId: user.telegramId,
+      // Peers key by telegramUserId; fall back to stub user id only if tg id missing.
+      webUserId: user.isTelegramPeer && telegramUserId ? null : user.id,
+      telegramUserId,
       externalCustomerId: params.partner?.externalCustomerId,
       displayName: partnerName.displayName,
     },
