@@ -2,6 +2,7 @@ import { getAppUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
 import { PersonasList } from "@/components/PersonasList";
 import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
+import { resolveCoverUrl } from "@/lib/chat/cover";
 import { redirect } from "next/navigation";
 
 export default async function PersonasPage() {
@@ -24,19 +25,16 @@ export default async function PersonasPage() {
         },
       },
       photos: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        select: { url: true, kind: true },
+        orderBy: [{ isProfile: "desc" }, { createdAt: "desc" }],
+        take: 8,
+        select: { url: true, kind: true, tags: true, isProfile: true },
       },
       _count: { select: { photos: true } },
     },
   });
 
   const list = characters.map((c) => {
-    const cover =
-      c.photos.find((p) => p.kind === "selfie" || p.kind === "face")?.url ??
-      c.photos[0]?.url ??
-      null;
+    const cover = resolveCoverUrl(c.photos);
     return {
       id: c.id,
       name: c.name,
@@ -53,9 +51,8 @@ export default async function PersonasPage() {
         label: b.label,
         peerCount: b._count.peers,
       })),
-      peerCount: c.telegramBots.reduce((n, b) => n + b._count.peers, 0),
     };
   });
 
-  return <PersonasList initial={list} />;
+  return <PersonasList personas={list} />;
 }

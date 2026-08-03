@@ -33,7 +33,11 @@ export function PersonaProfileShell({
   telegramPeerCount: number;
   children: React.ReactNode;
 }) {
-  const cover = persona.coverUrl ?? persona.photos[0]?.url ?? null;
+  const cover =
+    persona.coverUrl ??
+    persona.photos.find((p) => p.isProfile)?.url ??
+    persona.photos[0]?.url ??
+    null;
   const initial = (displayName.trim()[0] || "?").toUpperCase();
 
   return (

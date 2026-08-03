@@ -21,6 +21,7 @@ import {
   parsePhotoIntent,
   photoHintLabel,
   rankPhotosForIntent,
+  type PhotoIntent,
 } from "@/lib/chat/photos";
 import { shouldStaySilent } from "@/lib/chat/closing";
 import { resolvePartnerName } from "@/lib/telegram/profile";
@@ -68,15 +69,32 @@ export type ChatPartnerOverride = {
   externalCustomerId?: string | null;
 };
 
-async function pickCharacterPhoto(characterId: string, message: string) {
+type PhotoPick =
+  | { status: "none" }
+  | { status: "miss"; requested: string; intent: PhotoIntent }
+  | {
+      status: "photo";
+      photo: ChatPhotoPayload;
+      intent: PhotoIntent;
+    };
+
+async function pickCharacterPhoto(
+  characterId: string,
+  message: string,
+): Promise<PhotoPick> {
   const intent = parsePhotoIntent(message);
-  if (!intent.wantsPhoto) return null;
+  if (!intent.wantsPhoto) return { status: "none" };
 
   const photos = await prisma.characterPhoto.findMany({
     where: { characterId },
     orderBy: { createdAt: "desc" },
   });
-  if (!photos.length) return null;
+  if (!photos.length) {
+    if (intent.requestedLabel) {
+      return { status: "miss", requested: intent.requestedLabel, intent };
+    }
+    return { status: "none" };
+  }
 
   const ranked = rankPhotosForIntent(
     photos.map((p) => ({
@@ -88,23 +106,39 @@ async function pickCharacterPhoto(characterId: string, message: string) {
     })),
     intent,
   );
-  const photo = ranked[0];
-  if (!photo) return null;
+
+  if (ranked.miss) {
+    return {
+      status: "miss",
+      requested:
+        intent.requestedLabel ?? (intent.query.join(" ") || "that"),
+      intent,
+    };
+  }
+
+  const photo = ranked.photos[0];
+  if (!photo) return { status: "none" };
 
   return {
-    url: photo.url,
-    caption: safePhotoCaption(photo.caption) ?? null,
-    kind: photo.kind,
-    tags: photo.tags,
-    label: photoHintLabel(photo),
+    status: "photo",
+    intent,
+    photo: {
+      url: photo.url,
+      caption: safePhotoCaption(photo.caption) ?? null,
+      kind: photo.kind,
+      tags: photo.tags,
+      label: photoHintLabel(photo),
+    },
   };
 }
 
-function photoVibeHint(label?: string): true | "cute" | "spicy" {
+function photoVibeHint(label?: string): true | "cute" | "spicy" | string {
   if (!label) return true;
-  if (/\b(ass|tits|nude|spicy|lingerie)\b/i.test(label)) return "spicy";
-  if (/\b(face|selfie)\b/i.test(label)) return "cute";
-  return true;
+  if (/\b(ass|tits|nude|spicy|lingerie|culo|tetas)\b/i.test(label)) {
+    return "spicy";
+  }
+  if (/\b(face|selfie|cara)\b/i.test(label)) return "cute";
+  return label;
 }
 
 export type PreparedCharacterTurn = {
@@ -269,9 +303,12 @@ export async function prepareCharacterTurn(params: {
     };
   }
 
-  const photo = params.voiceMode
-    ? null
+  const photoPick = params.voiceMode
+    ? ({ status: "none" } as const)
     : await pickCharacterPhoto(character.id, text);
+  const photo = photoPick.status === "photo" ? photoPick.photo : null;
+  const photoMiss =
+    photoPick.status === "miss" ? photoPick.requested : null;
 
   const channel = params.partner?.channel ?? "web";
   const tgFirst =
@@ -338,6 +375,7 @@ export async function prepareCharacterTurn(params: {
       : photo
         ? photoVibeHint(photo.label)
         : false,
+    photoMiss: params.voiceMode ? null : photoMiss,
   });
   const system = params.systemAddon
     ? `${systemBase}\n\n${params.systemAddon}`

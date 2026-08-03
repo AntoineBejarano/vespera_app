@@ -1,141 +1,184 @@
 /**
- * Photo tags for CharacterPhoto — used to match user requests
- * ("send a face pic", "mandame una de culo", etc.)
+ * Character photos — free-text labels + request matching.
+ * Owners name photos however they want ("face", "hand", "red car");
+ * we match user asks against those labels (not a closed taxonomy).
  */
 
-export const PHOTO_TAG_OPTIONS = [
-  { id: "face", label: "Face" },
-  { id: "selfie", label: "Selfie" },
-  { id: "body", label: "Body" },
-  { id: "fullbody", label: "Full body" },
-  { id: "ass", label: "Ass" },
-  { id: "tits", label: "Tits" },
-  { id: "legs", label: "Legs" },
-  { id: "lingerie", label: "Lingerie" },
-  { id: "nude", label: "Nude" },
-  { id: "mirror", label: "Mirror" },
-  { id: "bed", label: "Bed" },
-  { id: "outfit", label: "Outfit" },
-  { id: "casual", label: "Casual" },
-  { id: "gym", label: "Gym" },
-  { id: "spicy", label: "Spicy" },
-] as const;
-
-export type PhotoTagId = (typeof PHOTO_TAG_OPTIONS)[number]["id"];
-
-/** Synonyms → canonical tag */
-const SYNONYMS: Record<string, PhotoTagId> = {
-  face: "face",
-  cara: "face",
-  rost: "face",
-  rostro: "face",
-  closeup: "face",
-  "close-up": "face",
-  headshot: "face",
-  selfie: "selfie",
-  selfi: "selfie",
-  body: "body",
-  cuerpo: "body",
-  figure: "body",
-  fullbody: "fullbody",
-  "full body": "fullbody",
-  "cuerpo entero": "fullbody",
-  ass: "ass",
-  culo: "ass",
-  butt: "ass",
-  booty: "ass",
-  trasero: "ass",
-  tits: "tits",
-  boobs: "tits",
-  pecho: "tits",
-  tetas: "tits",
-  breasts: "tits",
-  legs: "legs",
-  piernas: "legs",
-  thighs: "legs",
-  muslos: "legs",
-  lingerie: "lingerie",
-  lenceria: "lingerie",
-  lencería: "lingerie",
-  underwear: "lingerie",
-  nude: "nude",
-  nudes: "nude",
-  naked: "nude",
-  desnuda: "nude",
-  desnudo: "nude",
-  mirror: "mirror",
-  espejo: "mirror",
-  bed: "bed",
-  cama: "bed",
-  outfit: "outfit",
-  look: "outfit",
-  casual: "casual",
-  gym: "gym",
-  spicy: "spicy",
-  hot: "spicy",
+/** Soft bilingual/alias boosts only — labels themselves stay free-text. */
+const ALIASES: Record<string, string[]> = {
+  face: ["cara", "rostro", "selfie", "headshot", "closeup"],
+  cara: ["face", "rostro", "selfie"],
+  selfie: ["face", "cara", "selfi"],
+  selfi: ["selfie", "face"],
+  hand: ["mano", "hands", "manos"],
+  mano: ["hand", "hands", "manos"],
+  hands: ["hand", "mano", "manos"],
+  foot: ["pie", "feet", "pies"],
+  pie: ["foot", "feet", "pies"],
+  feet: ["foot", "pie", "pies"],
+  body: ["cuerpo", "fullbody"],
+  cuerpo: ["body", "fullbody"],
+  legs: ["piernas", "thighs", "muslos"],
+  piernas: ["legs", "thighs"],
+  ass: ["culo", "butt", "booty", "trasero"],
+  culo: ["ass", "butt", "booty"],
+  tits: ["boobs", "pecho", "tetas", "breasts"],
+  tetas: ["tits", "boobs", "pecho"],
+  nude: ["nudes", "naked", "desnuda", "desnudo"],
+  car: ["coche", "auto", "carro"],
+  coche: ["car", "auto", "carro"],
 };
+
+const STOP = new Set([
+  "a",
+  "an",
+  "the",
+  "me",
+  "my",
+  "your",
+  "you",
+  "of",
+  "to",
+  "and",
+  "or",
+  "one",
+  "some",
+  "any",
+  "de",
+  "del",
+  "la",
+  "el",
+  "los",
+  "las",
+  "una",
+  "un",
+  "unos",
+  "unas",
+  "tu",
+  "tus",
+  "su",
+  "sus",
+  "con",
+  "por",
+  "para",
+  "photo",
+  "photos",
+  "pic",
+  "pics",
+  "picture",
+  "pictures",
+  "image",
+  "images",
+  "foto",
+  "fotos",
+  "imagen",
+  "imagenes",
+  "imágenes",
+  "snap",
+  "send",
+  "sent",
+  "sending",
+  "show",
+  "showing",
+  "manda",
+  "mandame",
+  "mándame",
+  "envia",
+  "envía",
+  "enviame",
+  "envíame",
+  "muestra",
+  "muestrame",
+  "muéstrame",
+  "dame",
+  "give",
+  "gimme",
+  "please",
+  "por",
+  "favor",
+  "hey",
+  "hi",
+  "hola",
+]);
+
+const PHOTO_TRIGGER =
+  /\b(photo|photos|pic|pics|picture|pictures|selfie|selfi|nude|nudes|foto|fotos|imagen|im[aá]genes?|send\s+(me\s+)?(one|a|your)|manda(?:me)?|env[ií]a(?:me)?|muestra(?:me)?|show\s+(me\s+)?(your|a)|snap|dame)\b/i;
+
+const MAX_LABEL_LEN = 48;
+const MAX_TAGS = 12;
 
 export type PhotoIntent = {
   wantsPhoto: boolean;
-  tags: PhotoTagId[];
-  /** loose keywords found for logging / caption */
-  rawHints: string[];
+  /** Free-text subject tokens extracted from the ask ("face", "hand", "car"). */
+  query: string[];
+  /** Human-readable subject for "I don't have that" copy. */
+  requestedLabel: string | null;
 };
 
-const PHOTO_TRIGGER =
-  /\b(photo|photos|pic|pics|picture|pictures|selfie|selfi|nude|nudes|foto|fotos|imagen|im[aá]genes?|send\s+(me\s+)?(one|a|your)|manda(?:me)?|env[ií]a(?:me)?|muestra(?:me)?|show\s+(me\s+)?(your|a)|snap)\b/i;
+export function tokenizeLabel(text: string): string[] {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[^a-z0-9\s-]/gi, " ")
+    .split(/[\s,_/;|]+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 1 && !STOP.has(t));
+}
+
+function expandTokens(tokens: string[]): Set<string> {
+  const out = new Set(tokens);
+  for (const t of tokens) {
+    const aliases = ALIASES[t];
+    if (aliases) for (const a of aliases) out.add(a);
+  }
+  return out;
+}
+
+function extractSubject(text: string): string | null {
+  const lower = text.toLowerCase();
+  const patterns = [
+    /\b(?:pic|photo|picture|foto|imagen|selfie)\s+(?:of\s+)?(?:your\s+|tu\s+|tus\s+)?([a-zàáéíóúñü0-9][\wàáéíóúñü\s-]{0,36})/i,
+    /\b(?:of\s+(?:your\s+)?|de\s+(?:tu\s+|tus\s+|la\s+|el\s+|una?\s+)?)([a-zàáéíóúñü0-9][\wàáéíóúñü\s-]{0,36})/i,
+    /\b(?:send|show|manda|env[ií]a|muestra|dame).{0,24}?\b(?:a\s+|una?\s+)?([a-zàáéíóúñü0-9][\wàáéíóúñü-]{1,24})\b/i,
+  ];
+  for (const re of patterns) {
+    const m = lower.match(re);
+    const raw = m?.[1]?.trim();
+    if (!raw) continue;
+    const tokens = tokenizeLabel(raw);
+    if (tokens.length) return tokens.join(" ");
+  }
+  return null;
+}
 
 export function parsePhotoIntent(text: string): PhotoIntent {
-  const lower = text.toLowerCase();
-  const rawHints: string[] = [];
-  const found = new Set<PhotoTagId>();
-
-  // Multi-word first
-  for (const [syn, tag] of Object.entries(SYNONYMS)) {
-    if (syn.includes(" ") && lower.includes(syn)) {
-      found.add(tag);
-      rawHints.push(syn);
-    }
-  }
-
-  // Word tokens
-  const tokens = lower
-    .replace(/[^a-zàáéíóúñü0-9\s-]/gi, " ")
-    .split(/\s+/)
-    .filter(Boolean);
-
-  for (const t of tokens) {
-    const tag = SYNONYMS[t];
-    if (tag) {
-      found.add(tag);
-      rawHints.push(t);
-    }
-  }
-
-  // Phrases like "de cara", "de culo", "de pecho"
-  const deMatch = lower.match(
-    /\b(?:de|del|una?\s+de|pic\s+of\s+(?:your\s+)?|foto\s+de)\s+(cara|culo|pecho|tetas|cuerpo|piernas|ass|butt|face|tits|body|legs|selfie)\b/i,
-  );
-  if (deMatch?.[1]) {
-    const syn = deMatch[1].toLowerCase();
-    const tag = SYNONYMS[syn];
-    if (tag) {
-      found.add(tag);
-      rawHints.push(syn);
-    }
-  }
+  const subject = extractSubject(text);
+  const fromSubject = subject ? tokenizeLabel(subject) : [];
+  const allTokens = tokenizeLabel(text);
+  // Prefer phrase after "of/de"; fall back to non-trigger content words
+  const query =
+    fromSubject.length > 0
+      ? fromSubject
+      : allTokens.filter((t) => !PHOTO_TRIGGER.test(t));
 
   const wantsPhoto =
     PHOTO_TRIGGER.test(text) ||
-    found.size > 0 ||
-    /\b(send|manda|env[ií]a|show|muestra).{0,40}\b(ass|culo|face|cara|tits|pecho|body|cuerpo)\b/i.test(
+    /\b(send|manda|env[ií]a|show|muestra|dame).{0,40}\b(pic|photo|foto|imagen|selfie)\b/i.test(
       text,
     );
 
+  const requestedLabel =
+    fromSubject.length > 0
+      ? fromSubject.join(" ")
+      : query.length > 0
+        ? query.slice(0, 4).join(" ")
+        : null;
+
   return {
     wantsPhoto,
-    tags: [...found],
-    rawHints,
+    query: wantsPhoto ? query : [],
+    requestedLabel: wantsPhoto ? requestedLabel : null,
   };
 }
 
@@ -151,39 +194,38 @@ export type RankablePhoto = {
   tags: string[];
 };
 
+export type RankPhotosResult = {
+  photos: RankablePhoto[];
+  /** Specific ask with no label match — do not send a random photo. */
+  miss: boolean;
+};
+
 /**
- * Score photos against requested tags. Prefer exact kind/tag matches.
+ * Score photos against free-text query tokens from the user ask.
+ * Generic "send a pic" → any photo. Specific ask with zero overlap → miss.
  */
 export function rankPhotosForIntent(
   photos: RankablePhoto[],
   intent: PhotoIntent,
-): RankablePhoto[] {
-  if (!photos.length) return [];
+): RankPhotosResult {
+  if (!photos.length) return { photos: [], miss: false };
 
-  const wanted = new Set(intent.tags);
+  const wanted = expandTokens(intent.query);
   if (wanted.size === 0) {
-    // Generic "send a pic" — prefer selfie/face/casual, else random shuffle
-    const preferred = photos.filter((p) =>
-      ["selfie", "face", "casual"].includes(p.kind) ||
-      p.tags.some((t) => ["selfie", "face", "casual"].includes(t)),
-    );
-    const pool = preferred.length ? preferred : photos;
-    return [...pool].sort(() => Math.random() - 0.5);
+    return {
+      photos: [...photos].sort(() => Math.random() - 0.5),
+      miss: false,
+    };
   }
 
   const scored = photos.map((p) => {
-    const photoTags = new Set(
-      [p.kind, ...p.tags].map((t) => t.toLowerCase().trim()).filter(Boolean),
-    );
+    const labelBits = [p.kind, ...(p.tags ?? []), p.caption ?? ""]
+      .filter(Boolean)
+      .join(" ");
+    const photoTokens = expandTokens(tokenizeLabel(labelBits));
     let score = 0;
     for (const w of wanted) {
-      if (photoTags.has(w)) score += 3;
-      // soft related
-      if (w === "face" && photoTags.has("selfie")) score += 1;
-      if (w === "selfie" && photoTags.has("face")) score += 1;
-      if (w === "nude" && photoTags.has("spicy")) score += 1;
-      if (w === "ass" && photoTags.has("body")) score += 0.5;
-      if (w === "tits" && photoTags.has("body")) score += 0.5;
+      if (photoTokens.has(w)) score += 3;
     }
     return { photo: p, score };
   });
@@ -191,25 +233,49 @@ export function rankPhotosForIntent(
   scored.sort((a, b) => b.score - a.score || Math.random() - 0.5);
   const best = scored[0]?.score ?? 0;
   if (best <= 0) {
-    // No tag match — still send something rather than nothing
-    return [...photos].sort(() => Math.random() - 0.5);
+    return { photos: [], miss: true };
   }
-  return scored.filter((s) => s.score === best).map((s) => s.photo);
+  const top = scored.filter((s) => s.score === best).map((s) => s.photo);
+  return { photos: top, miss: false };
 }
 
+/** Free-text labels: comma/semicolon separated, length-capped. */
 export function normalizeTags(input: unknown): string[] {
-  const allowed = new Set(PHOTO_TAG_OPTIONS.map((t) => t.id));
   let raw: string[] = [];
   if (Array.isArray(input)) {
-    raw = input.map((x) => String(x).toLowerCase().trim());
+    raw = input.flatMap((x) => String(x).split(/[,;|]+/));
   } else if (typeof input === "string") {
-    raw = input.split(/[,;\s]+/).map((x) => x.toLowerCase().trim());
+    raw = input.split(/[,;|]+/);
   }
-  return [...new Set(raw.filter((t) => allowed.has(t as PhotoTagId)))];
+  const cleaned = raw
+    .map((t) => t.toLowerCase().trim().replace(/\s+/g, " "))
+    .filter((t) => t.length > 0 && t.length <= MAX_LABEL_LEN)
+    .slice(0, MAX_TAGS);
+  return [...new Set(cleaned)];
+}
+
+/** Primary kind slug from free-text tags (DB still has `kind`). */
+export function kindFromTags(tags: string[], fallback = "photo"): string {
+  const first = tags[0]?.trim();
+  if (!first) return fallback;
+  return first.slice(0, MAX_LABEL_LEN);
 }
 
 export function photoHintLabel(photo: RankablePhoto): string {
-  const tags = [photo.kind, ...photo.tags].filter(Boolean);
+  const tags = [...(photo.tags?.length ? photo.tags : [photo.kind])].filter(
+    Boolean,
+  );
   const uniq = [...new Set(tags.map((t) => t.toLowerCase()))];
   return uniq.join(", ");
 }
+
+/** @deprecated Prefer free-text labels; kept for soft UI suggestions only. */
+export const PHOTO_TAG_OPTIONS = [
+  { id: "face", label: "Face" },
+  { id: "selfie", label: "Selfie" },
+  { id: "body", label: "Body" },
+  { id: "hand", label: "Hand" },
+  { id: "foot", label: "Foot" },
+  { id: "outfit", label: "Outfit" },
+  { id: "casual", label: "Casual" },
+] as const;

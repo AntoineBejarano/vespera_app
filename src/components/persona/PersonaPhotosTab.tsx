@@ -16,22 +16,26 @@ export function PersonaPhotosTab({
   photos,
   photoUrl,
   photoCaption,
-  selectedTags,
+  photoLabel,
   onPhotoUrlChange,
   onPhotoCaptionChange,
-  onToggleTag,
+  onPhotoLabelChange,
+  onSuggestLabel,
   onAdd,
   onRemove,
+  onSetProfile,
 }: {
   photos: PersonaPhoto[];
   photoUrl: string;
   photoCaption: string;
-  selectedTags: string[];
+  photoLabel: string;
   onPhotoUrlChange: (v: string) => void;
   onPhotoCaptionChange: (v: string) => void;
-  onToggleTag: (id: string) => void;
+  onPhotoLabelChange: (v: string) => void;
+  onSuggestLabel: (id: string) => void;
   onAdd: () => void;
   onRemove: (photoId: string) => void;
+  onSetProfile: (photoId: string) => void;
 }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
@@ -46,24 +50,30 @@ export function PersonaPhotosTab({
             placeholder="https://…/photo.jpg"
           />
           <Input
-            value={photoCaption}
-            onChange={(e) => onPhotoCaptionChange(e.target.value)}
-            placeholder="Optional caption"
+            value={photoLabel}
+            onChange={(e) => onPhotoLabelChange(e.target.value)}
+            placeholder="Label — face, hand, red car…"
           />
           <div className="flex flex-wrap gap-2">
-            {PHOTO_TAG_OPTIONS.map((t) => {
-              const on = selectedTags.includes(t.id);
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => onToggleTag(t.id)}
-                >
-                  <Badge variant={on ? "default" : "outline"}>{t.label}</Badge>
-                </button>
-              );
-            })}
+            {PHOTO_TAG_OPTIONS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => onSuggestLabel(t.id)}
+              >
+                <Badge variant="outline">{t.label}</Badge>
+              </button>
+            ))}
           </div>
+          <Input
+            value={photoCaption}
+            onChange={(e) => onPhotoCaptionChange(e.target.value)}
+            placeholder="Optional chat caption"
+          />
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            Free-text label for chat matching. Use “Set as profile” on a photo
+            to choose the avatar.
+          </p>
           <Button type="button" className="w-full" onClick={onAdd}>
             Add photo
           </Button>
@@ -82,6 +92,13 @@ export function PersonaPhotosTab({
               alt=""
               className="aspect-[4/5] w-full object-cover transition duration-500 group-hover:scale-[1.03]"
             />
+            {p.isProfile ? (
+              <div className="absolute left-2 top-2">
+                <Badge className="bg-background/90 text-foreground">
+                  Profile
+                </Badge>
+              </div>
+            ) : null}
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3">
               <p className="text-xs text-white/90">
                 {(p.tags?.length ? p.tags : [p.kind]).join(", ")}
@@ -91,21 +108,34 @@ export function PersonaPhotosTab({
                   {p.caption}
                 </p>
               ) : null}
-              <Button
-                type="button"
-                variant="link"
-                size="sm"
-                className="mt-1 h-auto px-0 text-red-300 hover:text-red-200"
-                onClick={() => onRemove(p.id)}
-              >
-                Remove
-              </Button>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {!p.isProfile ? (
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="h-auto px-0 text-white/90 hover:text-white"
+                    onClick={() => onSetProfile(p.id)}
+                  >
+                    Set as profile
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="h-auto px-0 text-red-300 hover:text-red-200"
+                  onClick={() => onRemove(p.id)}
+                >
+                  Remove
+                </Button>
+              </div>
             </div>
           </div>
         ))}
         {!photos.length ? (
           <p className="col-span-full rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
-            No photos yet — add a cover image to make the profile feel alive.
+            No photos yet — add one and mark it as profile for the avatar.
           </p>
         ) : null}
       </div>

@@ -429,16 +429,19 @@ model CharacterPhoto {
   characterId String
   url         String
   caption     String?
-  /// Primary category (face, ass, body, selfie…)
+  /// Primary category / free-text kind slug
   kind        String   @default("selfie")
-  /// Extra tags for matching requests
+  /// Extra labels for matching chat photo requests
   tags        String[] @default([])
+  /// Avatar / cover for persona list + detail header
+  isProfile   Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
 
   @@index([characterId])
   @@index([characterId, kind])
+  @@index([characterId, isProfile])
 }
 
 model RelationshipState {

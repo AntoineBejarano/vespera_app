@@ -13,6 +13,7 @@ export type PersonaPhoto = {
   kind: string;
   tags: string[];
   caption: string | null;
+  isProfile?: boolean;
 };
 
 export type PersonaProfile = {

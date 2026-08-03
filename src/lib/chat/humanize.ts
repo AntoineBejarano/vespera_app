@@ -171,11 +171,10 @@ export function safePhotoCaption(caption?: string | null): string | undefined {
   if (!caption?.trim()) return undefined;
   const scrubbed = scrubMetaText(caption);
   if (!scrubbed) return undefined;
-  // Looks like only tags
+  // Looks like only short comma-separated labels (no real caption prose)
   if (
-    /^(face|selfie|ass|tits|body|nude|lingerie|spicy|casual|mirror|bed|outfit|gym|legs|fullbody)(\s*,\s*(face|selfie|ass|tits|body|nude|lingerie|spicy|casual|mirror|bed|outfit|gym|legs|fullbody))*$/i.test(
-      scrubbed,
-    )
+    /^[\wàáéíóúñü]+(?:\s*,\s*[\wàáéíóúñü]+){0,8}$/i.test(scrubbed) &&
+    scrubbed.length < 48
   ) {
     return undefined;
   }

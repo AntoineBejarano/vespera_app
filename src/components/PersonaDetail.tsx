@@ -6,6 +6,7 @@ import { PersonaProfileShell } from "@/components/persona/PersonaProfileShell";
 import { PersonaOverviewTab } from "@/components/persona/PersonaOverviewTab";
 import { PersonaConnectionsTab } from "@/components/persona/PersonaConnectionsTab";
 import { PersonaPhotosTab } from "@/components/persona/PersonaPhotosTab";
+import { resolveCoverUrl } from "@/lib/chat/cover";
 import { PersonaPublishTab } from "@/components/persona/PersonaPublishTab";
 import { PersonaMindGraph } from "@/components/persona/PersonaMindGraph";
 import type {
@@ -53,7 +54,7 @@ export function PersonaDetail({
 
   const [photoUrl, setPhotoUrl] = useState("");
   const [photoCaption, setPhotoCaption] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>(["selfie"]);
+  const [photoLabel, setPhotoLabel] = useState("");
   const [photos, setPhotos] = useState(persona.photos);
   const [bots, setBots] = useState(persona.bots);
   const [isPublic, setIsPublic] = useState(persona.isPublic);
@@ -280,15 +281,20 @@ export function PersonaDetail({
     }
   }
 
-  function toggleTag(id: string) {
-    setSelectedTags((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
-    );
+  function suggestPhotoLabel(id: string) {
+    setPhotoLabel((prev) => {
+      const parts = prev
+        .split(/[,;|]+/)
+        .map((t) => t.trim())
+        .filter(Boolean);
+      if (parts.includes(id)) return prev;
+      return parts.length ? `${parts.join(", ")}, ${id}` : id;
+    });
   }
 
   async function addPhoto() {
-    if (!photoUrl.trim() || !selectedTags.length) {
-      setMessage("URL and at least one tag required");
+    if (!photoUrl.trim() || !photoLabel.trim()) {
+      setMessage("URL and a free-text label required");
       return;
     }
     const res = await fetch(`/api/characters/${persona.id}/photos`, {
@@ -297,8 +303,7 @@ export function PersonaDetail({
       body: JSON.stringify({
         url: photoUrl.trim(),
         caption: photoCaption.trim() || null,
-        kind: selectedTags[0],
-        tags: selectedTags,
+        label: photoLabel.trim(),
       }),
     });
     const data = await res.json();
@@ -309,7 +314,7 @@ export function PersonaDetail({
     setPhotos((p) => [data.photo, ...p]);
     setPhotoUrl("");
     setPhotoCaption("");
-    setSelectedTags(["selfie"]);
+    setPhotoLabel("");
     setMessage("Photo added");
   }
 
@@ -322,6 +327,26 @@ export function PersonaDetail({
       setPhotos((p) => p.filter((x) => x.id !== photoId));
       setMessage("Photo removed");
     }
+  }
+
+  async function setProfilePhoto(photoId: string) {
+    const res = await fetch(`/api/characters/${persona.id}/photos`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ photoId, setAsProfile: true }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data.error ?? "Could not set profile photo");
+      return;
+    }
+    setPhotos((prev) =>
+      prev.map((p) => ({
+        ...p,
+        isProfile: p.id === photoId,
+      })),
+    );
+    setMessage("Profile photo updated");
   }
 
   async function deletePersona() {
@@ -408,7 +433,7 @@ export function PersonaDetail({
     slug: slug || persona.slug,
     tagline: tagline || persona.tagline,
     isAdult,
-    coverUrl: photos[0]?.url ?? persona.coverUrl,
+    coverUrl: resolveCoverUrl(photos) ?? persona.coverUrl,
   };
 
   return (
@@ -474,12 +499,14 @@ export function PersonaDetail({
           photos={photos}
           photoUrl={photoUrl}
           photoCaption={photoCaption}
-          selectedTags={selectedTags}
+          photoLabel={photoLabel}
           onPhotoUrlChange={setPhotoUrl}
           onPhotoCaptionChange={setPhotoCaption}
-          onToggleTag={toggleTag}
+          onPhotoLabelChange={setPhotoLabel}
+          onSuggestLabel={suggestPhotoLabel}
           onAdd={() => void addPhoto()}
           onRemove={(id) => void removePhoto(id)}
+          onSetProfile={(id) => void setProfilePhoto(id)}
         />
       ) : null}
 

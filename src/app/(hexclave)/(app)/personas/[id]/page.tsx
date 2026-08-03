@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { PersonaDetail } from "@/components/PersonaDetail";
 import { formatPersonaVersion } from "@/lib/personas/license";
 import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
+import { resolveCoverUrl } from "@/lib/chat/cover";
 import { redirect, notFound } from "next/navigation";
 
 type Params = { params: Promise<{ id: string }> };
@@ -22,7 +23,7 @@ export default async function PersonaPage({ params }: Params) {
         include: { _count: { select: { peers: true } } },
         orderBy: { createdAt: "desc" },
       },
-      photos: { orderBy: { createdAt: "desc" } },
+      photos: { orderBy: [{ isProfile: "desc" }, { createdAt: "desc" }] },
       _count: { select: { relationships: true, memories: true } },
     },
   });
@@ -34,11 +35,7 @@ export default async function PersonaPage({ params }: Params) {
     process.env.AUTH_URL?.replace(/\/$/, "") ||
     "";
 
-  const coverUrl =
-    character.photos.find((p) => p.kind === "selfie" || p.kind === "face")
-      ?.url ??
-    character.photos[0]?.url ??
-    null;
+  const coverUrl = resolveCoverUrl(character.photos);
 
   return (
     <PersonaDetail
@@ -68,6 +65,7 @@ export default async function PersonaPage({ params }: Params) {
           kind: p.kind,
           tags: p.tags,
           caption: p.caption,
+          isProfile: p.isProfile,
         })),
         relationshipCount: character._count.relationships,
         memoryCount: character._count.memories,
