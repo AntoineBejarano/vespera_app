@@ -240,3 +240,9 @@ button {
     text-decoration: none;
   }
 }
+
+/* Skip layout/paint for below-fold marketing blocks until near viewport (Speed Index). */
+.landing-defer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}

@@ -1,4 +1,3 @@
-import { preload } from "react-dom";
 import { MarketingNav } from "@/components/MarketingNav";
 import { LegalFooter } from "@/components/LegalFooter";
 import {
@@ -9,6 +8,7 @@ import { AFTER_DARK_URL } from "@/lib/site";
 import type { VoiceAgentId } from "@/lib/voice/types";
 
 // Brand mark via plain <picture> (avoid next/image client chunk on `/`).
+// No react-dom preload — LCP is hero text; image must not steal Slow 4G bandwidth.
 
 /** No-op wrapper — keeps markup stable without client motion (LCP).
  *  Only wraps in a div when className is set, so list children stay
@@ -322,8 +322,6 @@ export function LandingPage({
 }: {
   voiceAgent?: VoiceAgentId;
 }) {
-  preload("/brand/mark-128.avif", { as: "image", type: "image/avif" });
-
   return (
     <div className="relative overflow-hidden">
       <MarketingNav variant="marketing" />
@@ -348,8 +346,8 @@ export function LandingPage({
                 width={56}
                 height={56}
                 className="shrink-0 object-contain"
-                fetchPriority="high"
                 decoding="async"
+                loading="eager"
               />
             </picture>
             <span className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-[-0.03em] text-[var(--ink)] sm:text-5xl">
@@ -359,20 +357,13 @@ export function LandingPage({
           <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)] sm:text-xs sm:tracking-[0.35em]">
             They remember. They change. They stay consistent.
           </p>
-          <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[2.4rem] leading-[1.05] tracking-tight text-[var(--ink)] sm:text-5xl sm:leading-[1.05]">
+          <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[2.4rem] font-semibold leading-[1.05] tracking-tight text-[var(--ink)] sm:text-5xl sm:leading-[1.05]">
             Meet someone{" "}
             <span className="italic text-[var(--accent-2)]">impossible</span>.
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
-            They remember what others forget. Not another chatbot — someone who
-            stays. Talk to history, fall for an original character, learn from a
-            mentor, or build a personality that becomes more real every time
-            you talk.
-          </p>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[var(--muted)] sm:text-base">
-            Every Vesperer persona has a soul, feelings, long-term memory and
-            a voice — a stable identity and evolving relationships across chat
-            and speech.
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
+            Not another chatbot — someone who remembers, stays consistent, and
+            grows with every conversation.
           </p>
           <div className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
             <ShimmerLink href="/explore" className="w-full sm:w-auto">
@@ -388,22 +379,14 @@ export function LandingPage({
           <p className="mt-4 text-xs text-[var(--muted)]">
             Free to start · No code required · Export anytime
           </p>
-          <p className="mt-3 text-xs text-[var(--muted)]">
-            Building for a team or platform?{" "}
-            <a
-              href="/business"
-              className="text-[var(--ink)] underline-offset-2 hover:underline"
-            >
-              Explore Vesperer for Business
-            </a>
-            .
-          </p>
         </div>
-        <div className="relative z-10">
+        <div className="landing-defer relative z-10">
           <LandingProductPreview />
         </div>
       </section>
 
+      {/* Below-fold — content-visibility defers paint (Speed Index on mobile). */}
+      <div className="landing-defer">
       {/* Fall for / Learn / Hire / Create */}
       <section
         id="explore"
@@ -972,6 +955,7 @@ npm run vesperer -- personas create --from persona.json
         </BlurFade>
       </section>
 
+      </div>
       </main>
 
       <LegalFooter variant="marketing" />

@@ -13,16 +13,19 @@ import { cn } from "@/lib/utils";
 const display = Syne({
   variable: "--font-display",
   subsets: ["latin"],
-  // Only weights used on marketing (font-medium/semibold) — fewer font bytes on critical path.
-  weight: ["500", "600"],
-  display: "swap",
+  // Semibold covers brand + headings; optional avoids LCP waiting on Slow 4G.
+  weight: ["600"],
+  display: "optional",
+  preload: true,
 });
 
 const body = DM_Sans({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
+  // Single weight — hero body copy is the LCP element; don't block paint on webfonts.
+  weight: ["400"],
+  display: "optional",
+  preload: true,
 });
 
 export const metadata: Metadata = {
