@@ -34,7 +34,13 @@ export default async function PersonasPage() {
   });
 
   const list = characters.map((c) => {
-    const cover = resolveCoverUrl(c.photos);
+    const bots = c.telegramBots.map((b) => ({
+      id: b.id,
+      username: b.username,
+      active: b.active,
+      label: b.label,
+      peerCount: b._count.peers,
+    }));
     return {
       id: c.id,
       name: c.name,
@@ -42,17 +48,12 @@ export default async function PersonasPage() {
       active: c.active,
       updatedAt: c.updatedAt.toISOString(),
       photoCount: c._count.photos,
-      coverUrl: cover,
+      coverUrl: resolveCoverUrl(c.photos),
       hasApiKey: Boolean(c.apiKey || c.apiKeyHash),
-      bots: c.telegramBots.map((b) => ({
-        id: b.id,
-        username: b.username,
-        active: b.active,
-        label: b.label,
-        peerCount: b._count.peers,
-      })),
+      bots,
+      peerCount: bots.reduce((n, b) => n + b.peerCount, 0),
     };
   });
 
-  return <PersonasList personas={list} />;
+  return <PersonasList initial={list} />;
 }
