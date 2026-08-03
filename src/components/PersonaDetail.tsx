@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PersonaProfileShell } from "@/components/persona/PersonaProfileShell";
 import { PersonaOverviewTab } from "@/components/persona/PersonaOverviewTab";
@@ -16,6 +16,19 @@ import type {
 } from "@/components/persona/types";
 import type { PersonaLicense } from "@/lib/personas/license";
 
+const PERSONA_TABS = new Set<PersonaTab>([
+  "mind",
+  "self",
+  "agency",
+  "photos",
+  "publish",
+]);
+
+function tabFromSearch(raw: string | null): PersonaTab {
+  if (raw && PERSONA_TABS.has(raw as PersonaTab)) return raw as PersonaTab;
+  return "mind";
+}
+
 export function PersonaDetail({
   persona,
   appUrl,
@@ -26,7 +39,10 @@ export function PersonaDetail({
   operatorAttested?: boolean;
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<PersonaTab>("mind");
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<PersonaTab>(() =>
+    tabFromSearch(searchParams.get("tab")),
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [operatorAttested, setOperatorAttested] = useState(
     operatorAttestedInitial,
@@ -80,6 +96,19 @@ export function PersonaDetail({
     window.addEventListener("persona-message", onMsg);
     return () => window.removeEventListener("persona-message", onMsg);
   }, []);
+
+  useEffect(() => {
+    setTab(tabFromSearch(searchParams.get("tab")));
+  }, [searchParams]);
+
+  function selectTab(next: PersonaTab) {
+    setTab(next);
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === "mind") params.delete("tab");
+    else params.set("tab", next);
+    const qs = params.toString();
+    router.replace(qs ? `?${qs}` : "?", { scroll: false });
+  }
 
   function operatorPayload() {
     return operatorAttested || operatorAck
@@ -441,7 +470,7 @@ export function PersonaDetail({
       persona={shellPersona}
       displayName={name}
       tab={tab}
-      onTabChange={setTab}
+      onTabChange={selectTab}
       message={message}
       telegramPeerCount={telegramPeerCount}
     >

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import {
   BookOpen,
   Bot,
@@ -25,10 +26,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { ChannelPersonaPicker } from "./ChannelPersonaPicker";
 import {
   APP_NAV_GROUPS,
   APP_RESOURCE_LINKS,
   type NavItem,
+  type PersonaPickerTarget,
 } from "./nav-items";
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -38,6 +41,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   telegram: Bot,
   discord: Workflow,
   whatsapp: MessageSquare,
+  workspaces: Workflow,
   settings: Settings2,
   help: HelpCircle,
   docs: BookOpen,
@@ -52,6 +56,11 @@ export function AppSidebar({
   onClose: () => void;
 }) {
   const pathname = usePathname() || "/personas";
+  const searchParams = useSearchParams();
+  const [picker, setPicker] = useState<{
+    label: string;
+    target: PersonaPickerTarget;
+  } | null>(null);
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -114,8 +123,14 @@ export function AppSidebar({
                     <SidebarItem
                       key={item.id}
                       item={item}
-                      active={item.match?.(pathname) ?? false}
+                      active={
+                        item.match?.(pathname, searchParams) ?? false
+                      }
                       onNavigate={onClose}
+                      onPickPersona={(target) => {
+                        onClose();
+                        setPicker({ label: item.label, target });
+                      }}
                     />
                   ))}
                 </ul>
@@ -145,6 +160,17 @@ export function AppSidebar({
           <DebugRoleSwitcher />
         </div>
       </aside>
+
+      {picker ? (
+        <ChannelPersonaPicker
+          open={Boolean(picker)}
+          onOpenChange={(next) => {
+            if (!next) setPicker(null);
+          }}
+          channelLabel={picker.label}
+          target={picker.target}
+        />
+      ) : null}
     </TooltipProvider>
   );
 }
@@ -153,14 +179,16 @@ function SidebarItem({
   item,
   active,
   onNavigate,
+  onPickPersona,
 }: {
   item: NavItem;
   active: boolean;
   onNavigate: () => void;
+  onPickPersona: (target: PersonaPickerTarget) => void;
 }) {
   const Icon = ICONS[item.id] ?? Sparkles;
 
-  if (item.soon || !item.href) {
+  if (item.soon) {
     return (
       <li>
         <Tooltip>
@@ -178,6 +206,35 @@ function SidebarItem({
         </Tooltip>
       </li>
     );
+  }
+
+  if (item.pickPersona) {
+    return (
+      <li>
+        <button
+          type="button"
+          onClick={() => onPickPersona(item.pickPersona!)}
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] transition",
+            active
+              ? "bg-sidebar-accent font-medium text-foreground"
+              : "text-muted-foreground hover:bg-white/[0.03] hover:text-foreground",
+          )}
+        >
+          <Icon
+            className={cn(
+              "size-4 shrink-0",
+              active ? "text-[var(--accent)]" : "opacity-70",
+            )}
+          />
+          <span className="flex-1 text-left">{item.label}</span>
+        </button>
+      </li>
+    );
+  }
+
+  if (!item.href) {
+    return null;
   }
 
   return (

@@ -1,10 +1,17 @@
+export type PersonaPickerTarget = {
+  /** Opens persona detail on this tab after pick. */
+  tab: "agency" | "photos" | "self" | "publish" | "mind";
+};
+
 export type NavItem = {
   id: string;
   label: string;
   href?: string;
   soon?: boolean;
   external?: boolean;
-  match?: (pathname: string) => boolean;
+  /** Click opens a persona picker, then navigates to that persona + tab. */
+  pickPersona?: PersonaPickerTarget;
+  match?: (pathname: string, searchParams?: URLSearchParams) => boolean;
 };
 
 export type NavGroup = {
@@ -22,7 +29,12 @@ export const APP_NAV_GROUPS: NavGroup[] = [
         id: "personas",
         label: "Personas",
         href: "/personas",
-        match: (p) => p === "/personas" || p.startsWith("/personas/"),
+        match: (p, sp) => {
+          if (p === "/personas") return true;
+          if (!p.startsWith("/personas/")) return false;
+          // Channel deep-links own the highlight
+          return sp?.get("tab") !== "agency";
+        },
       },
       {
         id: "sources",
@@ -45,7 +57,9 @@ export const APP_NAV_GROUPS: NavGroup[] = [
       {
         id: "telegram",
         label: "Telegram",
-        soon: true,
+        pickPersona: { tab: "agency" },
+        match: (p, sp) =>
+          p.startsWith("/personas/") && sp?.get("tab") === "agency",
       },
       {
         id: "discord",
