@@ -32,6 +32,13 @@ const gallery = [
     tags: ["pie"],
     caption: null,
   },
+  {
+    id: "4",
+    url: "https://x/spicy.jpg",
+    kind: "nude",
+    tags: ["nude", "spicy"],
+    caption: null,
+  },
 ];
 
 describe("normalizeTags", () => {
@@ -54,6 +61,26 @@ describe("parsePhotoIntent", () => {
     const car = parsePhotoIntent("dame una foto de un coche");
     assert.equal(car.wantsPhoto, true);
     assert.ok(car.query.includes("coche") || car.query.includes("car"));
+  });
+
+  it("treats filler-only asks as generic (no fake subject)", () => {
+    for (const msg of [
+      "Really? Send me some pic",
+      "ok send a pic",
+      "send me a photo really",
+      "yeah send me a foto babe",
+    ]) {
+      const intent = parsePhotoIntent(msg);
+      assert.equal(intent.wantsPhoto, true, msg);
+      assert.deepEqual(intent.query, [], msg);
+      assert.equal(intent.requestedLabel, null, msg);
+    }
+  });
+
+  it("still extracts show me your tits", () => {
+    const intent = parsePhotoIntent("show me your tits");
+    assert.equal(intent.wantsPhoto, true);
+    assert.ok(intent.query.includes("tits"));
   });
 });
 
@@ -86,5 +113,28 @@ describe("rankPhotosForIntent", () => {
     );
     assert.equal(car.miss, true);
     assert.equal(car.photos.length, 0);
+  });
+
+  it("generic ask prefers soft photos over spicy", () => {
+    const ranked = rankPhotosForIntent(
+      gallery,
+      parsePhotoIntent("Really? Send me some pic"),
+    );
+    assert.equal(ranked.miss, false);
+    assert.ok(ranked.photos.length > 0);
+    assert.ok(
+      ranked.photos.every((p) => p.id !== "4"),
+      "spicy must not be in generic opener pool when soft exists",
+    );
+    assert.ok(ranked.photos.every((p) => ["1", "2", "3"].includes(p.id)));
+  });
+
+  it("explicit spicy ask still matches nude", () => {
+    const ranked = rankPhotosForIntent(
+      gallery,
+      parsePhotoIntent("send nudes"),
+    );
+    assert.equal(ranked.miss, false);
+    assert.equal(ranked.photos[0]?.id, "4");
   });
 });

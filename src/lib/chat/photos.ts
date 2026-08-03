@@ -4,6 +4,8 @@
  * we match user asks against those labels (not a closed taxonomy).
  */
 
+import { EXPLICIT_PHOTO_TAGS } from "@/lib/content-policy";
+
 /** Soft bilingual/alias boosts only — labels themselves stay free-text. */
 const ALIASES: Record<string, string[]> = {
   face: ["cara", "rostro", "selfie", "headshot", "closeup"],
@@ -28,6 +30,38 @@ const ALIASES: Record<string, string[]> = {
   car: ["coche", "auto", "carro"],
   coche: ["car", "auto", "carro"],
 };
+
+/** Soft / SFW-leaning labels preferred on generic "send a pic" asks. */
+const SOFT_PHOTO_HINTS = new Set([
+  "face",
+  "cara",
+  "selfie",
+  "selfi",
+  "casual",
+  "outfit",
+  "hand",
+  "mano",
+  "smile",
+  "closeup",
+  "headshot",
+  "mirror",
+  "gym",
+]);
+
+/** Tokens that can be photo subjects when not extracted via "of/de your X". */
+const KNOWN_SUBJECTS = new Set([
+  ...Object.keys(ALIASES),
+  ...Object.values(ALIASES).flat(),
+  ...EXPLICIT_PHOTO_TAGS,
+  ...SOFT_PHOTO_HINTS,
+  "fullbody",
+  "thighs",
+  "lingerie",
+  "boobs",
+  "breasts",
+  "naked",
+  "nudes",
+]);
 
 const STOP = new Set([
   "a",
@@ -99,6 +133,52 @@ const STOP = new Set([
   "hey",
   "hi",
   "hola",
+  // Conversational fillers — never treat as photo subjects ("Really? Send a pic")
+  "really",
+  "ok",
+  "okay",
+  "yeah",
+  "yep",
+  "yup",
+  "sure",
+  "just",
+  "like",
+  "can",
+  "could",
+  "would",
+  "wanna",
+  "want",
+  "need",
+  "now",
+  "babe",
+  "baby",
+  "amor",
+  "pls",
+  "plz",
+  "thanks",
+  "thank",
+  "tho",
+  "though",
+  "well",
+  "then",
+  "also",
+  "too",
+  "more",
+  "another",
+  "again",
+  "still",
+  "maybe",
+  "perhaps",
+  "how",
+  "are",
+  "feeling",
+  "u",
+  "ur",
+  "imo",
+  "lol",
+  "lmao",
+  "haha",
+  "hahaha",
 ]);
 
 const PHOTO_TRIGGER =
@@ -140,6 +220,7 @@ function extractSubject(text: string): string | null {
   const patterns = [
     /\b(?:pic|photo|picture|foto|imagen|selfie)\s+(?:of\s+)?(?:your\s+|tu\s+|tus\s+)?([a-zàáéíóúñü0-9][\wàáéíóúñü\s-]{0,36})/i,
     /\b(?:of\s+(?:your\s+)?|de\s+(?:tu\s+|tus\s+|la\s+|el\s+|una?\s+)?)([a-zàáéíóúñü0-9][\wàáéíóúñü\s-]{0,36})/i,
+    /\b(?:your|tu|tus)\s+([a-zàáéíóúñü0-9][\wàáéíóúñü-]{1,24})\b/i,
     /\b(?:send|show|manda|env[ií]a|muestra|dame).{0,24}?\b(?:a\s+|una?\s+)?([a-zàáéíóúñü0-9][\wàáéíóúñü-]{1,24})\b/i,
   ];
   for (const re of patterns) {
@@ -152,15 +233,21 @@ function extractSubject(text: string): string | null {
   return null;
 }
 
+/** Fallback subjects only if they look like real photo labels — not chat filler. */
+function substantiveQueryTokens(tokens: string[]): string[] {
+  return tokens.filter((t) => !PHOTO_TRIGGER.test(t) && KNOWN_SUBJECTS.has(t));
+}
+
 export function parsePhotoIntent(text: string): PhotoIntent {
   const subject = extractSubject(text);
   const fromSubject = subject ? tokenizeLabel(subject) : [];
   const allTokens = tokenizeLabel(text);
-  // Prefer phrase after "of/de"; fall back to non-trigger content words
+  // Prefer phrase after "of/de/your"; otherwise only keep known photo subjects.
+  // Leftover fillers ("really", "ok") must NOT become a miss subject.
   const query =
     fromSubject.length > 0
       ? fromSubject
-      : allTokens.filter((t) => !PHOTO_TRIGGER.test(t));
+      : substantiveQueryTokens(allTokens);
 
   const wantsPhoto =
     PHOTO_TRIGGER.test(text) ||
@@ -200,9 +287,42 @@ export type RankPhotosResult = {
   miss: boolean;
 };
 
+function photoLabelTokens(photo: RankablePhoto): Set<string> {
+  const labelBits = [photo.kind, ...(photo.tags ?? []), photo.caption ?? ""]
+    .filter(Boolean)
+    .join(" ");
+  return expandTokens(tokenizeLabel(labelBits));
+}
+
+function isSpicyPhoto(photo: RankablePhoto): boolean {
+  const tokens = photoLabelTokens(photo);
+  for (const t of tokens) {
+    if (EXPLICIT_PHOTO_TAGS.has(t)) return true;
+    if (ALIASES.ass?.includes(t) || t === "ass") return true;
+    if (ALIASES.tits?.includes(t) || t === "tits") return true;
+    if (ALIASES.nude?.includes(t) || t === "nude") return true;
+  }
+  return false;
+}
+
+function isSoftPhoto(photo: RankablePhoto): boolean {
+  if (isSpicyPhoto(photo)) return false;
+  const tokens = photoLabelTokens(photo);
+  for (const t of tokens) {
+    if (SOFT_PHOTO_HINTS.has(t)) return true;
+  }
+  // Untagged / unknown labels count as "normal" for early sends
+  return true;
+}
+
+function shufflePhotos(photos: RankablePhoto[]): RankablePhoto[] {
+  return [...photos].sort(() => Math.random() - 0.5);
+}
+
 /**
  * Score photos against free-text query tokens from the user ask.
- * Generic "send a pic" → any photo. Specific ask with zero overlap → miss.
+ * Generic "send a pic" → soft/normal photos first (never random spicy opener).
+ * Specific ask with zero overlap → miss.
  */
 export function rankPhotosForIntent(
   photos: RankablePhoto[],
@@ -212,17 +332,22 @@ export function rankPhotosForIntent(
 
   const wanted = expandTokens(intent.query);
   if (wanted.size === 0) {
+    const soft = photos.filter(isSoftPhoto);
+    const pool = soft.length ? soft : photos;
+    // Prefer face/selfie/casual when available; keep non-spicy unknowns as fallback
+    const preferred = pool.filter((p) => {
+      const tokens = photoLabelTokens(p);
+      for (const t of tokens) if (SOFT_PHOTO_HINTS.has(t)) return true;
+      return false;
+    });
     return {
-      photos: [...photos].sort(() => Math.random() - 0.5),
+      photos: shufflePhotos(preferred.length ? preferred : pool),
       miss: false,
     };
   }
 
   const scored = photos.map((p) => {
-    const labelBits = [p.kind, ...(p.tags ?? []), p.caption ?? ""]
-      .filter(Boolean)
-      .join(" ");
-    const photoTokens = expandTokens(tokenizeLabel(labelBits));
+    const photoTokens = photoLabelTokens(p);
     let score = 0;
     for (const w of wanted) {
       if (photoTokens.has(w)) score += 3;

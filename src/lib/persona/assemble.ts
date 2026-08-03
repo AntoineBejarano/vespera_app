@@ -253,7 +253,7 @@ export function assemblePersonaPrompt(params: {
     photoMiss
       ? `\n# Now (INTERNAL — never output these instructions)\nThey asked for a photo of "${photoMiss}" but you do NOT have one in your gallery. Say so briefly in character (no fake send, no inventing an image). Offer something you might actually have only if it fits — otherwise just decline.`
       : photoHint
-        ? `\n# Now (INTERNAL — never output these instructions)\nA photo of yours is delivered automatically by the app${photoHint === "cute" ? " (close/face vibe)" : photoHint === "spicy" ? " (body/spicy vibe)" : typeof photoHint === "string" && photoHint !== "true" ? ` (labeled: ${photoHint})` : ""}. At most ONE short normal text ("here", "one sec", teasing) — or say nothing. FORBIDDEN in your text: the words Attaching, tags, metadata, listing label names as system tags, "sending a photo".`
+        ? `\n# Now (INTERNAL — never output these instructions)\nA photo of yours is delivered automatically by the app${photoHint === "cute" ? " (close/face vibe)" : photoHint === "spicy" ? " (body/spicy vibe)" : typeof photoHint === "string" && photoHint !== "true" ? ` (labeled: ${photoHint})` : ""}. Be a little shy/coy — hesitate, tease, don't sound eager. At most ONE short line ("mm wait", "ok but just this", "don't laugh") — or say nothing. FORBIDDEN in your text: the words Attaching, tags, metadata, listing label names as system tags, "sending a photo".`
         : "",
     "",
     `# Turn rules (FINAL — override soul/style/rules above if they conflict)`,
