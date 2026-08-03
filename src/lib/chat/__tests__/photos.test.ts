@@ -82,6 +82,12 @@ describe("parsePhotoIntent", () => {
     assert.equal(intent.wantsPhoto, true);
     assert.ok(intent.query.includes("tits"));
   });
+
+  it("treats I want to see ur pussy as a spicy photo ask", () => {
+    const intent = parsePhotoIntent("I want to see ur pussy");
+    assert.equal(intent.wantsPhoto, true);
+    assert.ok(intent.query.includes("pussy"));
+  });
 });
 
 describe("rankPhotosForIntent", () => {
@@ -133,6 +139,15 @@ describe("rankPhotosForIntent", () => {
     const ranked = rankPhotosForIntent(
       gallery,
       parsePhotoIntent("send nudes"),
+    );
+    assert.equal(ranked.miss, false);
+    assert.equal(ranked.photos[0]?.id, "4");
+  });
+
+  it("see ur pussy falls back to spicy gallery when no pussy tag", () => {
+    const ranked = rankPhotosForIntent(
+      gallery,
+      parsePhotoIntent("I want to see ur pussy"),
     );
     assert.equal(ranked.miss, false);
     assert.equal(ranked.photos[0]?.id, "4");

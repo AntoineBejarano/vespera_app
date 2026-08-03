@@ -26,7 +26,9 @@ const ALIASES: Record<string, string[]> = {
   culo: ["ass", "butt", "booty"],
   tits: ["boobs", "pecho", "tetas", "breasts"],
   tetas: ["tits", "boobs", "pecho"],
-  nude: ["nudes", "naked", "desnuda", "desnudo"],
+  pussy: ["nude", "nudes", "body", "spicy", "cono"],
+  cono: ["pussy", "nude", "spicy"],
+  nude: ["nudes", "naked", "desnuda", "desnudo", "pussy"],
   car: ["coche", "auto", "carro"],
   coche: ["car", "auto", "carro"],
 };
@@ -61,6 +63,8 @@ const KNOWN_SUBJECTS = new Set([
   "breasts",
   "naked",
   "nudes",
+  "pussy",
+  "cono",
 ]);
 
 const STOP = new Set([
@@ -150,6 +154,8 @@ const STOP = new Set([
   "want",
   "need",
   "now",
+  "see",
+  "ver",
   "babe",
   "baby",
   "amor",
@@ -183,6 +189,10 @@ const STOP = new Set([
 
 const PHOTO_TRIGGER =
   /\b(photo|photos|pic|pics|picture|pictures|selfie|selfi|nude|nudes|foto|fotos|imagen|im[aá]genes?|send\s+(me\s+)?(one|a|your)|manda(?:me)?|env[ií]a(?:me)?|muestra(?:me)?|show\s+(me\s+)?(your|a)|snap|dame)\b/i;
+
+/** "I want to see ur pussy" / "show me your ass" without saying pic/photo. */
+const SEE_BODY_TRIGGER =
+  /\b((?:want|wanna|let\s+me)\s+(?:to\s+)?see|(?:see|ver)\s+(?:your|ur|tu|tus)|show\s+(?:me\s+)?(?:your|ur|tu)|muestra(?:me)?\s+(?:tu|tus))\b/i;
 
 const MAX_LABEL_LEN = 48;
 const MAX_TAGS = 12;
@@ -218,9 +228,10 @@ function expandTokens(tokens: string[]): Set<string> {
 function extractSubject(text: string): string | null {
   const lower = text.toLowerCase();
   const patterns = [
-    /\b(?:pic|photo|picture|foto|imagen|selfie)\s+(?:of\s+)?(?:your\s+|tu\s+|tus\s+)?([a-zàáéíóúñü0-9][\wàáéíóúñü\s-]{0,36})/i,
-    /\b(?:of\s+(?:your\s+)?|de\s+(?:tu\s+|tus\s+|la\s+|el\s+|una?\s+)?)([a-zàáéíóúñü0-9][\wàáéíóúñü\s-]{0,36})/i,
-    /\b(?:your|tu|tus)\s+([a-zàáéíóúñü0-9][\wàáéíóúñü-]{1,24})\b/i,
+    /\b(?:pic|photo|picture|foto|imagen|selfie)\s+(?:of\s+)?(?:your\s+|ur\s+|tu\s+|tus\s+)?([a-zàáéíóúñü0-9][\wàáéíóúñü\s-]{0,36})/i,
+    /\b(?:of\s+(?:your\s+|ur\s+)?|de\s+(?:tu\s+|tus\s+|la\s+|el\s+|una?\s+)?)([a-zàáéíóúñü0-9][\wàáéíóúñü\s-]{0,36})/i,
+    /\b(?:see|ver|show).{0,16}?\b(?:your|ur|tu|tus)\s+([a-zàáéíóúñü0-9][\wàáéíóúñü-]{1,24})\b/i,
+    /\b(?:your|ur|tu|tus)\s+([a-zàáéíóúñü0-9][\wàáéíóúñü-]{1,24})\b/i,
     /\b(?:send|show|manda|env[ií]a|muestra|dame).{0,24}?\b(?:a\s+|una?\s+)?([a-zàáéíóúñü0-9][\wàáéíóúñü-]{1,24})\b/i,
   ];
   for (const re of patterns) {
@@ -251,6 +262,7 @@ export function parsePhotoIntent(text: string): PhotoIntent {
 
   const wantsPhoto =
     PHOTO_TRIGGER.test(text) ||
+    SEE_BODY_TRIGGER.test(text) ||
     /\b(send|manda|env[ií]a|show|muestra|dame).{0,40}\b(pic|photo|foto|imagen|selfie)\b/i.test(
       text,
     );
@@ -298,9 +310,32 @@ function isSpicyPhoto(photo: RankablePhoto): boolean {
   const tokens = photoLabelTokens(photo);
   for (const t of tokens) {
     if (EXPLICIT_PHOTO_TAGS.has(t)) return true;
-    if (ALIASES.ass?.includes(t) || t === "ass") return true;
-    if (ALIASES.tits?.includes(t) || t === "tits") return true;
-    if (ALIASES.nude?.includes(t) || t === "nude") return true;
+    if (t === "ass" || ALIASES.ass?.includes(t)) return true;
+    if (t === "tits" || ALIASES.tits?.includes(t)) return true;
+    if (t === "nude" || ALIASES.nude?.includes(t)) return true;
+    if (t === "pussy" || ALIASES.pussy?.includes(t)) return true;
+  }
+  return false;
+}
+
+function isSpicyBodyAsk(wanted: Set<string>): boolean {
+  for (const t of wanted) {
+    if (EXPLICIT_PHOTO_TAGS.has(t)) return true;
+    if (
+      t === "ass" ||
+      t === "tits" ||
+      t === "nude" ||
+      t === "nudes" ||
+      t === "pussy" ||
+      t === "body" ||
+      t === "fullbody" ||
+      ALIASES.ass?.includes(t) ||
+      ALIASES.tits?.includes(t) ||
+      ALIASES.nude?.includes(t) ||
+      ALIASES.pussy?.includes(t)
+    ) {
+      return true;
+    }
   }
   return false;
 }
@@ -322,7 +357,8 @@ function shufflePhotos(photos: RankablePhoto[]): RankablePhoto[] {
 /**
  * Score photos against free-text query tokens from the user ask.
  * Generic "send a pic" → soft/normal photos first (never random spicy opener).
- * Specific ask with zero overlap → miss.
+ * Explicit body ask with no exact label → fall back to spicy/nude gallery.
+ * Other specific asks with zero overlap → miss.
  */
 export function rankPhotosForIntent(
   photos: RankablePhoto[],
@@ -358,6 +394,17 @@ export function rankPhotosForIntent(
   scored.sort((a, b) => b.score - a.score || Math.random() - 0.5);
   const best = scored[0]?.score ?? 0;
   if (best <= 0) {
+    if (isSpicyBodyAsk(wanted)) {
+      const spicy = photos.filter(isSpicyPhoto);
+      const bodyish = photos.filter((p) => {
+        const tok = photoLabelTokens(p);
+        return tok.has("body") || tok.has("fullbody") || isSpicyPhoto(p);
+      });
+      const pool = spicy.length ? spicy : bodyish;
+      if (pool.length) {
+        return { photos: shufflePhotos(pool), miss: false };
+      }
+    }
     return { photos: [], miss: true };
   }
   const top = scored.filter((s) => s.score === best).map((s) => s.photo);

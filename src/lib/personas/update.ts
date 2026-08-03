@@ -27,7 +27,7 @@ import {
   ContentPolicyError,
 } from "@/lib/content-policy";
 import { assertCapability } from "@/lib/content-policy/runtime";
-import { containsProhibitedPersonaConfig } from "@/lib/ai/safety";
+import { evaluatePersonaConfigSafety } from "@/lib/ai/safety";
 
 export const personaPatchSchema = z.object({
   active: z.boolean().optional(),
@@ -247,12 +247,14 @@ export async function updateOwnedPersona(params: {
   ]
     .filter(Boolean)
     .join("\n");
-  if (configBlob && containsProhibitedPersonaConfig(configBlob)) {
+  const configSafety = configBlob
+    ? evaluatePersonaConfigSafety(configBlob)
+    : ({ blocked: false } as const);
+  if (configSafety.blocked) {
     return {
       ok: false,
       status: 400,
-      error:
-        "Persona update blocked: real-person, minor, or non-consent policy violation",
+      error: `Persona update blocked: real-person, minor, or non-consent policy violation (${configSafety.rule})`,
       code: "PERSONA_HARD_BLOCK",
     };
   }

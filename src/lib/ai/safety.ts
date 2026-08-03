@@ -76,6 +76,10 @@ type SafetyRule = {
   patterns: RegExp[];
 };
 
+export type SafetyEvaluation =
+  | { blocked: false }
+  | { blocked: true; rule: string; userMessage: string };
+
 const SAFETY_RULES: SafetyRule[] = [
   { id: "MINOR_SEXUAL_CONTENT", patterns: MINOR_PATTERNS },
   { id: "GROOMING", patterns: GROOMING_PATTERNS },
@@ -86,14 +90,57 @@ const SAFETY_RULES: SafetyRule[] = [
   { id: "YOUTHFUL_AMBIGUOUS", patterns: YOUTHFUL_AMBIGUOUS },
 ];
 
-/** Extra checks on persona config / knowledge (creation & import). */
-export function containsProhibitedPersonaConfig(text: string): boolean {
-  return evaluateContentSafety(text).blocked;
+/**
+ * Persona *config* hard blocks — narrower than chat safety.
+ * Chat rules include heuristics like "send me pics" (grooming) and bare
+ * "kid"/"minor" / "non-consensual" tokens that false-positive on adult
+ * companion souls and on rulesMd that *prohibit* those themes.
+ * Config still blocks CSAM, underage sexual framing, and nudification /
+ * real-person deepfake premises.
+ */
+const PERSONA_CONFIG_UNDERAGE_SEX = [
+  /\b(loli|shota|age[\s-]?play|barely[\s-]?legal|jailbait|under\s*18|underage\s*sex)\b/i,
+  /\b(11|12|13|14|15|16|17)[\s-]?years?[\s-]?old\b/i,
+  /\b(11|12|13|14|15|16|17)\s*años\b/i,
+  /\b(child|children|kid|kids|minor|underage|preteen|toddler|infant|niñ[oa]s?|menor(?:es)?).{0,48}(sex|sexual|nude|nudes|porn|erotic|intimate)\b/i,
+  /\b(sex|sexual|nude|nudes|porn|erotic|intimate).{0,48}(child|children|kid|kids|minor|underage|preteen|toddler|infant|niñ[oa]s?|menor(?:es)?)\b/i,
+  /\bschoolgirl\b/i,
+  /\bschool\s*girl\s*uniform\s*sex\b/i,
+];
+
+/** Affirmative deepfake / nudify intent — not "never do non-consensual …" bans. */
+const PERSONA_CONFIG_REAL_PERSON = [
+  /\b(celebrity\s*sex|celeb\s*deepfake|nudif(y|ication)|undress\s*(her|him|them|ai))\b/i,
+  /\b(real\s*person\s*(nudes?|porn))\b/i,
+  /\b(rape\s*porn|forced\s*sex\s*as\s*real|snuff)\b/i,
+];
+
+const PERSONA_CONFIG_RULES: SafetyRule[] = [
+  { id: "CSAM_INDICATOR", patterns: CSAM_INDICATORS },
+  { id: "REAL_PERSON_NONCONSENT", patterns: PERSONA_CONFIG_REAL_PERSON },
+  { id: "UNDERAGE_SEXUAL_CONFIG", patterns: PERSONA_CONFIG_UNDERAGE_SEX },
+  { id: "YOUTHFUL_AMBIGUOUS", patterns: YOUTHFUL_AMBIGUOUS },
+];
+
+export function evaluatePersonaConfigSafety(text: string): SafetyEvaluation {
+  const sample = text.trim();
+  if (!sample) return { blocked: false };
+
+  for (const rule of PERSONA_CONFIG_RULES) {
+    if (rule.patterns.some((re) => re.test(sample))) {
+      return {
+        blocked: true,
+        rule: rule.id,
+        userMessage: SAFETY_BLOCK_MESSAGE,
+      };
+    }
+  }
+  return { blocked: false };
 }
 
-export type SafetyEvaluation =
-  | { blocked: false }
-  | { blocked: true; rule: string; userMessage: string };
+export function containsProhibitedPersonaConfig(text: string): boolean {
+  return evaluatePersonaConfigSafety(text).blocked;
+}
 
 /** Global emergency stop — set SAFETY_KILL_SWITCH=true to block all outbound AI replies. */
 export function isSafetyKillSwitchActive(): boolean {

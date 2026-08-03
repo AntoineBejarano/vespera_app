@@ -92,7 +92,8 @@ Current: mood=${current.mood}, trust=${current.trust}, affection=${current.affec
 User: ${params.userMessage}
 Companion: ${params.assistantMessage}
 
-Return mood (one word), currentTone (one of: ${CURRENT_TONES.join(", ")}), small deltas, and a short summary (max 280 chars).
+Return mood (one word), currentTone (one of: ${CURRENT_TONES.join(", ")}), small deltas, and a short INTERNAL summary (max 280 chars) of the relationship vibe only.
+Rules for summary: facts grounded in THIS turn only; no invented voice notes/photos/events; never write dialogue the companion should say aloud; third-person vibe notes only (e.g. "flirty, asked for a pic").
 No moralizing. Be subtle. Do not invent dramatic swings.`,
     });
 

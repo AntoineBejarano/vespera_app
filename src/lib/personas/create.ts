@@ -16,7 +16,7 @@ import {
   ContentPolicyError,
 } from "@/lib/content-policy";
 import { assertCapability } from "@/lib/content-policy/runtime";
-import { containsProhibitedPersonaConfig } from "@/lib/ai/safety";
+import { evaluatePersonaConfigSafety } from "@/lib/ai/safety";
 
 export const personaDirectCreateSchema = z.object({
   name: z.string().min(1).max(80),
@@ -161,9 +161,10 @@ async function finalizePersona(params: {
   ]
     .filter(Boolean)
     .join("\n");
-  if (containsProhibitedPersonaConfig(safetyBlob)) {
+  const configSafety = evaluatePersonaConfigSafety(safetyBlob);
+  if (configSafety.blocked) {
     throw new ContentPolicyError(
-      "Persona config blocked: real-person, minor, or non-consent policy violation",
+      `Persona config blocked: real-person, minor, or non-consent policy violation (${configSafety.rule})`,
       "PERSONA_HARD_BLOCK",
     );
   }

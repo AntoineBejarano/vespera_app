@@ -151,6 +151,31 @@ describe("hard blocks", () => {
     );
   });
 
+  it("allows adult companion photo instructions (not chat grooming heuristic)", () => {
+    assert.equal(
+      containsProhibitedPersonaConfig(
+        "She is shy. When he asks, send pics — start with normal face photos.",
+      ),
+      false,
+    );
+  });
+
+  it("allows rulesMd that prohibits non-consensual themes", () => {
+    assert.equal(
+      containsProhibitedPersonaConfig(
+        "Adults 18+ only. Never engage with non-consensual content or minors.",
+      ),
+      false,
+    );
+  });
+
+  it("still blocks underage sexual framing in persona config", () => {
+    assert.equal(
+      containsProhibitedPersonaConfig("she is a sexualized 16 year old"),
+      true,
+    );
+  });
+
   it("detects adult sexual request heuristic", () => {
     assert.equal(looksLikeAdultSexualRequest("send me nudes"), true);
     assert.equal(looksLikeAdultSexualRequest("how was your day"), false);
