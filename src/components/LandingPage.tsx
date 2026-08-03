@@ -1,3 +1,4 @@
+import { preload } from "react-dom";
 import { MarketingNav } from "@/components/MarketingNav";
 import { LegalFooter } from "@/components/LegalFooter";
 import {
@@ -7,9 +8,11 @@ import {
 import { AFTER_DARK_URL } from "@/lib/site";
 import type { VoiceAgentId } from "@/lib/voice/types";
 
-// Brand mark via plain <img> (avoid next/image client chunk on `/`).
+// Brand mark via plain <picture> (avoid next/image client chunk on `/`).
 
-/** No-op wrapper — keeps markup stable without client motion (LCP). */
+/** No-op wrapper — keeps markup stable without client motion (LCP).
+ *  Only wraps in a div when className is set, so list children stay
+ *  direct `<li>` under `<ol>`/`<ul>` for screen readers. */
 function BlurFade({
   children,
   className,
@@ -18,7 +21,10 @@ function BlurFade({
   delay?: number;
   className?: string;
 }) {
-  return <div className={className}>{children}</div>;
+  if (className) {
+    return <div className={className}>{children}</div>;
+  }
+  return children;
 }
 
 const PATHS = [
@@ -316,10 +322,13 @@ export function LandingPage({
 }: {
   voiceAgent?: VoiceAgentId;
 }) {
+  preload("/brand/mark-128.avif", { as: "image", type: "image/avif" });
+
   return (
     <div className="relative overflow-hidden">
       <MarketingNav variant="marketing" />
 
+      <main>
       {/* Hero — painted in HTML (no client opacity:0 / Hexclave) */}
       <section className="relative flex min-h-[92dvh] flex-col">
         <RetroGrid />
@@ -329,16 +338,20 @@ export function LandingPage({
             className="mb-8 inline-flex items-center gap-2.5 sm:gap-3"
             aria-label="Vesperer"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/brand/mark-256.png"
-              alt=""
-              width={56}
-              height={56}
-              className="shrink-0 object-contain"
-              fetchPriority="high"
-              decoding="async"
-            />
+            <picture>
+              <source srcSet="/brand/mark-128.avif" type="image/avif" />
+              <source srcSet="/brand/mark-128.webp" type="image/webp" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/brand/mark-128.png"
+                alt=""
+                width={56}
+                height={56}
+                className="shrink-0 object-contain"
+                fetchPriority="high"
+                decoding="async"
+              />
+            </picture>
             <span className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-[-0.03em] text-[var(--ink)] sm:text-5xl">
               Vesper<span className="text-[var(--accent-2)]">er</span>
             </span>
@@ -958,6 +971,8 @@ npm run vesperer -- personas create --from persona.json
           </div>
         </BlurFade>
       </section>
+
+      </main>
 
       <LegalFooter variant="marketing" />
     </div>

@@ -7,10 +7,10 @@ export const BRAND_SHORT = "vesperer";
 
 export type BrandVariant = "default" | "after-dark";
 
-/** Prefer 256px marks for LCP — full mark.png is 487² / ~110KB. */
+/** 128² marks cover 56–64 CSS px at 2× — far smaller than mark-256 / full mark. */
 const MARK_SRC: Record<BrandVariant, string> = {
-  default: "/brand/mark-256.png",
-  "after-dark": "/brand/mark-after-dark.png",
+  default: "/brand/mark-128.png",
+  "after-dark": "/brand/mark-after-dark-128.png",
 };
 
 export function BrandMark({

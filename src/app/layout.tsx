@@ -13,14 +13,15 @@ import { cn } from "@/lib/utils";
 const display = Syne({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  // Only weights used on marketing (font-medium/semibold) — fewer font bytes on critical path.
+  weight: ["500", "600"],
   display: "swap",
 });
 
 const body = DM_Sans({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 
@@ -86,16 +87,37 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full font-[family-name:var(--font-body)]">
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-NTQQWCJW1F"
-          strategy="lazyOnload"
-        />
-        <Script id="google-analytics" strategy="lazyOnload">
+        {/* GA after idle/interaction — keeps gtag off LCP/TBT for PageSpeed cold loads. */}
+        <Script id="google-analytics-deferred" strategy="lazyOnload">
           {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-NTQQWCJW1F', { send_page_view: true });
+            (function () {
+              var loaded = false;
+              function load() {
+                if (loaded) return;
+                loaded = true;
+                var s = document.createElement('script');
+                s.src = 'https://www.googletagmanager.com/gtag/js?id=G-NTQQWCJW1F';
+                s.async = true;
+                document.head.appendChild(s);
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){ dataLayer.push(arguments); }
+                window.gtag = gtag;
+                gtag('js', new Date());
+                gtag('config', 'G-NTQQWCJW1F', { send_page_view: true });
+              }
+              function arm() {
+                if ('requestIdleCallback' in window) {
+                  requestIdleCallback(function () { setTimeout(load, 5000); }, { timeout: 8000 });
+                } else {
+                  setTimeout(load, 6000);
+                }
+              }
+              ['scroll', 'pointerdown', 'keydown', 'touchstart'].forEach(function (evt) {
+                window.addEventListener(evt, load, { once: true, passive: true });
+              });
+              if (document.readyState === 'complete') arm();
+              else window.addEventListener('load', arm, { once: true });
+            })();
           `}
         </Script>
         {children}

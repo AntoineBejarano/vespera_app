@@ -292,7 +292,7 @@ function AgeGateInner() {
         <button
           type="button"
           disabled={!ready || loading}
-          className="w-full rounded-xl bg-[var(--accent)] px-6 py-3.5 font-medium text-white disabled:opacity-40 sm:w-auto"
+          className="w-full rounded-xl bg-[var(--accent)] px-6 py-3.5 font-medium text-[var(--accent-ink)] disabled:opacity-40 sm:w-auto"
           onClick={() => void continueFlow()}
         >
           {loading

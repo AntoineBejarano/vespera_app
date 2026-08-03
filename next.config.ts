@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["@prisma/client", "pg"],
   experimental: {
     optimizePackageImports: ["motion", "lucide-react"],
+    // Tailwind is ~19KiB — inline removes render-blocking CSS waterfall (FCP/LCP).
+    // Trade-off: no separate CSS cache for return visitors. Worth it for cold PageSpeed.
+    inlineCss: true,
   },
   images: {
     formats: ["image/avif", "image/webp"],
