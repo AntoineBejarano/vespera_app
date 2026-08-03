@@ -1,8 +1,19 @@
-import { generateText, Output } from "ai";
+import { generateText, Output, NoOutputGeneratedError } from "ai";
 import { getOpenRouter } from "@/lib/ai/openrouter";
 import { resolveModel } from "@/lib/ai/models";
 import type { OnboardingAnswers } from "@/lib/identity/schema";
 import { personaLayersSchema, type PersonaLayers } from "@/lib/persona/schema";
+import { buildFallbackPersonaLayers } from "@/lib/persona/fallback-layers";
+
+export type GeneratePersonaLayersOptions = {
+  /**
+   * When true (superadmin only), skip the LLM and build layers from answers.
+   * Temporary operator bypass while structured output is unreliable on some models.
+   */
+  bypassLlm?: boolean;
+  /** If LLM fails, fall back to the deterministic template. */
+  allowTemplateFallback?: boolean;
+};
 
 /**
  * Genera capas estilo Meuxe: soul / style / rules / context + meta.
@@ -11,14 +22,24 @@ import { personaLayersSchema, type PersonaLayers } from "@/lib/persona/schema";
 export async function generatePersonaLayers(
   answers: OnboardingAnswers,
   modelId?: string,
+  options?: GeneratePersonaLayersOptions,
 ): Promise<PersonaLayers> {
-  const openrouter = getOpenRouter();
-  const model = openrouter(resolveModel(modelId));
+  if (options?.bypassLlm) {
+    console.warn(
+      "[persona_generate] bypassLlm — using template layers for",
+      answers.name,
+    );
+    return finalizeLayers(buildFallbackPersonaLayers(answers), answers);
+  }
 
-  const { output } = await generateText({
-    model,
-    output: Output.object({ schema: personaLayersSchema }),
-    prompt: `Design an adult companion persona (18+) in Meuxe-style layers (soul/style/rules/context).
+  try {
+    const openrouter = getOpenRouter();
+    const model = openrouter(resolveModel(modelId));
+
+    const { output } = await generateText({
+      model,
+      output: Output.object({ schema: personaLayersSchema }),
+      prompt: `Design an adult companion persona (18+) in Meuxe-style layers (soul/style/rules/context).
 NOT one giant prompt. Each layer has a job.
 Must sound HUMAN on Telegram — never novel, never assistant.
 IMPORTANT: The companion speaks ENGLISH always. Spanish ONLY if the user explicitly asks to switch.
@@ -48,7 +69,8 @@ Note: always English unless user explicitly requests Spanish.
 - User boundaries
 - What the persona never does
 - Canon (no self-contradiction)
-- NEVER reveal being AI / bot / fictional / roleplay
+- Answer the latest message directly; never narrate mood/system state
+- If asked about being AI: answer honestly (AI on Vesperer)
 
 ## contextMd (light lore, ~80-120 words)
 Brief daily life, places, habits. NO tourist monologue.
@@ -60,12 +82,44 @@ name, relationshipMode, traits 0-1 (warmth, playfulness, directness, possessiven
 temperament, desires[], fears[], contradictions[], linguisticStyle, humor, backstory, goals[], relationshipDynamic, intensity, kinks[], boundaries[], excludedThemes[]
 
 Language of layers: ENGLISH by default.`,
-  });
+    });
 
-  if (!output) {
-    throw new Error("No se pudieron generar las capas de persona");
+    if (!output) {
+      throw new Error("No se pudieron generar las capas de persona");
+    }
+
+    return finalizeLayers(output, answers);
+  } catch (error) {
+    const detail =
+      error instanceof Error
+        ? `${error.message}${
+            error.cause instanceof Error ? ` (${error.cause.message})` : ""
+          }`
+        : "Unknown error";
+    console.error("[persona_generate] failed", {
+      model: resolveModel(modelId),
+      detail,
+      noOutput: NoOutputGeneratedError.isInstance(error),
+    });
+
+    if (options?.allowTemplateFallback) {
+      console.warn(
+        "[persona_generate] template fallback after LLM failure for",
+        answers.name,
+      );
+      return finalizeLayers(buildFallbackPersonaLayers(answers), answers);
+    }
+
+    throw error instanceof Error
+      ? error
+      : new Error("No se pudieron generar las capas de persona");
   }
+}
 
+function finalizeLayers(
+  output: PersonaLayers,
+  answers: OnboardingAnswers,
+): PersonaLayers {
   return {
     ...output,
     meta: {

@@ -17,6 +17,7 @@ import {
 } from "@/lib/content-policy";
 import { assertCapability } from "@/lib/content-policy/runtime";
 import { evaluatePersonaConfigSafety } from "@/lib/ai/safety";
+import { isSuperadminUser } from "@/lib/platform/superadmin";
 
 export const personaDirectCreateSchema = z.object({
   name: z.string().min(1).max(80),
@@ -279,9 +280,16 @@ export async function createPersonaFromGenerate(
   input: z.infer<typeof personaGenerateCreateSchema>,
   workspaceId?: string,
 ): Promise<PersonaCreateResult> {
+  const asSuperadmin = isSuperadminUser(user);
   const layers = await generatePersonaLayers(
     input,
     user.preferredModel ?? undefined,
+    {
+      // Operator bypass: Dolphin/OpenRouter often returns AI_NoOutputGeneratedError
+      // on Output.object — skip LLM for superadmin until a reliable model path exists.
+      bypassLlm: asSuperadmin,
+      allowTemplateFallback: asSuperadmin,
+    },
   );
 
   const identity =
