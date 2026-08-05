@@ -1,10 +1,5 @@
 import { prisma } from "@/lib/db";
 import {
-  getShowcaseBySlug,
-  SHOWCASE_CHARACTERS,
-  type ShowcaseCharacter,
-} from "@/lib/characters/showcase";
-import {
   formatPersonaVersion,
   PERSONA_LICENSE_BLURBS,
   PERSONA_LICENSE_LABELS,
@@ -70,82 +65,12 @@ function channelLabels(channels: string[]) {
   );
 }
 
-function fromShowcaseRegistry(c: ShowcaseCharacter): RegistryPersonaView {
-  const base = {
-    source: "showcase" as const,
-    id: null,
-    slug: c.slug,
-    name: c.name,
-    tagline: c.tagline,
-    openingLine: c.openingLine,
-    categories: c.categories,
-    isAdult: c.isAdult,
-    allowFork: c.allowFork,
-    intensity: c.intensity,
-    conversationCount: c.conversationCount,
-    creatorLabel: c.creatorLabel,
-    creatorId: null,
-    photoUrl: c.imageUrl,
-    photos: c.imageUrl ? [c.imageUrl] : [],
-    soulPreview: (c.soulMd || "")
-      .replace(/^#+\s.*/gm, "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 220),
-    layers: (
-      [
-        { key: "soul" as const, label: "Soul", md: c.soulMd },
-        { key: "style" as const, label: "Style", md: c.styleMd },
-        { key: "rules" as const, label: "Rules", md: c.rulesMd },
-        { key: "context" as const, label: "Context", md: c.contextMd },
-      ] as const
-    )
-      .map((e) => ({
-        key: e.key,
-        label: e.label,
-        preview: (e.md || "")
-          .replace(/^#+\s.*/gm, "")
-          .replace(/\s+/g, " ")
-          .trim()
-          .slice(0, 160),
-      }))
-      .filter((e) => e.preview.length > 0),
-  };
-
-  const license: PersonaLicense = "commercial";
-  const channels = defaultChannels(c.isAdult);
-
-  return {
-    ...base,
-    version: "1.0",
-    versionMajor: 1,
-    versionMinor: 0,
-    license,
-    licenseLabel: PERSONA_LICENSE_LABELS[license],
-    licenseBlurb: PERSONA_LICENSE_BLURBS[license],
-    channels,
-    channelLabels: channelLabels(channels),
-    forkCount: Math.max(12, Math.floor(c.conversationCount / 800)),
-    forkedFrom: null,
-    versions: [
-      {
-        version: "1.0",
-        changelog: "Initial curated registry release",
-        createdAt: new Date().toISOString(),
-      },
-    ],
-    knowledgePacks: [],
-    hasTelegram: false,
-    updatedAt: null,
-  };
-}
-
 export async function getRegistryPersonaBySlug(
   slug: string,
 ): Promise<RegistryPersonaView | null> {
   try {
     const fromDb = await prisma.character.findFirst({
-      where: { slug, isPublic: true },
+      where: { slug, isPublic: true, archivedAt: null },
       select: {
         id: true,
         slug: true,
@@ -276,12 +201,11 @@ export async function getRegistryPersonaBySlug(
         updatedAt: fromDb.updatedAt.toISOString(),
       };
     }
-  } catch {
-    // Fall through to showcase during build / DB outages.
+  } catch (err) {
+    console.error("[registry] failed to load persona", { slug, err });
   }
 
-  const showcase = getShowcaseBySlug(slug);
-  return showcase ? fromShowcaseRegistry(showcase) : null;
+  return null;
 }
 
 export type RegistryListItem = {
@@ -308,7 +232,12 @@ export async function listRegistryPersonas(opts?: {
 
   try {
     const rows = await prisma.character.findMany({
-      where: { isPublic: true, isAdult: adult, slug: { not: null } },
+      where: {
+        isPublic: true,
+        isAdult: adult,
+        slug: { not: null },
+        archivedAt: null,
+      },
       orderBy: { updatedAt: "desc" },
       take: limit,
       select: {
@@ -350,29 +279,8 @@ export async function listRegistryPersonas(opts?: {
         channelLabels: channelLabels(channels),
       });
     }
-  } catch {
-    // Fall through to showcase.
-  }
-
-  const seen = new Set(items.map((i) => i.slug));
-  for (const c of SHOWCASE_CHARACTERS) {
-    if (items.length >= limit) break;
-    if (c.isAdult !== adult || seen.has(c.slug)) continue;
-    const license: PersonaLicense = "commercial";
-    const channels = defaultChannels(c.isAdult);
-    items.push({
-      slug: c.slug,
-      name: c.name,
-      tagline: c.tagline,
-      creatorLabel: c.creatorLabel,
-      version: "1.0",
-      licenseLabel: PERSONA_LICENSE_LABELS[license],
-      categories: c.categories,
-      photoUrl: c.imageUrl,
-      forkCount: Math.max(12, Math.floor(c.conversationCount / 800)),
-      isAdult: c.isAdult,
-      channelLabels: channelLabels(channels),
-    });
+  } catch (err) {
+    console.error("[registry] failed to list personas", { err });
   }
 
   return items.slice(0, limit);

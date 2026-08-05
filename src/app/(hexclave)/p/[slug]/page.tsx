@@ -6,12 +6,11 @@ import { getRegistryPersonaBySlug } from "@/lib/registry/public";
 import { ADULT_COOKIE, LEGAL_VERSION } from "@/lib/legal/constants";
 import { characterSeoKeywords } from "@/lib/seo/keywords";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
-import { SHOWCASE_CHARACTERS } from "@/lib/characters/showcase";
 
 type Params = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
-  return SHOWCASE_CHARACTERS.map((c) => ({ slug: c.slug }));
+  return [];
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {

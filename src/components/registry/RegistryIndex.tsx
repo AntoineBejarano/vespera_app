@@ -65,56 +65,74 @@ export function RegistryIndex({ personas }: { personas: RegistryListItem[] }) {
           </div>
         </div>
 
-        <ul className="mt-10 grid gap-4 sm:grid-cols-2">
-          {personas.map((p) => (
-            <li key={p.slug}>
-              <Link
-                href={`/p/${p.slug}`}
-                className="group flex gap-4 rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/30 p-4 transition hover:border-[var(--accent)]/40"
-              >
-                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--bg)]">
-                  {p.photoUrl ? (
-                    <Image
-                      src={p.photoUrl}
-                      alt=""
-                      fill
-                      sizes="64px"
-                      className="object-cover object-top"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center font-[family-name:var(--font-display)] text-xl text-[var(--accent)]">
-                      {(p.name[0] || "?").toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <h3 className="font-[family-name:var(--font-display)] text-xl text-[var(--ink)] group-hover:text-[var(--accent)]">
-                      {p.name}
-                    </h3>
-                    <span className="text-xs text-[var(--muted)]">
-                      v{p.version}
-                    </span>
+        {personas.length > 0 ? (
+          <ul className="mt-10 grid gap-4 sm:grid-cols-2">
+            {personas.map((p) => (
+              <li key={p.slug}>
+                <Link
+                  href={`/p/${p.slug}`}
+                  className="group flex gap-4 rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/30 p-4 transition hover:border-[var(--accent)]/40"
+                >
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--bg)]">
+                    {p.photoUrl ? (
+                      <Image
+                        src={p.photoUrl}
+                        alt=""
+                        fill
+                        sizes="64px"
+                        className="object-cover object-top"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center font-[family-name:var(--font-display)] text-xl text-[var(--accent)]">
+                        {(p.name[0] || "?").toUpperCase()}
+                      </div>
+                    )}
                   </div>
-                  <p className="mt-1 line-clamp-2 text-sm text-[var(--muted)]">
-                    {p.tagline}
-                  </p>
-                  <p className="mt-2 text-[11px] text-[var(--muted)]">
-                    by {p.creatorLabel}
-                    <span className="mx-1.5">·</span>
-                    {p.licenseLabel}
-                    {p.forkCount > 0 ? (
-                      <>
-                        <span className="mx-1.5">·</span>
-                        {p.forkCount} forks
-                      </>
-                    ) : null}
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                      <h3 className="font-[family-name:var(--font-display)] text-xl text-[var(--ink)] group-hover:text-[var(--accent)]">
+                        {p.name}
+                      </h3>
+                      <span className="text-xs text-[var(--muted)]">
+                        v{p.version}
+                      </span>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-sm text-[var(--muted)]">
+                      {p.tagline}
+                    </p>
+                    <p className="mt-2 text-[11px] text-[var(--muted)]">
+                      by {p.creatorLabel}
+                      <span className="mx-1.5">·</span>
+                      {p.licenseLabel}
+                      {p.forkCount > 0 ? (
+                        <>
+                          <span className="mx-1.5">·</span>
+                          {p.forkCount} forks
+                        </>
+                      ) : null}
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="mt-10 rounded-2xl border border-dashed border-[var(--line)] bg-[var(--bg-elevated)]/20 p-8">
+            <h3 className="font-[family-name:var(--font-display)] text-2xl text-[var(--ink)]">
+              No public personas yet.
+            </h3>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--muted)]">
+              Published personas will appear here after creators mark them
+              public from the Persona Registry tab.
+            </p>
+            <Link
+              href="/personas/new"
+              className="mt-5 inline-flex rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-medium text-[var(--accent-ink)]"
+            >
+              Create a persona
+            </Link>
+          </div>
+        )}
       </main>
 
       <LegalFooter />
