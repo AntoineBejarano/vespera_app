@@ -293,6 +293,17 @@ model UserSettings {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+/// Global operator-controlled platform settings. Superadmin-only.
+model PlatformSetting {
+  key             String   @id
+  value           Json
+  updatedByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([updatedAt])
+}
+
 model Character {
   id           String   @id @default(cuid())
   /// Tenant owner of this persona

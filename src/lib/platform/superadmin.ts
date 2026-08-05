@@ -4,17 +4,13 @@ import {
   type WorkspaceRole,
 } from "@/lib/workspace/roles";
 
-/** Always allowed — primary operator. Extra emails via SUPERADMIN_EMAILS. */
-const BUILTIN_SUPERADMIN_EMAILS = ["antubejar96@gmail.com"];
+/** Single primary operator. Do not extend via env without an explicit security review. */
+export const PRIMARY_SUPERADMIN_EMAIL = "antubejar96@gmail.com";
 
 export const DEBUG_ROLE_COOKIE = "vesperer_debug_role";
 
 export function getSuperadminEmails(): string[] {
-  const fromEnv = (process.env.SUPERADMIN_EMAILS ?? "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
-  return [...new Set([...BUILTIN_SUPERADMIN_EMAILS, ...fromEnv])];
+  return [PRIMARY_SUPERADMIN_EMAIL];
 }
 
 export function isSuperadminEmail(email: string | null | undefined): boolean {
