@@ -4,6 +4,7 @@ import {
   RetroGrid,
   ShimmerLink,
 } from "@/components/magicui/static-effects";
+import { VoiceLandingSection } from "@/components/VoiceLandingSection";
 import { AFTER_DARK_URL } from "@/lib/site";
 import type { VoiceAgentId } from "@/lib/voice/types";
 
@@ -318,7 +319,7 @@ function LandingProductPreview() {
 }
 
 export function LandingPage({
-  voiceAgent = "einstein",
+  voiceAgent = "luna",
 }: {
   voiceAgent?: VoiceAgentId;
 }) {
@@ -502,30 +503,8 @@ export function LandingPage({
         </div>
       </section>
 
-      {/* Voice + Live Personas — linked, not bundled on first paint */}
-      <section
-        id="voice"
-        className="scroll-mt-24 border-y border-[var(--line)] bg-[var(--bg-elevated)]/30 py-16 sm:py-24"
-      >
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
-            Vesperer Voice
-          </p>
-          <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold sm:text-5xl">
-            Choose who answers.
-          </h2>
-          <p className="mt-4 max-w-xl text-[var(--muted)]">
-            Speak or type. The same identity and memories continue across chat
-            and voice.
-          </p>
-          <a
-            href={`/voice${voiceAgent !== "einstein" ? `?agent=${voiceAgent}` : ""}`}
-            className="mt-8 inline-flex rounded-xl border border-[var(--line)] px-5 py-3 text-sm hover:border-[var(--accent)]"
-          >
-            Try voice demo →
-          </a>
-        </div>
-      </section>
+      {/* Voice + Live Personas */}
+      <VoiceLandingSection defaultAgent={voiceAgent} />
 
       <section
         id="live-personas"
