@@ -18,7 +18,10 @@ import {
   isSuperadminUser,
 } from "@/lib/platform/superadmin";
 import { getSeoAutomationSettings } from "@/lib/platform/settings";
-import { updateSeoAutomationAction } from "./actions";
+import {
+  runSeoGenerationAction,
+  updateSeoAutomationAction,
+} from "./actions";
 
 export const metadata: Metadata = {
   title: "Superadmin",
@@ -53,6 +56,60 @@ function Stat({
   );
 }
 
+async function loadSeoGeneratedAdminData() {
+  try {
+    const [draftCount, publishedCount, recentRuns, recentPages] =
+      await Promise.all([
+        prisma.seoGeneratedPage.count({ where: { status: "draft" } }),
+        prisma.seoGeneratedPage.count({ where: { status: "published" } }),
+        prisma.seoGenerationRun.findMany({
+          orderBy: { startedAt: "desc" },
+          take: 5,
+          select: {
+            id: true,
+            source: true,
+            status: true,
+            pagesAttempted: true,
+            pagesCreated: true,
+            pagesPublished: true,
+            error: true,
+            startedAt: true,
+            finishedAt: true,
+          },
+        }),
+        prisma.seoGeneratedPage.findMany({
+          orderBy: { generatedAt: "desc" },
+          take: 8,
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            category: true,
+            status: true,
+            score: true,
+            generatedAt: true,
+            publishedAt: true,
+          },
+        }),
+      ]);
+
+    return {
+      draftCount,
+      publishedCount,
+      recentRuns,
+      recentPages,
+    };
+  } catch (error) {
+    console.error("[admin] failed to load generated SEO data", { error });
+    return {
+      draftCount: 0,
+      publishedCount: 0,
+      recentRuns: [],
+      recentPages: [],
+    };
+  }
+}
+
 async function loadAdminData() {
   const now = new Date();
   const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -68,6 +125,7 @@ async function loadAdminData() {
     recentUsers,
     recentPublicPersonas,
     seoSettings,
+    generatedSeo,
   ] = await Promise.all([
     prisma.user.count({ where: { isTelegramPeer: false } }),
     prisma.user.count({
@@ -120,6 +178,7 @@ async function loadAdminData() {
       },
     }),
     getSeoAutomationSettings(),
+    loadSeoGeneratedAdminData(),
   ]);
 
   return {
@@ -133,6 +192,7 @@ async function loadAdminData() {
     recentUsers,
     recentPublicPersonas,
     seoSettings,
+    generatedSeo,
   };
 }
 
@@ -305,6 +365,35 @@ export default async function AdminPage() {
                   </Button>
                 </div>
               </form>
+
+              <div className="mt-6 border-t pt-5">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">Drafts</p>
+                    <p className="mt-1 text-2xl font-semibold">
+                      {data.generatedSeo.draftCount}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">Published</p>
+                    <p className="mt-1 text-2xl font-semibold">
+                      {data.generatedSeo.publishedCount}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">Last run</p>
+                    <p className="mt-1 text-sm font-medium">
+                      {data.generatedSeo.recentRuns[0]?.status ?? "Never"}
+                    </p>
+                  </div>
+                </div>
+
+                <form action={runSeoGenerationAction} className="mt-4">
+                  <Button type="submit" variant="outline">
+                    Generate draft now
+                  </Button>
+                </form>
+              </div>
             </CardContent>
           </Card>
 
@@ -427,6 +516,106 @@ export default async function AdminPage() {
               ) : (
                 <p className="text-sm text-muted-foreground">
                   No real registry pages are published yet.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+          <Card>
+            <CardHeader>
+              <CardTitle>Generated SEO pages</CardTitle>
+              <CardDescription>
+                Drafts are not indexable. Published pages appear under
+                /use-cases and in the sitemap.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {data.generatedSeo.recentPages.length ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="text-xs text-muted-foreground">
+                      <tr>
+                        <th className="py-2 pr-4 font-medium">Page</th>
+                        <th className="py-2 pr-4 font-medium">Status</th>
+                        <th className="py-2 pr-4 font-medium">Score</th>
+                        <th className="py-2 font-medium">Generated</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.generatedSeo.recentPages.map((page) => (
+                        <tr key={page.id} className="border-t">
+                          <td className="py-3 pr-4">
+                            <p className="font-medium">{page.title}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {page.status === "published" ? (
+                                <Link
+                                  href={`/use-cases/${page.slug}`}
+                                  className="hover:text-foreground"
+                                >
+                                  /use-cases/{page.slug}
+                                </Link>
+                              ) : (
+                                `/use-cases/${page.slug}`
+                              )}
+                              {" · "}
+                              {page.category}
+                            </p>
+                          </td>
+                          <td className="py-3 pr-4">{page.status}</td>
+                          <td className="py-3 pr-4">{page.score}</td>
+                          <td className="py-3 text-muted-foreground">
+                            {formatDate(page.generatedAt)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No generated SEO pages yet.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Generation runs</CardTitle>
+              <CardDescription>
+                Manual and cron executions, including errors from AI providers.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {data.generatedSeo.recentRuns.length ? (
+                <div className="space-y-3">
+                  {data.generatedSeo.recentRuns.map((run) => (
+                    <div key={run.id} className="rounded-lg border p-3 text-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-medium">
+                          {run.source} · {run.status}
+                        </p>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(run.startedAt)}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Attempted {run.pagesAttempted} · created{" "}
+                        {run.pagesCreated} · published {run.pagesPublished}
+                      </p>
+                      {run.error ? (
+                        <p className="mt-2 line-clamp-3 text-xs text-destructive">
+                          {run.error}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  No generation runs yet.
                 </p>
               )}
             </CardContent>

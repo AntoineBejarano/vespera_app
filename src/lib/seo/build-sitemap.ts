@@ -3,6 +3,7 @@ import { SHOWCASE_CHARACTERS } from "@/lib/characters/showcase";
 import { prisma } from "@/lib/db";
 import { LEGAL_PAGES } from "@/lib/legal/constants";
 import { listAllForSitemap } from "@/lib/seo/catalog";
+import { listPublishedGeneratedSeoPages } from "@/lib/seo/generated/pages";
 import { APEX_STATIC_PAGES, apexUrl, afterDarkUrl } from "@/lib/seo/public-pages";
 import { SITE_URL } from "@/lib/site";
 
@@ -77,7 +78,10 @@ function entry(
 /** Apex (vesperer.com) — SFW only. Never includes xxx.vesperer.com URLs. */
 export async function buildApexSitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  const publicChars = await loadPublicSfwCharacters();
+  const [publicChars, generatedSeoPages] = await Promise.all([
+    loadPublicSfwCharacters(),
+    listPublishedGeneratedSeoPages(),
+  ]);
   const showcaseSlugs = new Set(
     SHOWCASE_CHARACTERS.filter((c) => !c.isAdult).map((c) => c.slug),
   );
@@ -95,6 +99,14 @@ export async function buildApexSitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.85,
+    }),
+  );
+
+  const generatedSeoEntries = generatedSeoPages.map((page) =>
+    entry(apexUrl(`/use-cases/${page.slug}`), {
+      lastModified: page.publishedAt ?? page.updatedAt,
+      changeFrequency: "weekly",
+      priority: 0.82,
     }),
   );
 
@@ -138,6 +150,7 @@ export async function buildApexSitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticEntries,
     ...seoEntries,
+    ...generatedSeoEntries,
     ...dbRegistry,
     ...showcaseChat,
     ...dbChat,

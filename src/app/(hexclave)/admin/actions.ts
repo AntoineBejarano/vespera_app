@@ -11,6 +11,7 @@ import {
   saveSeoAutomationSettings,
   type SeoAutomationMode,
 } from "@/lib/platform/settings";
+import { runSeoAutomation } from "@/lib/seo/generated/generator";
 
 function readInt(formData: FormData, key: string, fallback: number) {
   const raw = formData.get(key);
@@ -69,6 +70,25 @@ export async function updateSeoAutomationAction(formData: FormData) {
     },
     user.id,
   );
+
+  revalidatePath("/admin");
+}
+
+export async function runSeoGenerationAction() {
+  const user = await getAppUser();
+  if (
+    !user ||
+    !isSuperadminUser(user) ||
+    user.email?.trim().toLowerCase() !== PRIMARY_SUPERADMIN_EMAIL
+  ) {
+    throw new Error("Not authorized");
+  }
+
+  await runSeoAutomation({
+    source: "manual",
+    ignoreEnabled: true,
+    maxPages: 1,
+  });
 
   revalidatePath("/admin");
 }
