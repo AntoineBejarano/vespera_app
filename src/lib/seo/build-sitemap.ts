@@ -98,16 +98,6 @@ export async function buildApexSitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  const showcaseRegistry = SHOWCASE_CHARACTERS.filter((c) => !c.isAdult).map(
-    (c) =>
-      entry(apexUrl(`/p/${c.slug}`), {
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.85,
-        images: [absoluteAsset(c.imageUrl)].filter(Boolean) as string[],
-      }),
-  );
-
   const showcaseChat = SHOWCASE_CHARACTERS.filter((c) => !c.isAdult).map((c) =>
     entry(apexUrl(`/c/${c.slug}`), {
       lastModified: now,
@@ -148,7 +138,6 @@ export async function buildApexSitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticEntries,
     ...seoEntries,
-    ...showcaseRegistry,
     ...dbRegistry,
     ...showcaseChat,
     ...dbChat,
