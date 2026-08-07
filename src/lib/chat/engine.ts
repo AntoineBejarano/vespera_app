@@ -35,6 +35,8 @@ import {
   ContentPolicyError,
   looksLikeAdultSexualRequest,
 } from "@/lib/content-policy";
+import { buildPaywall, type PaywallPayload } from "@/lib/billing/paywall";
+import { logProductEvent } from "@/lib/product-events";
 
 export type ChatPhotoPayload = {
   url: string;
@@ -56,7 +58,7 @@ export type ChatEngineResult =
       subjectId?: string;
       activity?: MindActivityHit[];
     }
-  | { ok: false; error: string; status: number };
+  | { ok: false; error: string; status: number; paywall?: PaywallPayload };
 
 export type ChatPartnerOverride = {
   channel: "telegram" | "web";
@@ -166,7 +168,12 @@ export type PreparedCharacterTurn = {
   dailyRemaining: number;
 };
 
-export type PrepareTurnError = { ok: false; error: string; status: number };
+export type PrepareTurnError = {
+  ok: false;
+  error: string;
+  status: number;
+  paywall?: PaywallPayload;
+};
 
 /**
  * Shared prep for web stream + JSON reply paths.
@@ -273,10 +280,31 @@ export async function prepareCharacterTurn(params: {
   if (!params.skipDailyLimit) {
     const limit = await checkAndIncrementDailyLimit(user.id);
     if (!limit.allowed) {
+      const paywall = buildPaywall({
+        reason: "daily_message_limit",
+        feature: "daily_messages",
+        plan: "creator",
+        limit: limit.limit,
+        remaining: 0,
+      });
+      await logProductEvent({
+        type: "paywall_viewed",
+        userId: user.id,
+        workspaceId: character.workspaceId,
+        feature: "daily_messages",
+        plan: "creator",
+        context: {
+          reason: "daily_message_limit",
+          limit: limit.limit,
+          remaining: 0,
+          route: "chat_engine",
+        },
+      });
       return {
         ok: false,
-        error: `Daily limit (${limit.limit}). Try again tomorrow.`,
-        status: 429,
+        error: paywall.error,
+        status: 402,
+        paywall,
       };
     }
     dailyRemaining = limit.remaining;

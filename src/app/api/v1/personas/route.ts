@@ -56,6 +56,9 @@ export async function POST(req: Request) {
 
   const result = await createPersonaFromBody(user, body, auth.workspaceId);
   if (!result.ok) {
+    if ("paywall" in result && result.paywall) {
+      return Response.json(result.paywall, { status: result.status });
+    }
     return Response.json(
       {
         error: result.error,

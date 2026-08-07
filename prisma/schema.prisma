@@ -293,6 +293,84 @@ model UserSettings {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+/// Persisted product/funnel event stream. Keep this lightweight: it powers
+/// paywall analytics, lifecycle emails, and ops dashboards.
+model ProductEvent {
+  id          String   @id @default(cuid())
+  userId      String?
+  workspaceId String?
+  type        String
+  feature     String?
+  surface     String   @default("apex_sfw")
+  plan        String?
+  contextJson Json?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([workspaceId, createdAt])
+  @@index([type, createdAt])
+  @@index([feature, createdAt])
+}
+
+/// User-level notification consent/preferences. The first funnel ships email,
+/// but channel is open-ended for future in-app/push/Telegram lifecycle nudges.
+model NotificationPreference {
+  id        String   @id @default(cuid())
+  userId    String
+  channel   String
+  topic     String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, channel, topic])
+  @@index([userId, channel])
+}
+
+/// Dedupe ledger for lifecycle sends and in-app notifications.
+model NotificationDelivery {
+  id          String    @id @default(cuid())
+  userId      String?
+  channel     String
+  topic       String
+  templateId  String?
+  status      String    @default("pending")
+  dedupeKey   String    @unique
+  error       String?   @db.Text
+  metaJson    Json?
+  sentAt      DateTime?
+  skippedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([topic, status])
+  @@index([status, createdAt])
+}
+
+/// Records monetization intent before leaving for Stripe. Useful for abandoned
+/// checkout recovery and attribution back to the exact paywall trigger.
+model CheckoutIntent {
+  id              String    @id @default(cuid())
+  userId          String
+  workspaceId     String?
+  plan            String
+  reason          String?
+  source          String?
+  status          String    @default("started")
+  stripeSessionId String?   @unique
+  checkoutUrl     String?   @db.Text
+  metaJson        Json?
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+  canceledAt      DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId, startedAt])
+  @@index([status, startedAt])
+  @@index([reason, startedAt])
+}
+
 /// Global operator-controlled platform settings. Superadmin-only.
 model PlatformSetting {
   key             String   @id

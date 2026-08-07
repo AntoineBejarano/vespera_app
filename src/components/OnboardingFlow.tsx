@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ONBOARDING_STEPS } from "@/lib/identity/schema";
 import { Button } from "@/components/ui/button";
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import type { PaywallPayload } from "@/lib/billing/paywall";
 
 type Answers = {
   name: string;
@@ -34,6 +36,7 @@ export function OnboardingFlow() {
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paywall, setPaywall] = useState<PaywallPayload | null>(null);
 
   const current = ONBOARDING_STEPS[step];
   const progress = useMemo(
@@ -44,6 +47,7 @@ export function OnboardingFlow() {
   async function finish(finalAnswers: Answers) {
     setLoading(true);
     setError(null);
+    setPaywall(null);
     try {
       const res = await fetch("/api/characters", {
         method: "POST",
@@ -51,7 +55,14 @@ export function OnboardingFlow() {
         body: JSON.stringify(finalAnswers),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error");
+      if (!res.ok) {
+        if (data?.error === "PAYWALL_REQUIRED") {
+          setPaywall(data as PaywallPayload);
+          setLoading(false);
+          return;
+        }
+        throw new Error(data.error ?? "Error");
+      }
       router.push(`/personas/${data.character.id}`);
       router.refresh();
     } catch (err) {
@@ -137,6 +148,15 @@ export function OnboardingFlow() {
       />
       {error ? (
         <p className="mt-3 text-sm text-destructive">{error}</p>
+      ) : null}
+      {paywall ? (
+        <div className="mt-4">
+          <UpgradePrompt
+            paywall={paywall}
+            source="persona_onboarding"
+            onDismiss={() => setPaywall(null)}
+          />
+        </div>
       ) : null}
       <div className="mt-6 flex gap-3">
         {step > 0 ? (

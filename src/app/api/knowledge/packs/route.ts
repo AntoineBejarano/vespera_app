@@ -12,6 +12,8 @@ import {
   requireWorkspacePermission,
   workspaceAuthResponse,
 } from "@/lib/workspace/permissions";
+import { entitlementsForPlan } from "@/lib/billing/entitlements";
+import { paywallResponse } from "@/lib/billing/paywall";
 
 export async function GET() {
   const user = await getAppUser();
@@ -107,6 +109,22 @@ export async function POST(req: Request) {
   try {
     const workspaceId = await getOrCreateActiveWorkspaceId(user);
     await requireWorkspacePermission(user.id, workspaceId, "knowledge.write");
+    const currentCount = await prisma.knowledgePack.count({
+      where: { workspaceId, archivedAt: null },
+    });
+    const entitlements = entitlementsForPlan(user.plan);
+    if (currentCount >= entitlements.maxKnowledgePacks) {
+      return paywallResponse({
+        userId: user.id,
+        workspaceId,
+        reason: "knowledge_pack_limit",
+        feature: "knowledge_packs",
+        plan: "studio",
+        limit: entitlements.maxKnowledgePacks,
+        remaining: 0,
+        context: { currentCount, currentPlan: user.plan },
+      });
+    }
 
     if (parsed.data.seedKey) {
       const { pack, created } = await createPackFromSeed({

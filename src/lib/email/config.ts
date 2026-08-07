@@ -87,5 +87,8 @@ export const EMAIL_CATALOG: Record<
 };
 
 export function isTemplateEnabled(id: EmailTemplateId) {
-  return EMAIL_CATALOG[id]?.enabled === true;
+  const globalEnabled = process.env.EMAIL_FUNNEL_ENABLED === "true";
+  const envKey = `EMAIL_TEMPLATE_${id.toUpperCase()}_ENABLED`;
+  const templateEnabled = process.env[envKey] === "true";
+  return EMAIL_CATALOG[id]?.enabled === true || globalEnabled || templateEnabled;
 }

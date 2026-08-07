@@ -1,6 +1,8 @@
 import { hash } from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { logProductEvent } from "@/lib/product-events";
+import { sendLifecycleEmail } from "@/lib/notifications/lifecycle";
 
 const schema = z.object({
   email: z.string().email(),
@@ -48,6 +50,21 @@ export async function POST(req: Request) {
         },
       },
     });
+
+    await logProductEvent({
+      type: "signup_completed",
+      userId: user.id,
+      context: { source: "credentials_register" },
+    });
+    if (user.email) {
+      await sendLifecycleEmail({
+        userId: user.id,
+        to: user.email,
+        templateId: "welcome",
+        props: { name: user.name },
+        dedupeKey: `welcome:${user.id}`,
+      });
+    }
 
     return Response.json({ id: user.id, email: user.email });
   } catch (error) {

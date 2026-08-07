@@ -4,6 +4,8 @@ import { generatePersonaLayers } from "@/lib/persona/generator";
 import { onboardingAnswersSchema } from "@/lib/identity/schema";
 import { maxCharactersForPlan } from "@/lib/monetization";
 import { countWorkspaceCharacters } from "@/lib/users";
+import { buildPaywall } from "@/lib/billing/paywall";
+import { logProductEvent } from "@/lib/product-events";
 import { ensureRelationshipState } from "@/lib/persona/relationship";
 import { resolveSubject } from "@/lib/persona/subject";
 import { Prisma, type User } from "@/generated/prisma/client";
@@ -18,6 +20,7 @@ import {
 import { assertCapability } from "@/lib/content-policy/runtime";
 import { evaluatePersonaConfigSafety } from "@/lib/ai/safety";
 import { isSuperadminUser } from "@/lib/platform/superadmin";
+import { sendLifecycleEmail } from "@/lib/notifications/lifecycle";
 
 export const personaDirectCreateSchema = z.object({
   name: z.string().min(1).max(80),
@@ -64,10 +67,34 @@ export async function assertCanCreatePersona(
   const count = await countWorkspaceCharacters(wsId);
   const max = maxCharactersForPlan(user.plan);
   if (count >= max) {
+    const paywall = buildPaywall({
+      reason: "persona_limit",
+      feature: "personas",
+      plan: "studio",
+      limit: max,
+      remaining: 0,
+    });
+    await logProductEvent({
+      type: "persona_limit_hit",
+      userId: user.id,
+      workspaceId: wsId,
+      feature: "personas",
+      plan: "studio",
+      context: { count, max, currentPlan: user.plan },
+    });
+    await logProductEvent({
+      type: "paywall_viewed",
+      userId: user.id,
+      workspaceId: wsId,
+      feature: "personas",
+      plan: "studio",
+      context: { reason: "persona_limit", count, max },
+    });
     return {
       ok: false as const,
-      status: 403,
-      error: `Persona limit reached (${max}).`,
+      status: 402,
+      error: paywall.error,
+      paywall,
     };
   }
   return { ok: true as const, workspaceId: wsId };
@@ -227,6 +254,19 @@ async function finalizePersona(params: {
 
   const { track } = await import("@/lib/metrics");
   track("character_created");
+  if (params.user.email) {
+    await sendLifecycleEmail({
+      userId: params.user.id,
+      to: params.user.email,
+      templateId: "persona_created",
+      props: {
+        name: params.user.name,
+        personaName: character.name,
+        personaId: character.id,
+      },
+      dedupeKey: `persona_created:first:${params.user.id}`,
+    });
+  }
 
   return {
     id: character.id,

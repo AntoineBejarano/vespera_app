@@ -12,6 +12,8 @@ import { TypingAnimation } from "@/components/magicui/typing-animation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import type { PaywallPayload } from "@/lib/billing/paywall";
 
 type Character = {
   id: string;
@@ -41,6 +43,7 @@ export function ChatPanel({
   );
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [paywall, setPaywall] = useState<PaywallPayload | null>(null);
   const [busy, setBusy] = useState(false);
   const [typing, setTyping] = useState(false);
   const [messages, setMessages] = useState<BubbleMsg[]>([]);
@@ -56,6 +59,7 @@ export function ChatPanel({
     setCharacterId(id);
     setMessages([]);
     setError(null);
+    setPaywall(null);
   }
 
   async function resetChat() {
@@ -90,6 +94,12 @@ export function ChatPanel({
       });
       const data = await res.json();
       if (!res.ok) {
+        if (data?.error === "PAYWALL_REQUIRED") {
+          setPaywall(data as PaywallPayload);
+          setTyping(false);
+          setBusy(false);
+          return;
+        }
         setError(data.error ?? "Error");
         setTyping(false);
         setBusy(false);
@@ -262,6 +272,15 @@ export function ChatPanel({
 
       {error ? (
         <p className="mt-2 text-sm text-destructive">{error}</p>
+      ) : null}
+      {paywall ? (
+        <div className="mt-3">
+          <UpgradePrompt
+            paywall={paywall}
+            source="chat"
+            onDismiss={() => setPaywall(null)}
+          />
+        </div>
       ) : null}
 
       <form

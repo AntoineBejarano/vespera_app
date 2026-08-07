@@ -5,12 +5,14 @@ import { getAppUser } from "@/lib/session";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { maxCharactersForPlan } from "@/lib/monetization";
 import { countWorkspaceCharacters } from "@/lib/users";
+import { paywallResponse } from "@/lib/billing/paywall";
 import { ensureRelationshipState } from "@/lib/persona/relationship";
 import { resolveSubject } from "@/lib/persona/subject";
 import { getShowcaseBySlug } from "@/lib/characters/showcase";
 import { generateChatApiKeySecret } from "@/lib/api-keys/chat-keys";
 import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
 import { requireWorkspacePermission } from "@/lib/workspace/permissions";
+import { sendLifecycleEmail } from "@/lib/notifications/lifecycle";
 
 const bodySchema = z.object({
   /** Fork a published DB character */
@@ -41,10 +43,16 @@ export async function POST(req: Request) {
   const count = await countWorkspaceCharacters(workspaceId);
   const max = maxCharactersForPlan(user.plan);
   if (count >= max) {
-    return Response.json(
-      { error: `Persona limit reached (${max}).` },
-      { status: 403 },
-    );
+    return paywallResponse({
+      userId: user.id,
+      workspaceId,
+      reason: "persona_limit",
+      feature: "personas",
+      plan: "studio",
+      limit: max,
+      remaining: 0,
+      context: { count, route: "fork" },
+    });
   }
 
   const parsed = bodySchema.safeParse(await req.json());
@@ -203,6 +211,19 @@ export async function POST(req: Request) {
 
   const { track } = await import("@/lib/metrics");
   track("character_forked");
+  if (user.email) {
+    await sendLifecycleEmail({
+      userId: user.id,
+      to: user.email,
+      templateId: "persona_created",
+      props: {
+        name: user.name,
+        personaName: character.name,
+        personaId: character.id,
+      },
+      dedupeKey: `persona_created:first:${user.id}`,
+    });
+  }
 
   return Response.json({
     character: { id: character.id, name: character.name },

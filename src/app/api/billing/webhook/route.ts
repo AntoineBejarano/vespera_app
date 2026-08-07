@@ -6,6 +6,7 @@ import {
   applySubscriptionToUser,
   findUserIdForStripeCustomer,
 } from "@/lib/stripe/sync";
+import { logProductEvent } from "@/lib/product-events";
 import type Stripe from "stripe";
 
 export const runtime = "nodejs";
@@ -143,6 +144,28 @@ export async function POST(req: Request) {
           });
         }
         await applySubscriptionToUser(userId, sub);
+        await prisma.checkoutIntent.updateMany({
+          where: { stripeSessionId: session.id },
+          data: { status: "completed", completedAt: new Date() },
+        });
+        await logProductEvent({
+          type: "checkout_completed",
+          userId,
+          plan: session.metadata?.plan ?? null,
+          context: {
+            stripeSessionId: session.id,
+            reason: session.metadata?.reason ?? null,
+            source: session.metadata?.source ?? null,
+          },
+        });
+        break;
+      }
+      case "checkout.session.expired": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        await prisma.checkoutIntent.updateMany({
+          where: { stripeSessionId: session.id, status: "started" },
+          data: { status: "canceled", canceledAt: new Date() },
+        });
         break;
       }
       case "customer.subscription.updated":
@@ -181,6 +204,16 @@ export async function POST(req: Request) {
           status: sub?.status,
         });
         await notifyPaymentFailed(userId, invoice);
+        await logProductEvent({
+          type: "payment_failed",
+          userId,
+          plan: sub?.metadata?.plan ?? null,
+          context: {
+            invoiceId: invoice.id,
+            attempt: invoice.attempt_count,
+            status: sub?.status ?? null,
+          },
+        });
         break;
       }
       case "invoice.paid": {

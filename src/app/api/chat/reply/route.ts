@@ -25,6 +25,9 @@ export async function POST(req: Request) {
     });
 
     if (!result.ok) {
+      if (result.paywall) {
+        return Response.json(result.paywall, { status: result.status });
+      }
       return Response.json(
         { error: result.error },
         { status: result.status },

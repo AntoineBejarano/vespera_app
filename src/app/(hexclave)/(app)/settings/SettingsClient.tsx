@@ -203,6 +203,8 @@ export default function SettingsClient() {
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
                     plan: plan === "studio" || plan === "premium" ? "studio" : "creator",
+                    reason: "settings_upgrade",
+                    source: "settings",
                   }),
                 });
                 const data = (await res.json()) as {

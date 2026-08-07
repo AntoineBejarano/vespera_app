@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { LegalFooter } from "@/components/LegalFooter";
 import { MarketingNav } from "@/components/MarketingNav";
 import { ShimmerButton } from "@/components/magicui/effects";
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import type { PaywallPayload } from "@/lib/billing/paywall";
 import {
   parseCharacterImport,
   type ImportSource,
@@ -55,6 +57,7 @@ export function BringCharacterFlow() {
   const [parseError, setParseError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paywall, setPaywall] = useState<PaywallPayload | null>(null);
 
   const sourceMeta = useMemo(
     () => SOURCES.find((s) => s.id === source) ?? SOURCES[0],
@@ -97,6 +100,7 @@ export function BringCharacterFlow() {
     }
     setLoading(true);
     setError(null);
+    setPaywall(null);
     try {
       const res = await fetch("/api/characters/import", {
         method: "POST",
@@ -114,6 +118,11 @@ export function BringCharacterFlow() {
         if (res.status === 401 || res.status === 403) {
           sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ raw, source }));
           window.location.href = "/handler/sign-up";
+          return;
+        }
+        if (data?.error === "PAYWALL_REQUIRED") {
+          setPaywall(data as PaywallPayload);
+          setLoading(false);
           return;
         }
         throw new Error(data.error ?? "Import failed");
@@ -201,6 +210,15 @@ export function BringCharacterFlow() {
         ) : null}
         {error ? (
           <p className="mt-4 text-sm text-[var(--danger)]">{error}</p>
+        ) : null}
+        {paywall ? (
+          <div className="mt-4">
+            <UpgradePrompt
+              paywall={paywall}
+              source="bring_character"
+              onDismiss={() => setPaywall(null)}
+            />
+          </div>
         ) : null}
 
         {preview ? (

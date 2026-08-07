@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { maxCharactersForPlan } from "@/lib/monetization";
 import { countWorkspaceCharacters } from "@/lib/users";
+import { buildPaywall, type PaywallPayload } from "@/lib/billing/paywall";
+import { logProductEvent } from "@/lib/product-events";
 import { ensureRelationshipState } from "@/lib/persona/relationship";
 import { resolveSubject } from "@/lib/persona/subject";
 import {
@@ -13,6 +15,7 @@ import { containsProhibitedMinorContent } from "@/lib/ai/safety";
 import { generateChatApiKeySecret } from "@/lib/api-keys/chat-keys";
 import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
 import { requireWorkspacePermission } from "@/lib/workspace/permissions";
+import { sendLifecycleEmail } from "@/lib/notifications/lifecycle";
 
 export type PersonaImportResult =
   | {
@@ -24,7 +27,7 @@ export type PersonaImportResult =
         warnings: string[];
       };
     }
-  | { ok: false; status: number; error: string };
+  | { ok: false; status: number; error: string; paywall?: PaywallPayload };
 
 export async function importPersonaFromBody(
   user: User,
@@ -49,10 +52,34 @@ export async function importPersonaFromBody(
   const count = await countWorkspaceCharacters(wsId);
   const max = maxCharactersForPlan(user.plan);
   if (count >= max) {
+    const paywall = buildPaywall({
+      reason: "persona_limit",
+      feature: "personas",
+      plan: "studio",
+      limit: max,
+      remaining: 0,
+    });
+    await logProductEvent({
+      type: "persona_limit_hit",
+      userId: user.id,
+      workspaceId: wsId,
+      feature: "personas",
+      plan: "studio",
+      context: { count, max, currentPlan: user.plan, route: "import" },
+    });
+    await logProductEvent({
+      type: "paywall_viewed",
+      userId: user.id,
+      workspaceId: wsId,
+      feature: "personas",
+      plan: "studio",
+      context: { reason: "persona_limit", count, max, route: "import" },
+    });
     return {
       ok: false,
-      status: 403,
-      error: `Persona limit reached (${max}).`,
+      status: 402,
+      error: paywall.error,
+      paywall,
     };
   }
 
@@ -168,6 +195,19 @@ export async function importPersonaFromBody(
 
   const { track } = await import("@/lib/metrics");
   track("character_imported");
+  if (user.email) {
+    await sendLifecycleEmail({
+      userId: user.id,
+      to: user.email,
+      templateId: "persona_created",
+      props: {
+        name: user.name,
+        personaName: character.name,
+        personaId: character.id,
+      },
+      dedupeKey: `persona_created:first:${user.id}`,
+    });
+  }
 
   return {
     ok: true,

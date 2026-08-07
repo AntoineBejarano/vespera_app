@@ -8,6 +8,8 @@ import { motion } from "motion/react";
 import { LegalFooter } from "@/components/LegalFooter";
 import { MarketingNav } from "@/components/MarketingNav";
 import { BlurFade, ShimmerButton } from "@/components/magicui/effects";
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import type { PaywallPayload } from "@/lib/billing/paywall";
 import type { RegistryPersonaView as RegistryPersona } from "@/lib/registry/public";
 
 export function RegistryPersonaView({ persona }: { persona: RegistryPersona }) {
@@ -18,10 +20,12 @@ export function RegistryPersonaView({ persona }: { persona: RegistryPersona }) {
   );
   const [exportText, setExportText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paywall, setPaywall] = useState<PaywallPayload | null>(null);
 
   async function forkPersona(thenTalk: boolean) {
     setLoading(thenTalk ? "talk" : "fork");
     setError(null);
+    setPaywall(null);
     try {
       const res = await fetch("/api/characters/fork", {
         method: "POST",
@@ -36,6 +40,11 @@ export function RegistryPersonaView({ persona }: { persona: RegistryPersona }) {
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
           window.location.href = "/handler/sign-up";
+          return;
+        }
+        if (data?.error === "PAYWALL_REQUIRED") {
+          setPaywall(data as PaywallPayload);
+          setLoading(null);
           return;
         }
         throw new Error(data.error ?? "Could not fork");
@@ -184,6 +193,15 @@ export function RegistryPersonaView({ persona }: { persona: RegistryPersona }) {
           </BlurFade>
           {error ? (
             <p className="mt-4 text-sm text-[var(--danger)]">{error}</p>
+          ) : null}
+          {paywall ? (
+            <div className="mt-4">
+              <UpgradePrompt
+                paywall={paywall}
+                source="registry_fork"
+                onDismiss={() => setPaywall(null)}
+              />
+            </div>
           ) : null}
         </div>
       </header>

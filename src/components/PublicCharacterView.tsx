@@ -9,6 +9,8 @@ import { LegalFooter } from "@/components/LegalFooter";
 import { MarketingNav } from "@/components/MarketingNav";
 import { BorderBeam } from "@/components/magicui/border-beam";
 import { BlurFade, ShimmerButton } from "@/components/magicui/effects";
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import type { PaywallPayload } from "@/lib/billing/paywall";
 import dynamic from "next/dynamic";
 import type { PublicCharacterView as PublicCharacter } from "@/lib/characters/public";
 
@@ -35,10 +37,12 @@ export function PublicCharacterView({
   const router = useRouter();
   const [loading, setLoading] = useState<"talk" | "fork" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paywall, setPaywall] = useState<PaywallPayload | null>(null);
 
   async function forkCharacter(thenTalk: boolean) {
     setLoading(thenTalk ? "talk" : "fork");
     setError(null);
+    setPaywall(null);
     try {
       const res = await fetch("/api/characters/fork", {
         method: "POST",
@@ -53,6 +57,11 @@ export function PublicCharacterView({
       if (!res.ok) {
         if (res.status === 401 || res.status === 403) {
           window.location.href = "/handler/sign-up";
+          return;
+        }
+        if (data?.error === "PAYWALL_REQUIRED") {
+          setPaywall(data as PaywallPayload);
+          setLoading(null);
           return;
         }
         throw new Error(data.error ?? "Could not create your version");
@@ -180,6 +189,15 @@ export function PublicCharacterView({
             </div>
             {error ? (
               <p className="mt-2 text-sm text-[var(--danger)]">{error}</p>
+            ) : null}
+            {paywall ? (
+              <div className="mt-3">
+                <UpgradePrompt
+                  paywall={paywall}
+                  source="public_character_fork"
+                  onDismiss={() => setPaywall(null)}
+                />
+              </div>
             ) : null}
           </BlurFade>
         </div>

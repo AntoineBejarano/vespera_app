@@ -9,6 +9,7 @@ import { checkAndIncrementDailyLimit } from "@/lib/memory/limits";
 import { getActiveCharacter } from "@/lib/users";
 import { streamCharacterReply } from "@/lib/chat/engine";
 import { requireAppUser } from "@/lib/session";
+import { paywallResponse } from "@/lib/billing/paywall";
 
 export const maxDuration = 60;
 
@@ -61,14 +62,15 @@ export async function POST(req: Request) {
     const limit = await checkAndIncrementDailyLimit(user.id);
     if (!limit.allowed) {
       const { track } = await import("@/lib/metrics");
-      track("daily_limit_hit");
-      return Response.json(
-        {
-          error: `Has alcanzado el límite diario gratuito (${limit.limit} mensajes). Vuelve mañana.`,
-          remaining: 0,
-        },
-        { status: 429 },
-      );
+      track("daily_limit_hit", { feature: "daily_messages" });
+      return paywallResponse({
+        userId: user.id,
+        reason: "daily_message_limit",
+        feature: "daily_messages",
+        plan: "creator",
+        limit: limit.limit,
+        remaining: 0,
+      });
     }
 
     const streamed = await streamCharacterReply({

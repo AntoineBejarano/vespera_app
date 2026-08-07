@@ -10,6 +10,9 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const result = await importPersonaFromBody(user, body);
   if (!result.ok) {
+    if (result.paywall) {
+      return Response.json(result.paywall, { status: result.status });
+    }
     return Response.json({ error: result.error }, { status: result.status });
   }
 

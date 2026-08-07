@@ -8,9 +8,13 @@ import { priceIdForPlan } from "@/lib/stripe/catalog";
 import { assertStripeSurfaceAllowed } from "@/lib/stripe/guard";
 import { ensureStripeCustomerId } from "@/lib/stripe/sync";
 import { prisma } from "@/lib/db";
+import { logProductEvent } from "@/lib/product-events";
 
 const bodySchema = z.object({
   plan: z.enum(["creator", "studio"]),
+  reason: z.string().max(80).optional(),
+  source: z.string().max(80).optional(),
+  feature: z.string().max(80).optional(),
 });
 
 function randomSuffix(len = 8): string {
@@ -97,6 +101,8 @@ export async function POST(req: Request) {
       vespererUserId: profile.id,
       plan: parsed.data.plan,
       surface: "apex_sfw",
+      reason: parsed.data.reason ?? "manual",
+      source: parsed.data.source ?? "unknown",
       integration: `apex-sfw-checkout-${randomSuffix()}`,
     },
     subscription_data: {
@@ -114,6 +120,44 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
+
+  try {
+    await prisma.checkoutIntent.create({
+      data: {
+        userId: profile.id,
+        workspaceId: profile.activeWorkspaceId,
+        plan: parsed.data.plan,
+        reason: parsed.data.reason ?? null,
+        source: parsed.data.source ?? null,
+        stripeSessionId: session.id,
+        checkoutUrl: session.url,
+        metaJson: {
+          feature: parsed.data.feature ?? null,
+          priceId,
+          surface: "apex_sfw",
+        },
+      },
+    });
+  } catch (error) {
+    console.warn("[checkout_intent] skipped", {
+      userId: profile.id,
+      sessionId: session.id,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  await logProductEvent({
+    type: "checkout_started",
+    userId: profile.id,
+    workspaceId: profile.activeWorkspaceId,
+    feature: parsed.data.feature,
+    plan: parsed.data.plan,
+    context: {
+      reason: parsed.data.reason ?? "manual",
+      source: parsed.data.source ?? "unknown",
+      stripeSessionId: session.id,
+    },
+  });
 
   return Response.json({ url: session.url });
 }

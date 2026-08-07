@@ -9,7 +9,10 @@ type MetricEvent =
   | "safety_block"
   | "openrouter_error"
   | "adult_approval"
-  | "content_policy_deny";
+  | "content_policy_deny"
+  | "paywall_viewed"
+  | "checkout_started"
+  | "checkout_completed";
 
 const counters = new Map<string, number>();
 
@@ -21,6 +24,14 @@ export function track(event: MetricEvent, meta?: Record<string, string>) {
   const key = `${dayBucket()}:${event}`;
   counters.set(key, (counters.get(key) ?? 0) + 1);
   console.info("[metric]", event, meta ?? {});
+  void import("@/lib/product-events").then(({ logProductEvent }) =>
+    logProductEvent({
+      type: event,
+      feature: meta?.feature,
+      plan: meta?.plan,
+      context: meta ?? undefined,
+    }),
+  );
 }
 
 export function snapshotMetrics() {

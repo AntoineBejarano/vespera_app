@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/app-shell/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
+import type { PaywallPayload } from "@/lib/billing/paywall";
 
 type ProviderMeta = { id: string; label: string; description: string };
 type SeedMeta = {
@@ -108,6 +110,7 @@ export function KnowledgePacksPanel({
   const [characters, setCharacters] = useState<CharacterOpt[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paywall, setPaywall] = useState<PaywallPayload | null>(null);
   const [busy, setBusy] = useState(false);
   const [provider, setProvider] = useState("gutenberg");
   const [configText, setConfigText] = useState(
@@ -183,6 +186,7 @@ export function KnowledgePacksPanel({
     if (!newPackName.trim()) return;
     setBusy(true);
     setError(null);
+    setPaywall(null);
     const res = await fetch("/api/knowledge/packs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -191,6 +195,10 @@ export function KnowledgePacksPanel({
     const data = await res.json();
     setBusy(false);
     if (!res.ok) {
+      if (data?.error === "PAYWALL_REQUIRED") {
+        setPaywall(data as PaywallPayload);
+        return;
+      }
       setError(data.error ?? "Could not create pack");
       return;
     }
@@ -202,6 +210,7 @@ export function KnowledgePacksPanel({
   async function createFromSeed(seedKey: string) {
     setBusy(true);
     setError(null);
+    setPaywall(null);
     const res = await fetch("/api/knowledge/packs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -210,6 +219,10 @@ export function KnowledgePacksPanel({
     const data = await res.json();
     setBusy(false);
     if (!res.ok) {
+      if (data?.error === "PAYWALL_REQUIRED") {
+        setPaywall(data as PaywallPayload);
+        return;
+      }
       setError(data.error ?? "Could not create from seed");
       return;
     }
@@ -410,6 +423,15 @@ export function KnowledgePacksPanel({
 
       {error ? (
         <p className="mt-4 text-sm text-destructive">{error}</p>
+      ) : null}
+      {paywall ? (
+        <div className="mt-4">
+          <UpgradePrompt
+            paywall={paywall}
+            source="knowledge_packs"
+            onDismiss={() => setPaywall(null)}
+          />
+        </div>
       ) : null}
 
       <section className="mt-8 space-y-3 border-t border-border pt-6">

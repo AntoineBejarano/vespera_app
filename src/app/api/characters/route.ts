@@ -1,8 +1,6 @@
 import { prisma } from "@/lib/db";
-import { onboardingAnswersSchema } from "@/lib/identity/schema";
 import { getAppUser } from "@/lib/session";
-import { needsAccountAgeGate } from "@/lib/legal/gate";
-import { createPersonaFromGenerate } from "@/lib/personas/create";
+import { createPersonaFromBody } from "@/lib/personas/create";
 import { getOrCreateActiveWorkspaceId } from "@/lib/workspace/ensure";
 
 export async function GET() {
@@ -73,23 +71,17 @@ export async function POST(req: Request) {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  if (needsAccountAgeGate(user)) {
-    return Response.json({ error: "Age verification 18+ required" }, { status: 403 });
-  }
-
-  const body = await req.json();
-  const parsed = onboardingAnswersSchema.safeParse(body);
-  if (!parsed.success) {
-    return Response.json({ error: "Invalid onboarding answers" }, { status: 400 });
-  }
-
   try {
+    const body = await req.json();
     const workspaceId = await getOrCreateActiveWorkspaceId(user);
-    const character = await createPersonaFromGenerate(
-      user,
-      parsed.data,
-      workspaceId,
-    );
+    const result = await createPersonaFromBody(user, body, workspaceId);
+    if (!result.ok) {
+      if ("paywall" in result && result.paywall) {
+        return Response.json(result.paywall, { status: result.status });
+      }
+      return Response.json({ error: result.error }, { status: result.status });
+    }
+    const character = result.character;
     return Response.json({
       character: {
         id: character.id,
