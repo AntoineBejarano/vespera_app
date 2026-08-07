@@ -1,13 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
-import { AppNav } from "@/components/AppNav";
 import { LegalFooter } from "@/components/LegalFooter";
+import { MarketingNav } from "@/components/MarketingNav";
 import type { RegistryListItem } from "@/lib/registry/public";
 
 export function RegistryIndex({ personas }: { personas: RegistryListItem[] }) {
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <AppNav variant="marketing" />
+      <MarketingNav variant="marketing" />
 
       <header className="relative border-b border-[var(--line)]">
         <div

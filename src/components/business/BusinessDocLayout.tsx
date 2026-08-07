@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { AppNav } from "@/components/AppNav";
 import { LegalFooter } from "@/components/LegalFooter";
+import { MarketingNav } from "@/components/MarketingNav";
 
 type Capability = { title: string; body: string };
 type Cta = { href: string; label: string };
@@ -50,7 +50,7 @@ export function BusinessDocLayout({
 }) {
   return (
     <div className="relative min-h-screen">
-      <AppNav variant="marketing" />
+      <MarketingNav variant="marketing" />
       <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
         <nav aria-label="Breadcrumb" className="text-xs text-[var(--muted)]">
           <ol className="flex flex-wrap items-center gap-1.5">

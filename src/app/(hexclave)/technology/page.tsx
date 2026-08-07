@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AppNav } from "@/components/AppNav";
 import { LegalFooter } from "@/components/LegalFooter";
+import { MarketingNav } from "@/components/MarketingNav";
 import { breadcrumbJsonLd } from "@/lib/seo/breadcrumbs";
 import { TECHNOLOGY_KEYWORDS } from "@/lib/seo/keywords";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
@@ -84,7 +84,7 @@ export default function TechnologyPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <AppNav variant="marketing" />
+      <MarketingNav variant="marketing" />
       <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
         <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
           Technology

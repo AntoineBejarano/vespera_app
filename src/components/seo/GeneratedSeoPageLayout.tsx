@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { AppNav } from "@/components/AppNav";
 import { LegalFooter } from "@/components/LegalFooter";
+import { MarketingNav } from "@/components/MarketingNav";
 import type { PublishedSeoGeneratedPage } from "@/lib/seo/generated/pages";
 
 export function GeneratedSeoPageLayout({
@@ -12,7 +12,7 @@ export function GeneratedSeoPageLayout({
 
   return (
     <div className="relative overflow-hidden">
-      <AppNav variant="marketing" />
+      <MarketingNav variant="marketing" />
 
       <article className="mx-auto max-w-5xl px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
         <nav className="flex flex-wrap gap-x-2 text-xs text-[var(--muted)]">

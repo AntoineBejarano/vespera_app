@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AppNav } from "@/components/AppNav";
 import { LegalFooter } from "@/components/LegalFooter";
+import { MarketingNav } from "@/components/MarketingNav";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 const description =
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 export default function ChaiCharacterBackupPage() {
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <AppNav variant="marketing" />
+      <MarketingNav variant="marketing" />
 
       <header className="relative border-b border-[var(--line)]">
         <div

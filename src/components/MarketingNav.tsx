@@ -1,3 +1,5 @@
+"use client";
+
 import { AFTER_DARK_URL, SITE_URL } from "@/lib/site";
 import { PARTNERS_MAILTO } from "@/lib/adult/partners";
 
@@ -30,8 +32,8 @@ const AFTER_DARK_LINKS = [
 ];
 
 /**
- * Marketing chrome with zero client components (plain <a>).
- * Avoids next/link client chunk that currently shares a webpack graph with Hexclave.
+ * Marketing chrome with zero Hexclave/auth hooks (plain <a>).
+ * It can be used by both Server and Client Components without suspending.
  */
 export function MarketingNav({
   variant = "marketing",

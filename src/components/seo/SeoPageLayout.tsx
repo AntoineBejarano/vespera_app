@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { AppNav } from "@/components/AppNav";
 import { LegalFooter } from "@/components/LegalFooter";
+import { MarketingNav } from "@/components/MarketingNav";
 import { BlurFade } from "@/components/magicui/effects";
 import { RoiHint } from "@/components/seo/RoiHint";
 import {
@@ -12,7 +12,7 @@ import {
 export function SeoPageLayout({ page }: { page: SeoPage }) {
   return (
     <div className="relative overflow-hidden">
-      <AppNav variant="marketing" />
+      <MarketingNav variant="marketing" />
 
       <article className="mx-auto max-w-6xl px-4 pb-20 pt-10 sm:px-6 sm:pt-14">
         <BlurFade>

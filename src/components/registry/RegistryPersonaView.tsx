@@ -5,15 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion } from "motion/react";
-import { useHexclaveApp, useUser } from "@hexclave/next";
-import { AppNav } from "@/components/AppNav";
 import { LegalFooter } from "@/components/LegalFooter";
+import { MarketingNav } from "@/components/MarketingNav";
 import { BlurFade, ShimmerButton } from "@/components/magicui/effects";
 import type { RegistryPersonaView as RegistryPersona } from "@/lib/registry/public";
 
 export function RegistryPersonaView({ persona }: { persona: RegistryPersona }) {
-  const app = useHexclaveApp();
-  const user = useUser({ or: "return-null" });
   const router = useRouter();
   const [loading, setLoading] = useState<"fork" | "talk" | null>(null);
   const [exporting, setExporting] = useState<"chai" | "character_card" | null>(
@@ -23,10 +20,6 @@ export function RegistryPersonaView({ persona }: { persona: RegistryPersona }) {
   const [error, setError] = useState<string | null>(null);
 
   async function forkPersona(thenTalk: boolean) {
-    if (!user) {
-      void app.redirectToSignUp();
-      return;
-    }
     setLoading(thenTalk ? "talk" : "fork");
     setError(null);
     try {
@@ -40,7 +33,13 @@ export function RegistryPersonaView({ persona }: { persona: RegistryPersona }) {
         ),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Could not fork");
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          window.location.href = "/handler/sign-up";
+          return;
+        }
+        throw new Error(data.error ?? "Could not fork");
+      }
       router.push(
         thenTalk
           ? `/chat?characterId=${data.character.id}`
@@ -83,7 +82,7 @@ export function RegistryPersonaView({ persona }: { persona: RegistryPersona }) {
       className="relative min-h-screen overflow-hidden"
       data-theme={persona.isAdult ? "after-dark" : undefined}
     >
-      <AppNav variant={persona.isAdult ? "after-dark" : "marketing"} />
+      <MarketingNav variant={persona.isAdult ? "after-dark" : "marketing"} />
 
       <header className="relative border-b border-[var(--line)]">
         <div

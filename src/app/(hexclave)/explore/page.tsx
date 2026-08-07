@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { ExploreHub } from "@/components/seo/ExploreHub";
-import { PageSpinner } from "@/components/Spinner";
-import { listAllSeoPages } from "@/lib/seo/catalog";
+import { listAllSeoPages, seoPath, VERB_LABELS } from "@/lib/seo/catalog";
+import { breadcrumbJsonLd } from "@/lib/seo/breadcrumbs";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -20,17 +19,55 @@ export const metadata: Metadata = {
 
 type Props = { searchParams: Promise<{ filter?: string }> };
 
-async function ExploreInner({ searchParams }: Props) {
+export default async function ExplorePage({ searchParams }: Props) {
   const { filter } = await searchParams;
-  return (
-    <ExploreHub pages={listAllSeoPages()} initialFilter={filter ?? null} />
-  );
-}
+  const pages = listAllSeoPages();
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        name: "Explore what AI can become",
+        description: metadata.description,
+        url: `${SITE_URL}/explore`,
+        isPartOf: {
+          "@type": "WebSite",
+          name: SITE_NAME,
+          url: SITE_URL,
+        },
+      },
+      {
+        "@type": "ItemList",
+        name: "Vesperer AI persona paths",
+        numberOfItems: pages.length,
+        itemListElement: pages.map((page, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          url: `${SITE_URL}${seoPath(page.verb, page.slug)}`,
+          name: page.name,
+          description: page.summary,
+          item: {
+            "@type": "WebPage",
+            name: page.h1,
+            url: `${SITE_URL}${seoPath(page.verb, page.slug)}`,
+            about: VERB_LABELS[page.verb],
+          },
+        })),
+      },
+      breadcrumbJsonLd([
+        { name: "Home", path: "/" },
+        { name: "Explore", path: "/explore" },
+      ]),
+    ],
+  };
 
-export default function ExplorePage(props: Props) {
   return (
-    <Suspense fallback={<PageSpinner />}>
-      <ExploreInner {...props} />
-    </Suspense>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ExploreHub pages={pages} initialFilter={filter ?? null} />
+    </>
   );
 }

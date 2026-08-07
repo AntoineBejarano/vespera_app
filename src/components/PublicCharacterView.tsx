@@ -5,9 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion } from "motion/react";
-import { useHexclaveApp, useUser } from "@hexclave/next";
-import { AppNav } from "@/components/AppNav";
 import { LegalFooter } from "@/components/LegalFooter";
+import { MarketingNav } from "@/components/MarketingNav";
 import { BorderBeam } from "@/components/magicui/border-beam";
 import { BlurFade, ShimmerButton } from "@/components/magicui/effects";
 import dynamic from "next/dynamic";
@@ -33,17 +32,11 @@ export function PublicCharacterView({
 }: {
   character: PublicCharacter;
 }) {
-  const app = useHexclaveApp();
-  const user = useUser({ or: "return-null" });
   const router = useRouter();
   const [loading, setLoading] = useState<"talk" | "fork" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function forkCharacter(thenTalk: boolean) {
-    if (!user) {
-      void app.redirectToSignUp();
-      return;
-    }
     setLoading(thenTalk ? "talk" : "fork");
     setError(null);
     try {
@@ -57,7 +50,13 @@ export function PublicCharacterView({
         ),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Could not create your version");
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          window.location.href = "/handler/sign-up";
+          return;
+        }
+        throw new Error(data.error ?? "Could not create your version");
+      }
       router.push(
         thenTalk
           ? `/chat?characterId=${data.character.id}`
@@ -79,7 +78,7 @@ export function PublicCharacterView({
       className="relative min-h-screen overflow-hidden"
       data-theme={character.isAdult ? "after-dark" : undefined}
     >
-      <AppNav variant={character.isAdult ? "after-dark" : "marketing"} />
+      <MarketingNav variant={character.isAdult ? "after-dark" : "marketing"} />
 
       {/* Compact identity bar — no giant header photo */}
       <header className="relative border-b border-[var(--line)]">

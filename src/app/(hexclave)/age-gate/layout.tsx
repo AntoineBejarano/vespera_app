@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HexclaveShell } from "@/components/HexclaveShell";
 
 export const metadata: Metadata = {
   title: "Access gate",
@@ -10,5 +11,5 @@ export default function AgeGateLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  return <HexclaveShell>{children}</HexclaveShell>;
 }

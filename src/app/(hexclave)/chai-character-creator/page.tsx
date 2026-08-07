@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AppNav } from "@/components/AppNav";
 import { LegalFooter } from "@/components/LegalFooter";
+import { MarketingNav } from "@/components/MarketingNav";
+import { breadcrumbJsonLd } from "@/lib/seo/breadcrumbs";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 const description =
@@ -43,9 +44,53 @@ const steps = [
 ];
 
 export default function ChaiCharacterCreatorPage() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        name: "Chai Character Creator",
+        applicationCategory: "DesignApplication",
+        operatingSystem: "Web",
+        description,
+        url: `${SITE_URL}/chai-character-creator`,
+        provider: {
+          "@type": "Organization",
+          name: SITE_NAME,
+          url: SITE_URL,
+        },
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+        },
+      },
+      {
+        "@type": "HowTo",
+        name: "How to create a Chai-ready character with Vesperer",
+        description:
+          "Define a canonical persona, export Chai-ready fields, and keep a portable master identity on Vesperer.",
+        step: steps.map((step, index) => ({
+          "@type": "HowToStep",
+          position: index + 1,
+          name: step.title,
+          text: step.body,
+        })),
+      },
+      breadcrumbJsonLd([
+        { name: "Home", path: "/" },
+        { name: "Chai Character Creator", path: "/chai-character-creator" },
+      ]),
+    ],
+  };
+
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <AppNav variant="marketing" />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <MarketingNav variant="marketing" />
 
       <header className="relative border-b border-[var(--line)]">
         <div

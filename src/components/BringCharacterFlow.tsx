@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useHexclaveApp, useUser } from "@hexclave/next";
-import { AppNav } from "@/components/AppNav";
 import { LegalFooter } from "@/components/LegalFooter";
+import { MarketingNav } from "@/components/MarketingNav";
 import { ShimmerButton } from "@/components/magicui/effects";
 import {
   parseCharacterImport,
@@ -48,8 +47,6 @@ const SOURCES: { id: ImportSource; label: string; hint: string }[] = [
 ];
 
 export function BringCharacterFlow() {
-  const app = useHexclaveApp();
-  const user = useUser({ or: "return-null" });
   const router = useRouter();
   const [source, setSource] = useState<ImportSource>("character_card");
   const [raw, setRaw] = useState("");
@@ -98,12 +95,6 @@ export function BringCharacterFlow() {
       runPreview();
       return;
     }
-    if (!user) {
-      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ raw, source }));
-      void app.redirectToSignUp();
-      return;
-    }
-
     setLoading(true);
     setError(null);
     try {
@@ -119,7 +110,14 @@ export function BringCharacterFlow() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Import failed");
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ raw, source }));
+          window.location.href = "/handler/sign-up";
+          return;
+        }
+        throw new Error(data.error ?? "Import failed");
+      }
       sessionStorage.removeItem(DRAFT_KEY);
       router.push(`/personas/${data.character.id}`);
       router.refresh();
@@ -131,7 +129,7 @@ export function BringCharacterFlow() {
 
   return (
     <div className="relative min-h-screen">
-      <AppNav variant="marketing" />
+      <MarketingNav variant="marketing" />
       <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
         <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--accent)]">
           Bring a character
@@ -181,11 +179,7 @@ export function BringCharacterFlow() {
             Preview reconstruction
           </button>
           <ShimmerButton onClick={() => void importNow()}>
-            {loading
-              ? "Importing…"
-              : user
-                ? "Bring my character"
-                : "Sign up to import"}
+            {loading ? "Importing…" : "Bring my character"}
           </ShimmerButton>
         </div>
 

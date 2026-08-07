@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { RegistryIndex } from "@/components/registry/RegistryIndex";
 import { listRegistryPersonas } from "@/lib/registry/public";
+import { breadcrumbJsonLd } from "@/lib/seo/breadcrumbs";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -26,5 +27,46 @@ export const metadata: Metadata = {
 
 export default async function RegistryPage() {
   const personas = await listRegistryPersonas({ adult: false, limit: 48 });
-  return <RegistryIndex personas={personas} />;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        name: "Persona Registry",
+        description: metadata.description,
+        url: `${SITE_URL}/registry`,
+        isPartOf: {
+          "@type": "WebSite",
+          name: SITE_NAME,
+          url: SITE_URL,
+        },
+      },
+      {
+        "@type": "ItemList",
+        name: "Public AI personas on Vesperer",
+        numberOfItems: personas.length,
+        itemListElement: personas.map((persona, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          url: `${SITE_URL}/p/${persona.slug}`,
+          name: persona.name,
+          description: persona.tagline,
+        })),
+      },
+      breadcrumbJsonLd([
+        { name: "Home", path: "/" },
+        { name: "Persona Registry", path: "/registry" },
+      ]),
+    ],
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <RegistryIndex personas={personas} />
+    </>
+  );
 }

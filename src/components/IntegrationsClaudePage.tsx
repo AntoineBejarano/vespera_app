@@ -1,16 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { AppNav } from "@/components/AppNav";
 import { LegalFooter } from "@/components/LegalFooter";
+import { MarketingNav } from "@/components/MarketingNav";
 import { BlurFade, RetroGrid, ShimmerButton } from "@/components/magicui/effects";
 import {
   AnimatedSpan,
   Terminal,
   TerminalTyping,
 } from "@/components/magicui/terminal";
-import { useHexclaveApp } from "@hexclave/next";
-import { redirectToAppSignUp } from "@/lib/auth/redirects";
 
 const STEPS = [
   {
@@ -137,15 +135,13 @@ function ClaudeTerminalDemo() {
 }
 
 export function IntegrationsClaudePage() {
-  const app = useHexclaveApp();
-
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div className="pointer-events-none absolute inset-0 opacity-[0.35]">
         <RetroGrid />
       </div>
 
-      <AppNav variant="marketing" />
+      <MarketingNav variant="marketing" />
 
       <section className="relative mx-auto grid min-h-[88dvh] max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
         <BlurFade>
@@ -161,7 +157,7 @@ export function IntegrationsClaudePage() {
             production-grade tenant isolation.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <ShimmerButton onClick={() => redirectToAppSignUp(app)}>
+            <ShimmerButton href="/handler/sign-up">
               Get a free API key
             </ShimmerButton>
             <Link
@@ -331,7 +327,7 @@ npm run vesperer -- chat --key vesp_… --message "Hello" --peer demo --age-atte
               do the rest.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <ShimmerButton onClick={() => redirectToAppSignUp(app)}>
+              <ShimmerButton href="/handler/sign-up">
                 Start free
               </ShimmerButton>
               <Link

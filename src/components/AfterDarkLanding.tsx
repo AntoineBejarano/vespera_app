@@ -3,11 +3,9 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useUser } from "@hexclave/next";
-import { AppNav } from "@/components/AppNav";
 import { BrandLogo } from "@/components/BrandLogo";
 import { LegalFooter } from "@/components/LegalFooter";
-import { PageSpinner } from "@/components/Spinner";
+import { MarketingNav } from "@/components/MarketingNav";
 import {
   BlurFade,
   Marquee,
@@ -135,20 +133,15 @@ const PRICING = [
 
 export function AfterDarkLanding() {
   const search = useSearchParams();
-  const user = useUser({ or: "return-null" });
 
   useEffect(() => {
     // Invite-only: never auto-route guests into adult signup.
     void search.get("auth");
   }, [search]);
 
-  if (user && search.get("hexclave_cross_domain_auth")) {
-    return <PageSpinner label="Continuing" variant="after-dark" />;
-  }
-
   return (
     <div className="relative overflow-hidden" data-theme="after-dark">
-      <AppNav variant="after-dark" />
+      <MarketingNav variant="after-dark" />
       <section className="relative min-h-[88dvh] px-4 pb-16 pt-10 sm:min-h-[92vh] sm:px-6 sm:pb-20 sm:pt-16">
         <RetroGrid />
         <div className="relative mx-auto flex max-w-5xl flex-col items-start">
@@ -198,14 +191,6 @@ export function AfterDarkLanding() {
             >
               Vesperer SFW (main site)
             </Link>
-            {user ? (
-              <Link
-                href={`${SITE_URL}/personas`}
-                className="w-full rounded-xl border border-[var(--line)] px-6 py-3 text-center sm:w-auto"
-              >
-                Open Studio
-              </Link>
-            ) : null}
           </BlurFade>
           <p className="mt-4 text-sm text-[var(--muted)]">{PARTNERS_EMAIL}</p>
         </div>

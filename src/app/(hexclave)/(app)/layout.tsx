@@ -4,6 +4,7 @@ import { getAppUser } from "@/lib/session";
 import { accountAgeGateHref, safeNextPath } from "@/lib/legal/access-cookie";
 import { needsAccountAgeGate } from "@/lib/legal/gate";
 import { AppShell } from "@/components/app-shell/AppShell";
+import { HexclaveShell } from "@/components/HexclaveShell";
 
 export default async function AppLayout({
   children,
@@ -20,5 +21,9 @@ export default async function AppLayout({
     redirect(accountAgeGateHref(next));
   }
 
-  return <AppShell>{children}</AppShell>;
+  return (
+    <HexclaveShell>
+      <AppShell>{children}</AppShell>
+    </HexclaveShell>
+  );
 }
