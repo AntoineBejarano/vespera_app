@@ -187,6 +187,53 @@ export async function POST(req: Request) {
         }
         break;
       }
+      case "customer.subscription.trial_will_end": {
+        const sub = event.data.object as Stripe.Subscription;
+        const userId = await userIdFromSubscription(sub);
+        if (!userId) break;
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true },
+        });
+        if (!user?.email) break;
+        const trialEnds = sub.trial_end
+          ? new Intl.DateTimeFormat("en", {
+              dateStyle: "long",
+              timeZone: "UTC",
+            }).format(new Date(sub.trial_end * 1000))
+          : "soon";
+        await sendEmail({
+          to: user.email,
+          subject: "Your Vesperer Studio trial is ending soon",
+          text: [
+            `Your Vesperer Studio trial ends on ${trialEnds}.`,
+            "",
+            "Your saved payment method will be charged the recurring Studio price shown when you started the trial unless you cancel before then.",
+            "",
+            `Manage or cancel your subscription: ${SITE_URL}/settings`,
+            "",
+            "— Vesperer / Deevly Labs LTD",
+          ].join("\n"),
+          html: `
+            <p>Your Vesperer Studio trial ends on <strong>${trialEnds}</strong>.</p>
+            <p>Your saved payment method will be charged the recurring Studio price shown when you started the trial unless you cancel before then.</p>
+            <p><a href="${SITE_URL}/settings">Manage or cancel your subscription</a></p>
+            <p>— Vesperer / Deevly Labs LTD</p>
+          `,
+          idempotencyKey: `trial_will_end:${sub.id}:${sub.trial_end ?? "unknown"}`,
+          tags: [
+            { name: "template", value: "trial_will_end" },
+            { name: "product", value: "vesperer" },
+          ],
+        });
+        await logProductEvent({
+          type: "trial_will_end",
+          userId,
+          plan: sub.metadata?.plan ?? "studio",
+          context: { subscriptionId: sub.id, trialEnd: sub.trial_end },
+        });
+        break;
+      }
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
         const { userId, sub } = await userIdFromInvoice(invoice);

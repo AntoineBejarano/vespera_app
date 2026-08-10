@@ -37,9 +37,9 @@ const COPY: Record<
     secondaryCta: "Stay on Starter",
   },
   persona_limit: {
-    title: "Build a small roster",
+    title: "Your workspace is full",
     description:
-      "Studio unlocks up to 3 personas, shared workspace ownership, and room to test different characters.",
+      "Remove a persona to free your Starter slot, or use Studio for a larger roster.",
     cta: "Upgrade to Studio",
     secondaryCta: "Keep one persona",
   },

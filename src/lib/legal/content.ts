@@ -94,23 +94,25 @@ export function getLegalBody(slug: LegalSlug): string[] {
         "2. Stripe scope. Card and Stripe Checkout payments apply only to eligible apex SFW subscriptions (Creator / Studio and any Business invoices we expressly route through Stripe). We do not sell After Dark adult companionship or erotic content through Stripe.",
         "3. Prices. Current list prices appear on the apex marketing site and in Checkout. Taxes (including UK/EU VAT where we are registered to collect) may be added at checkout. Currency and renewal interval are shown before you pay.",
         "4. Subscriptions. Paid apex plans renew automatically each billing period until cancelled. You authorize recurring charges to your payment method for the selected plan.",
-        "5. What you get. Plan limits (e.g. number of personas, usage) are described at purchase and in-product. We may adjust fair-use limits to protect service integrity.",
-        "6. After Dark. Adult pricing shown on xxx.vesperer.com is informational until an adult payment rail is live. Those purchases, when available, will not use the same Stripe merchant flow as apex SFW plans.",
-        "7. Account responsibility. You must keep billing details accurate. Failure to pay may result in downgrade to the free plan or suspension.",
-        "8. Disputes. Contact us before filing a chargeback so we can help. Unresolved card disputes may lead to account review.",
-        `9. Contact. Billing questions: ${contactEmail} · ${companyWebsite}. Also see Refunds & Cancellation at /legal/refunds.`,
+        "5. Free trials. Eligible first-time customers may start a time-limited Studio trial by adding a card in Stripe Checkout. The trial duration, recurring price, currency, and billing interval are shown before confirmation. Unless cancelled before the stated trial end, the subscription converts automatically to paid Studio and the saved card is charged. One trial is available per eligible account.",
+        "6. What you get. Plan limits (e.g. number of personas, usage) are described at purchase and in-product. We may adjust fair-use limits to protect service integrity.",
+        "7. After Dark. Adult pricing shown on xxx.vesperer.com is informational until an adult payment rail is live. Those purchases, when available, will not use the same Stripe merchant flow as apex SFW plans.",
+        "8. Account responsibility. You must keep billing details accurate. Failure to pay may result in downgrade to the free plan or suspension.",
+        "9. Disputes. Contact us before filing a chargeback so we can help. Unresolved card disputes may lead to account review.",
+        `10. Contact. Billing questions: ${contactEmail} · ${companyWebsite}. Also see Refunds & Cancellation at /legal/refunds.`,
       ];
     case "refunds":
       return [
         DISCLAIMER,
         `This Refunds & Cancellation policy applies to paid apex (vesperer.com) subscriptions for the ${brand} product operated by ${companyName}.`,
         "1. Cancel anytime. You may cancel renewal in the Stripe Customer Portal (Settings → Manage billing) or by emailing us. Cancellation stops future renewals; you keep access until the end of the period already paid.",
-        "2. Cooling-off (EEA/UK consumers). If you are a consumer in the EEA or UK and purchased a digital subscription, you may have a 14-day withdrawal right. If you ask us to start the service immediately, you may lose that right for the period already supplied, to the extent permitted by law.",
-        "3. Refunds. (a) Duplicate or clearly erroneous charges: full refund when confirmed. (b) Service materially unavailable for a sustained period attributable to us: pro-rata credit or refund at our discretion. (c) Change of mind after substantial use in a billing period: generally no refund of the current period, except where mandatory law requires otherwise.",
-        "4. How to request. Email ${contactEmail} with your account email, approximate charge date, and reason. We aim to respond within 5 business days.",
-        "5. After Dark. Adult-rail purchases (when live) follow the terms shown at that checkout; they are not Stripe apex subscriptions and may have different refund rules from the adult processor.",
-        "6. Chargebacks. Please contact us first. We retain delivery evidence (account activity, plan entitlements) to respond to disputes.",
-        `7. Contact. ${companyName} — ${contactEmail} · ${companyWebsite}`,
+        "2. Trials. You may cancel a Studio trial from the Stripe Customer Portal before its stated end to avoid the first recurring charge. Access continues until the trial ends. If you do not cancel, the saved card is charged the recurring price disclosed at Checkout.",
+        "3. Cooling-off (EEA/UK consumers). If you are a consumer in the EEA or UK and purchased a digital subscription, you may have a 14-day withdrawal right. If you ask us to start the service immediately, you may lose that right for the period already supplied, to the extent permitted by law.",
+        "4. Refunds. (a) Duplicate or clearly erroneous charges: full refund when confirmed. (b) Service materially unavailable for a sustained period attributable to us: pro-rata credit or refund at our discretion. (c) Change of mind after substantial use in a billing period: generally no refund of the current period, except where mandatory law requires otherwise.",
+        `5. How to request. Email ${contactEmail} with your account email, approximate charge date, and reason. We aim to respond within 5 business days.`,
+        "6. After Dark. Adult-rail purchases (when live) follow the terms shown at that checkout; they are not Stripe apex subscriptions and may have different refund rules from the adult processor.",
+        "7. Chargebacks. Please contact us first. We retain delivery evidence (account activity, plan entitlements) to respond to disputes.",
+        `8. Contact. ${companyName} — ${contactEmail} · ${companyWebsite}`,
       ];
     default:
       return [DISCLAIMER];

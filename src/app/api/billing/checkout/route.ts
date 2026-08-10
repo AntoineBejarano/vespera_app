@@ -9,12 +9,16 @@ import { assertStripeSurfaceAllowed } from "@/lib/stripe/guard";
 import { ensureStripeCustomerId } from "@/lib/stripe/sync";
 import { prisma } from "@/lib/db";
 import { logProductEvent } from "@/lib/product-events";
+import { safeNextPath } from "@/lib/legal/access-cookie";
+import { STUDIO_TRIAL_DAYS } from "@/lib/billing/trial";
 
 const bodySchema = z.object({
   plan: z.enum(["creator", "studio"]),
   reason: z.string().max(80).optional(),
   source: z.string().max(80).optional(),
   feature: z.string().max(80).optional(),
+  returnTo: z.string().max(500).optional(),
+  startTrial: z.boolean().optional(),
 });
 
 function randomSuffix(len = 8): string {
@@ -24,6 +28,22 @@ function randomSuffix(len = 8): string {
     out += alphabet[Math.floor(Math.random() * alphabet.length)]!;
   }
   return out;
+}
+
+function billingReturnUrl(
+  origin: string,
+  path: string,
+  result: "success" | "canceled",
+  includeSessionId = false,
+) {
+  const url = new URL(path, origin);
+  url.searchParams.set("billing", result);
+  if (includeSessionId) {
+    url.searchParams.set("session_id", "CHECKOUT_SESSION_ID_PLACEHOLDER");
+  }
+  return url
+    .toString()
+    .replace("CHECKOUT_SESSION_ID_PLACEHOLDER", "{CHECKOUT_SESSION_ID}");
 }
 
 export async function POST(req: Request) {
@@ -81,6 +101,30 @@ export async function POST(req: Request) {
     },
   });
 
+  const startTrial = parsed.data.startTrial === true;
+  if (
+    startTrial &&
+    (parsed.data.plan !== "studio" || parsed.data.reason !== "persona_limit")
+  ) {
+    return Response.json({ error: "Trial not available" }, { status: 400 });
+  }
+  if (startTrial) {
+    const previousSubscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "all",
+      limit: 1,
+    });
+    if (previousSubscriptions.data.length > 0) {
+      return Response.json(
+        {
+          error: "This account has already used its Studio trial.",
+          code: "TRIAL_NOT_ELIGIBLE",
+        },
+        { status: 409 },
+      );
+    }
+  }
+
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
   const proto = h.get("x-forwarded-proto") ?? "https";
@@ -88,14 +132,23 @@ export async function POST(req: Request) {
     host && !host.includes("xxx.")
       ? `${proto}://${host}`
       : SITE_URL;
+  const returnTo = safeNextPath(parsed.data.returnTo) ?? null;
+  const successUrl = returnTo
+    ? billingReturnUrl(origin, returnTo, "success", true)
+    : `${origin}/settings?billing=success`;
+  const cancelUrl = returnTo
+    ? billingReturnUrl(origin, returnTo, "canceled")
+    : `${origin}/#pricing`;
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
+    payment_method_types: ["card"],
+    payment_method_collection: "always",
     allow_promotion_codes: true,
-    success_url: `${origin}/settings?billing=success`,
-    cancel_url: `${origin}/#pricing`,
+    success_url: successUrl,
+    cancel_url: cancelUrl,
     client_reference_id: profile.id,
     metadata: {
       vespererUserId: profile.id,
@@ -103,6 +156,7 @@ export async function POST(req: Request) {
       surface: "apex_sfw",
       reason: parsed.data.reason ?? "manual",
       source: parsed.data.source ?? "unknown",
+      trial: startTrial ? `${STUDIO_TRIAL_DAYS}-day` : "none",
       integration: `apex-sfw-checkout-${randomSuffix()}`,
     },
     subscription_data: {
@@ -110,7 +164,16 @@ export async function POST(req: Request) {
         vespererUserId: profile.id,
         plan: parsed.data.plan,
         surface: "apex_sfw",
+        trial: startTrial ? `${STUDIO_TRIAL_DAYS}-day` : "none",
       },
+      ...(startTrial
+        ? {
+            trial_period_days: STUDIO_TRIAL_DAYS,
+            trial_settings: {
+              end_behavior: { missing_payment_method: "cancel" as const },
+            },
+          }
+        : {}),
     },
   });
 
@@ -135,6 +198,9 @@ export async function POST(req: Request) {
           feature: parsed.data.feature ?? null,
           priceId,
           surface: "apex_sfw",
+          startTrial,
+          trialDays: startTrial ? STUDIO_TRIAL_DAYS : null,
+          returnTo,
         },
       },
     });
@@ -156,6 +222,8 @@ export async function POST(req: Request) {
       reason: parsed.data.reason ?? "manual",
       source: parsed.data.source ?? "unknown",
       stripeSessionId: session.id,
+      startTrial,
+      trialDays: startTrial ? STUDIO_TRIAL_DAYS : null,
     },
   });
 

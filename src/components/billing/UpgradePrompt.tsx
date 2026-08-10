@@ -8,16 +8,22 @@ export function UpgradePrompt({
   paywall,
   source,
   onDismiss,
+  trialDays,
+  returnTo,
 }: {
   paywall: PaywallPayload;
   source: string;
   onDismiss?: () => void;
+  trialDays?: number;
+  returnTo?: string;
 }) {
-  const [busy, setBusy] = React.useState(false);
+  const [busy, setBusy] = React.useState<"trial" | "upgrade" | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [trialUnavailable, setTrialUnavailable] = React.useState(false);
+  const trialAvailable = Boolean(trialDays) && !trialUnavailable;
 
-  async function startCheckout() {
-    setBusy(true);
+  async function startCheckout(startTrial: boolean) {
+    setBusy(startTrial ? "trial" : "upgrade");
     setError(null);
     try {
       const res = await fetch("/api/billing/checkout", {
@@ -28,16 +34,30 @@ export function UpgradePrompt({
           reason: paywall.reason,
           feature: paywall.feature,
           source,
+          returnTo,
+          startTrial,
         }),
       });
-      const data = (await res.json()) as { url?: string; error?: string };
+      const data = (await res.json()) as {
+        url?: string;
+        error?: string;
+        code?: string;
+      };
+      if (data.code === "TRIAL_NOT_ELIGIBLE") {
+        setTrialUnavailable(true);
+        setError(
+          "The free trial has already been used. You can upgrade directly or free a slot.",
+        );
+        setBusy(null);
+        return;
+      }
       if (!res.ok || !data.url) {
         throw new Error(data.error ?? "Checkout unavailable");
       }
       window.location.href = data.url;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout unavailable");
-      setBusy(false);
+      setBusy(null);
     }
   }
 
@@ -54,6 +74,13 @@ export function UpgradePrompt({
               Starter limit: {paywall.limit}
             </p>
           ) : null}
+          {trialAvailable && trialDays ? (
+            <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              {trialDays} days free, then the recurring Studio price shown in
+              Stripe Checkout. Card required. Cancel before the trial ends to
+              avoid being charged.
+            </p>
+          ) : null}
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
           {onDismiss ? (
@@ -62,13 +89,31 @@ export function UpgradePrompt({
               variant="ghost"
               size="sm"
               onClick={onDismiss}
-              disabled={busy}
+              disabled={busy !== null}
             >
               {paywall.secondaryCta}
             </Button>
           ) : null}
-          <Button type="button" size="sm" onClick={startCheckout} disabled={busy}>
-            {busy ? "Opening…" : paywall.cta}
+          {trialAvailable && trialDays ? (
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => void startCheckout(true)}
+              disabled={busy !== null}
+            >
+              {busy === "trial"
+                ? "Opening…"
+                : `Start ${trialDays}-day free trial`}
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            variant={trialAvailable ? "outline" : "default"}
+            size="sm"
+            onClick={() => void startCheckout(false)}
+            disabled={busy !== null}
+          >
+            {busy === "upgrade" ? "Opening…" : paywall.cta}
           </Button>
         </div>
       </div>
