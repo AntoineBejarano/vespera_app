@@ -1,7 +1,7 @@
 import { generateText } from "ai";
 import { prisma } from "@/lib/db";
 import { getOpenRouter } from "@/lib/ai/openrouter";
-import { resolveModel } from "@/lib/ai/models";
+import { resolveInternalModel } from "@/lib/ai/models";
 
 const SUMMARY_EVERY = 20;
 
@@ -37,7 +37,7 @@ export async function maybeCreateSummary(params: {
   try {
     const openrouter = getOpenRouter();
     const { text } = await generateText({
-      model: openrouter(resolveModel(params.modelId)),
+      model: openrouter(resolveInternalModel()),
       prompt: `Resume esta conversación adulta de forma compacta para continuidad emocional y narrativa.
 Incluye hechos, tono relacional, hilos abiertos y preferencias. Máximo 180 palabras.
 

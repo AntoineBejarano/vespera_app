@@ -3,7 +3,7 @@ import { generateText, Output } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getOpenRouter } from "@/lib/ai/openrouter";
-import { resolveModel } from "@/lib/ai/models";
+import { resolveInternalModel } from "@/lib/ai/models";
 import { evaluateContentSafety } from "@/lib/ai/safety";
 import { clamp01 } from "@/lib/persona/affect";
 
@@ -83,7 +83,7 @@ export async function maybeSyncIntentions(params: {
     );
     const openrouter = getOpenRouter();
     const { output } = await generateText({
-      model: openrouter(resolveModel(params.modelId)),
+      model: openrouter(resolveInternalModel()),
       output: Output.object({ schema: syncSchema }),
       prompt: `Extract ONLY clearly evidenced open intentions the companion should remember about THIS person.
 

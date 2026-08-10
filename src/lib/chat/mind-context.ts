@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { searchMemories } from "@/lib/memory/vector";
+import { searchMem0Memories } from "@/lib/memory/mem0";
 import { searchCharacterKnowledge } from "@/lib/knowledge/retrieve";
 import { getLatestSummary } from "@/lib/memory/summaries";
 import {
@@ -71,13 +72,27 @@ export async function loadMindContext(params: {
     displayName: params.identities.displayName,
   });
 
-  const [memories, knowledgeBrief, summary, relationship, intentions, photoCount, telegramBotCount] =
+  const [
+    localMemories,
+    mem0Memories,
+    knowledgeBrief,
+    summary,
+    relationship,
+    intentions,
+    photoCount,
+    telegramBotCount,
+  ] =
     await Promise.all([
       searchMemories({
         subjectId: subject.id,
         characterId: params.character.id,
         query: params.query,
         userId: params.identities.webUserId,
+      }),
+      searchMem0Memories({
+        subjectId: subject.id,
+        characterId: params.character.id,
+        query: params.query,
       }),
       searchCharacterKnowledge({
         characterId: params.character.id,
@@ -97,15 +112,28 @@ export async function loadMindContext(params: {
     ]);
 
   const affect = toAffectSnapshot(relationship);
+  const memories = [
+    ...localMemories,
+    ...mem0Memories.map((memory) => {
+      const score =
+        typeof memory.score === "number" ? ` ${memory.score.toFixed(2)}` : "";
+      return `[mem0${score}] ${memory.content}`;
+    }),
+  ].slice(0, 10);
   const intentionBrief = intentions.map(
     (i) => `[${i.kind}] ${i.content}${i.dueHint ? ` (due: ${i.dueHint})` : ""}`,
   );
 
   const activity: MindActivityHit[] = [
-    ...memories.slice(0, 4).map((m) => ({
+    ...localMemories.slice(0, 4).map((m) => ({
       kind: "memory" as const,
       label: "Retrieved memory",
       detail: m.slice(0, 120),
+    })),
+    ...mem0Memories.slice(0, 2).map((m) => ({
+      kind: "memory" as const,
+      label: "Mem0 memory",
+      detail: m.content.slice(0, 120),
     })),
     ...knowledgeBrief.slice(0, 3).map((k) => ({
       kind: "knowledge" as const,

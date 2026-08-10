@@ -2,7 +2,7 @@ import { generateText, Output } from "ai";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getOpenRouter } from "@/lib/ai/openrouter";
-import { resolveModel } from "@/lib/ai/models";
+import { resolveInternalModel } from "@/lib/ai/models";
 import { evaluateContentSafety } from "@/lib/ai/safety";
 import {
   CURRENT_TONES,
@@ -84,7 +84,7 @@ export async function maybeUpdateRelationship(params: {
     );
     const openrouter = getOpenRouter();
     const { output } = await generateText({
-      model: openrouter(resolveModel(params.modelId)),
+      model: openrouter(resolveInternalModel()),
       output: Output.object({ schema: updateSchema }),
       prompt: `Update simulated relationship affect after one chat turn.
 Current: mood=${current.mood}, trust=${current.trust}, affection=${current.affection}, energy=${current.energy}, familiarity=${current.familiarity}, openness=${current.openness}, playfulness=${current.playfulness}, tone=${current.currentTone}, summary=${current.summary ?? ""}

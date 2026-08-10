@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { maybeExtractMemories } from "@/lib/memory/extractor";
+import { addTurnToMem0 } from "@/lib/memory/mem0";
 import { maybeCreateSummary } from "@/lib/memory/summaries";
 import { maybeUpdateRelationship } from "@/lib/persona/relationship";
 import { maybeSyncIntentions } from "@/lib/persona/intentions";
@@ -59,6 +60,13 @@ export async function runPostTurnJob(params: PostTurnParams): Promise<void> {
       userMessage: params.userMessage,
       assistantMessage: params.assistantMessage,
       modelId: params.modelId,
+    });
+    await addTurnToMem0({
+      subjectId: params.subjectId,
+      characterId: params.characterId,
+      conversationId: params.conversationId,
+      userMessage: params.userMessage,
+      assistantMessage: params.assistantMessage,
     });
     await maybeUpdateRelationship({
       subjectId: params.subjectId,

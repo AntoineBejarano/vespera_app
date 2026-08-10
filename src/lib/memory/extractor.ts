@@ -1,7 +1,7 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import { getOpenRouter } from "@/lib/ai/openrouter";
-import { resolveModel } from "@/lib/ai/models";
+import { resolveInternalModel } from "@/lib/ai/models";
 import { upsertMemory, type MemoryType } from "@/lib/memory/vector";
 import { evaluateContentSafety } from "@/lib/ai/safety";
 
@@ -41,7 +41,7 @@ export async function maybeExtractMemories(params: {
   try {
     const openrouter = getOpenRouter();
     const { output } = await generateText({
-      model: openrouter(resolveModel(params.modelId)),
+      model: openrouter(resolveInternalModel()),
       output: Output.object({ schema: extractionSchema }),
       prompt: `Analiza este turno de conversación entre un usuario adulto y un personaje ficticio adulto.
 Decide si hay hechos, preferencias, eventos emocionales, promesas o cambios relacionales dignos de memoria a largo plazo.
