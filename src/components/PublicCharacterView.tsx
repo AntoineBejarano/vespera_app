@@ -57,8 +57,16 @@ export function PublicCharacterView({
       });
       const data = await res.json();
       if (!res.ok) {
-        if (res.status === 401 || res.status === 403) {
-          window.location.href = "/handler/sign-up";
+        if (
+          res.status === 401 ||
+          (res.status === 403 && data?.error?.includes("Age verification"))
+        ) {
+          if (professional && character.source === "showcase") {
+            const activationPath = `/professionals/activate/${character.slug}`;
+            window.location.href = `/auth/continue?next=${encodeURIComponent(activationPath)}`;
+          } else {
+            window.location.href = "/handler/sign-up";
+          }
           return;
         }
         if (data?.error === "PAYWALL_REQUIRED") {
@@ -69,9 +77,13 @@ export function PublicCharacterView({
         throw new Error(data.error ?? "Could not create your version");
       }
       router.push(
-        thenTalk
-          ? `/chat?characterId=${data.character.id}`
-          : `/personas/${data.character.id}`,
+        professional
+          ? thenTalk
+            ? `/professionals/session?characterId=${data.character.id}`
+            : "/professionals/workspace"
+          : thenTalk
+            ? `/chat?characterId=${data.character.id}`
+            : `/personas/${data.character.id}`,
       );
       router.refresh();
     } catch (err) {

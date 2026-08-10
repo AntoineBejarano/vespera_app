@@ -21,6 +21,12 @@ const bodySchema = z.object({
   showcaseSlug: z.string().optional(),
 });
 
+function showcaseSlugFromMeta(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const slug = (value as Record<string, unknown>).forkedFromShowcase;
+  return typeof slug === "string" ? slug : null;
+}
+
 export async function POST(req: Request) {
   const user = await getAppUser();
   if (!user) {
@@ -38,21 +44,6 @@ export async function POST(req: Request) {
       { error: "Missing permission: personas.write" },
       { status: 403 },
     );
-  }
-
-  const count = await countWorkspaceCharacters(workspaceId);
-  const max = maxCharactersForPlan(user.plan);
-  if (count >= max) {
-    return paywallResponse({
-      userId: user.id,
-      workspaceId,
-      reason: "persona_limit",
-      feature: "personas",
-      plan: "studio",
-      limit: max,
-      remaining: 0,
-      context: { count, route: "fork" },
-    });
   }
 
   const parsed = bodySchema.safeParse(await req.json());
@@ -77,6 +68,7 @@ export async function POST(req: Request) {
     allowFork: boolean;
     isAdult: boolean;
     limitsJson: Prisma.InputJsonValue | undefined;
+    imageUrl: string | null;
   };
 
   if (parsed.data.showcaseSlug) {
@@ -120,7 +112,44 @@ export async function POST(req: Request) {
       allowFork: true,
       isAdult: showcase.isAdult,
       limitsJson: undefined,
+      imageUrl: showcase.imageUrl,
     };
+
+    const workspaceCharacters = await prisma.character.findMany({
+      where: { workspaceId, archivedAt: null },
+      select: {
+        id: true,
+        name: true,
+        metaJson: true,
+        photos: {
+          where: { isProfile: true },
+          take: 1,
+          select: { id: true },
+        },
+      },
+    });
+    const existing = workspaceCharacters.find(
+      (character) =>
+        showcaseSlugFromMeta(character.metaJson) === parsed.data.showcaseSlug,
+    );
+    if (existing) {
+      if (existing.photos.length === 0) {
+        await prisma.characterPhoto.create({
+          data: {
+            characterId: existing.id,
+            url: showcase.imageUrl,
+            caption: `${showcase.name} profile`,
+            kind: "profile",
+            tags: ["profile"],
+            isProfile: true,
+          },
+        });
+      }
+      return Response.json({
+        character: { id: existing.id, name: existing.name },
+        reused: true,
+      });
+    }
   } else {
     const original = await prisma.character.findFirst({
       where: {
@@ -155,7 +184,23 @@ export async function POST(req: Request) {
       limitsJson: (original.limitsJson ?? undefined) as
         | Prisma.InputJsonValue
         | undefined,
+      imageUrl: null,
     };
+  }
+
+  const count = await countWorkspaceCharacters(workspaceId);
+  const max = maxCharactersForPlan(user.plan);
+  if (count >= max) {
+    return paywallResponse({
+      userId: user.id,
+      workspaceId,
+      reason: "persona_limit",
+      feature: "personas",
+      plan: "studio",
+      limit: max,
+      remaining: 0,
+      context: { count, route: "fork" },
+    });
   }
 
   await prisma.character.updateMany({
@@ -192,6 +237,19 @@ export async function POST(req: Request) {
       apiKeyHash: keyHash,
       apiKeyPrefix: keyPrefix,
       apiKeyLastFour: lastFour,
+      ...(source.imageUrl
+        ? {
+            photos: {
+              create: {
+                url: source.imageUrl,
+                caption: `${source.name} profile`,
+                kind: "profile",
+                tags: ["profile"],
+                isProfile: true,
+              },
+            },
+          }
+        : {}),
     },
   });
 
