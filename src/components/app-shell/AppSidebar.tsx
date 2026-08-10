@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   BookOpen,
   Bot,
+  GraduationCap,
   HelpCircle,
   MessageSquare,
   Settings2,
@@ -36,6 +37,7 @@ import {
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   personas: Users,
+  professionals: GraduationCap,
   sources: BookOpen,
   chat: MessageSquare,
   telegram: Bot,

@@ -61,11 +61,14 @@ export function ObsidianMindGraph({
   data,
   height = 560,
   emptyHint,
+  theme = "dark",
 }: {
   data: MindGraphData;
   height?: number;
   emptyHint?: string;
+  theme?: "dark" | "light";
 }) {
+  const light = theme === "light";
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sigmaRef = useRef<any>(null);
@@ -161,8 +164,12 @@ export function ObsidianMindGraph({
         graph.addEdge(l.source, l.target, {
           size: 0.35 + l.strength * 2.4,
           color: l.uncertain
-            ? "rgba(148,163,184,0.22)"
-            : "rgba(148,163,184,0.42)",
+            ? light
+              ? "rgba(64,90,86,0.2)"
+              : "rgba(148,163,184,0.22)"
+            : light
+              ? "rgba(64,90,86,0.46)"
+              : "rgba(148,163,184,0.42)",
           uncertain: Boolean(l.uncertain),
           label: l.label ?? "",
         });
@@ -186,7 +193,9 @@ export function ObsidianMindGraph({
         labelFont: "ui-sans-serif, system-ui, sans-serif",
         labelSize: 11,
         labelWeight: "500",
-        labelColor: { color: "rgba(232,230,227,0.9)" },
+        labelColor: {
+          color: light ? "rgba(19,43,47,0.92)" : "rgba(232,230,227,0.9)",
+        },
         stagePadding: 48,
       });
 
@@ -208,7 +217,9 @@ export function ObsidianMindGraph({
               graph.hasEdge(node, h) ||
               graph.areNeighbors(h, node);
             if (!keep) {
-              res.color = "rgba(71,85,105,0.14)";
+              res.color = light
+                ? "rgba(113,131,127,0.16)"
+                : "rgba(71,85,105,0.14)";
               res.label = "";
               res.zIndex = 0;
             } else {
@@ -223,7 +234,9 @@ export function ObsidianMindGraph({
             const label = String(attrs.label ?? "").toLowerCase();
             if (!label.includes(q) && String(attrs.nodeType) !== "persona") {
               if (!h) {
-                res.color = "rgba(71,85,105,0.1)";
+                res.color = light
+                  ? "rgba(113,131,127,0.12)"
+                  : "rgba(71,85,105,0.1)";
                 res.label = "";
               }
             }
@@ -244,7 +257,9 @@ export function ObsidianMindGraph({
               res.size = Number(attrs.size ?? 1) * 1.4;
             }
           } else if (attrs.uncertain) {
-            res.color = "rgba(148,163,184,0.2)";
+            res.color = light
+              ? "rgba(64,90,86,0.2)"
+              : "rgba(148,163,184,0.2)";
           }
           return res;
         });
@@ -303,7 +318,7 @@ export function ObsidianMindGraph({
       sigmaRef.current = null;
       graphRef.current = null;
     };
-  }, [data, hiddenTypes, hideWeak, sourcesOnly, nodeById]);
+  }, [data, hiddenTypes, hideWeak, sourcesOnly, nodeById, light]);
 
   useEffect(() => {
     queryRef.current = query;
@@ -325,7 +340,9 @@ export function ObsidianMindGraph({
   if (!data.nodes.length) {
     return (
       <div
-        className="flex items-center justify-center rounded-2xl border border-dashed border-[var(--line)] bg-[#0b0d10]"
+        className={`flex items-center justify-center rounded-2xl border border-dashed border-[var(--line)] ${
+          light ? "bg-[#f3f7f5]" : "bg-[#0b0d10]"
+        }`}
         style={{ height }}
       >
         <p className="max-w-sm px-6 text-center text-sm text-[var(--muted)]">
@@ -393,7 +410,9 @@ export function ObsidianMindGraph({
 
       <div className="grid gap-3 lg:grid-cols-[1fr_280px]">
         <div
-          className="relative overflow-hidden rounded-2xl border border-[var(--line)] bg-[#0b0d10]"
+          className={`relative overflow-hidden rounded-2xl border border-[var(--line)] ${
+            light ? "bg-[#f3f7f5]" : "bg-[#0b0d10]"
+          }`}
           style={{ height }}
         >
           <div ref={containerRef} className="h-full w-full" />
@@ -402,7 +421,13 @@ export function ObsidianMindGraph({
               Loading graph engine…
             </div>
           ) : null}
-          <div className="pointer-events-none absolute left-3 top-3 rounded-lg border border-white/10 bg-black/55 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-white/60 backdrop-blur">
+          <div
+            className={`pointer-events-none absolute left-3 top-3 rounded-lg px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] backdrop-blur ${
+              light
+                ? "border border-[var(--line)] bg-white/80 text-[var(--muted)]"
+                : "border border-white/10 bg-black/55 text-white/60"
+            }`}
+          >
             Sigma · ForceAtlas2 · {data.nodes.length} nodes · {data.links.length}{" "}
             edges
           </div>

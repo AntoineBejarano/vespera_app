@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { isProfessionalPersona } from "@/lib/professionals";
 
 type Bot = {
   id: string;
@@ -25,6 +26,7 @@ type Persona = {
   photoCount: number;
   coverUrl?: string | null;
   hasApiKey: boolean;
+  categories: string[];
   bots: Bot[];
   peerCount: number;
 };
@@ -145,6 +147,13 @@ export function PersonasList({ initial }: { initial: Persona[] }) {
                       </div>
                     </Link>
                     <div className="flex gap-2 border-t border-border pt-3">
+                      {isProfessionalPersona(p.categories) ? (
+                        <Button asChild size="sm">
+                          <Link href={`/professionals/session?characterId=${p.id}`}>
+                            Professional session
+                          </Link>
+                        </Button>
+                      ) : null}
                       <Button asChild variant="outline" size="sm">
                         <Link href={`/chat?characterId=${p.id}`}>
                           <MessageSquare className="size-3.5" />

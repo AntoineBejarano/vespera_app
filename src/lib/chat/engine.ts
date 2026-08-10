@@ -37,6 +37,7 @@ import {
 } from "@/lib/content-policy";
 import { buildPaywall, type PaywallPayload } from "@/lib/billing/paywall";
 import { logProductEvent } from "@/lib/product-events";
+import { hasWorkspacePermission } from "@/lib/workspace/permissions";
 
 export type ChatPhotoPayload = {
   url: string;
@@ -226,8 +227,16 @@ export async function prepareCharacterTurn(params: {
           where: { id: params.characterId },
         });
         if (!found) return null;
+        const workspaceMemberCanRun =
+          !user.isTelegramPeer &&
+          (await hasWorkspacePermission(
+            user.id,
+            found.workspaceId,
+            "playground.run",
+          ));
         const allowed =
           found.userId === user.id ||
+          workspaceMemberCanRun ||
           user.isTelegramPeer ||
           params.partner?.channel === "telegram" ||
           Boolean(params.partner?.externalCustomerId);

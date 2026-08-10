@@ -11,6 +11,7 @@ import { SITE_URL } from "@/lib/site";
 import { PARTNERS_MAILTO } from "@/lib/adult/partners";
 
 const MARKETING_LINKS = [
+  { href: "/professionals", label: "Professionals" },
   { href: "/registry", label: "Registry" },
   { href: "/#live-personas", label: "Live Personas" },
   { href: "/#creators", label: "For Creators" },
@@ -19,6 +20,7 @@ const MARKETING_LINKS = [
 ];
 
 const EXPLORE_LINKS = [
+  { href: "/professionals", label: "Professionals" },
   { href: "/registry", label: "Persona Registry" },
   { href: "/explore", label: "All paths" },
   { href: "/explore?filter=meet", label: "Great minds" },

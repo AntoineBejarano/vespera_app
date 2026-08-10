@@ -13,6 +13,8 @@ import { UpgradePrompt } from "@/components/billing/UpgradePrompt";
 import type { PaywallPayload } from "@/lib/billing/paywall";
 import dynamic from "next/dynamic";
 import type { PublicCharacterView as PublicCharacter } from "@/lib/characters/public";
+import { isProfessionalPersona } from "@/lib/professionals";
+import "@/styles/professionals-public.css";
 
 const PublicMindPreview = dynamic(
   () =>
@@ -81,28 +83,36 @@ export function PublicCharacterView({
   const avatar = character.photoUrl;
   const initial = (character.name.trim()[0] || "?").toUpperCase();
   const gallery = character.photos.slice(0, 6);
+  const professional =
+    !character.isAdult && isProfessionalPersona(character.categories);
 
   return (
     <div
-      className="relative min-h-screen overflow-hidden"
+      className={`relative min-h-screen overflow-hidden ${
+        professional ? "professionals-theme professional-profile-theme" : ""
+      }`}
       data-theme={character.isAdult ? "after-dark" : undefined}
     >
       <MarketingNav variant={character.isAdult ? "after-dark" : "marketing"} />
 
       {/* Compact identity bar — no giant header photo */}
-      <header className="relative border-b border-[var(--line)]">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-80"
-          style={{
-            background:
-              "radial-gradient(ellipse 55% 80% at 10% 0%, var(--brand-glow), transparent 60%), radial-gradient(ellipse 40% 60% at 90% 20%, var(--brand-glow-2), transparent 55%)",
-          }}
-        />
-        <motion.div
-          className="pointer-events-none absolute left-1/4 top-0 h-32 w-32 rounded-full bg-[var(--accent)]/15 blur-3xl"
-          animate={{ opacity: [0.2, 0.45, 0.2] }}
-          transition={{ duration: 7, repeat: Infinity }}
-        />
+      <header className="professional-profile-header relative border-b border-[var(--line)]">
+        {!professional ? (
+          <>
+            <div
+              className="pointer-events-none absolute inset-0 opacity-80"
+              style={{
+                background:
+                  "radial-gradient(ellipse 55% 80% at 10% 0%, var(--brand-glow), transparent 60%), radial-gradient(ellipse 40% 60% at 90% 20%, var(--brand-glow-2), transparent 55%)",
+              }}
+            />
+            <motion.div
+              className="pointer-events-none absolute left-1/4 top-0 h-32 w-32 rounded-full bg-[var(--accent)]/15 blur-3xl"
+              animate={{ opacity: [0.2, 0.45, 0.2] }}
+              transition={{ duration: 7, repeat: Infinity }}
+            />
+          </>
+        ) : null}
 
         <div className="relative mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:py-12">
           <BlurFade>
@@ -174,7 +184,11 @@ export function PublicCharacterView({
                 className="w-full sm:w-auto"
                 onClick={() => void forkCharacter(true)}
               >
-                {loading === "talk" ? "Opening…" : "Talk now"}
+                {loading === "talk"
+                  ? "Opening…"
+                  : professional
+                    ? `Work with ${character.name}`
+                    : "Talk now"}
               </ShimmerButton>
               {character.allowFork ? (
                 <button
@@ -183,7 +197,11 @@ export function PublicCharacterView({
                   onClick={() => void forkCharacter(false)}
                   className="w-full rounded-xl border border-[var(--line)] px-5 py-3.5 text-sm sm:w-auto disabled:opacity-50"
                 >
-                  {loading === "fork" ? "Creating…" : "Make your version"}
+                  {loading === "fork"
+                    ? "Creating…"
+                    : professional
+                      ? "Add to workspace"
+                      : "Make your version"}
                 </button>
               ) : null}
             </div>
@@ -219,7 +237,10 @@ export function PublicCharacterView({
           </p>
         </BlurFade>
         <div className="mt-8">
-          <PublicMindPreview slug={character.slug} />
+          <PublicMindPreview
+            slug={character.slug}
+            theme={professional ? "light" : "dark"}
+          />
         </div>
       </section>
 
@@ -311,25 +332,31 @@ export function PublicCharacterView({
               }}
             />
             <p className="relative font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
-              Step into {character.name}
+              {professional ? "Work with" : "Step into"} {character.name}
             </p>
             <div className="relative mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <ShimmerButton onClick={() => void forkCharacter(true)}>
-                {loading === "talk" ? "Opening…" : "Talk now"}
+                {loading === "talk"
+                  ? "Opening…"
+                  : professional
+                    ? "Start a session"
+                    : "Talk now"}
               </ShimmerButton>
               <Link
-                href="/explore"
+                href={professional ? "/professionals/registry" : "/explore"}
                 className="rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm text-[var(--muted)] hover:text-[var(--ink)]"
               >
-                Explore more
+                {professional ? "Professional Registry" : "Explore more"}
               </Link>
             </div>
-            <BorderBeam
-              size={120}
-              duration={9}
-              colorFrom="var(--accent)"
-              colorTo="var(--accent-2)"
-            />
+            {!professional ? (
+              <BorderBeam
+                size={120}
+                duration={9}
+                colorFrom="var(--accent)"
+                colorTo="var(--accent-2)"
+              />
+            ) : null}
           </div>
         </BlurFade>
       </section>

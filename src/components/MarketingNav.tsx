@@ -1,9 +1,11 @@
 "use client";
 
-import { AFTER_DARK_URL, SITE_URL } from "@/lib/site";
+import Link from "next/link";
+import { SITE_URL } from "@/lib/site";
 import { PARTNERS_MAILTO } from "@/lib/adult/partners";
 
 const MARKETING_LINKS = [
+  { href: "/professionals/registry", label: "Find a professional" },
   { href: "/registry", label: "Registry" },
   { href: "/#live-personas", label: "Live Personas" },
   { href: "/#creators", label: "For Creators" },
@@ -12,6 +14,7 @@ const MARKETING_LINKS = [
 ];
 
 const EXPLORE_LINKS = [
+  { href: "/professionals", label: "Professionals" },
   { href: "/registry", label: "Persona Registry" },
   { href: "/explore", label: "All paths" },
   { href: "/explore?filter=meet", label: "Great minds" },
@@ -114,9 +117,9 @@ export function MarketingNav({
             </a>
           ) : null}
 
-          <a href="/handler/sign-in" className={linkClass}>
+          <Link href="/handler/sign-in" className={linkClass}>
             Sign in
-          </a>
+          </Link>
           <a
             href={signUpHref}
             className="ml-1 border border-[var(--ink)]/20 px-3.5 py-1.5 text-[13px] font-medium tracking-[0.01em] text-[var(--ink)] transition hover:border-[var(--accent)]/50 hover:bg-[var(--accent-soft)]"
@@ -166,9 +169,9 @@ export function MarketingNav({
                   Main site
                 </a>
               ) : null}
-              <a href="/handler/sign-in" className="py-2.5 hover:text-[var(--ink)]">
+              <Link href="/handler/sign-in" className="py-2.5 hover:text-[var(--ink)]">
                 Sign in
-              </a>
+              </Link>
               <a
                 href={signUpHref}
                 className="mt-3 border border-[var(--ink)]/20 px-4 py-3 text-left font-medium text-[var(--ink)]"

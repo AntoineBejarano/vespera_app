@@ -31,7 +31,5 @@ export default async function ChatPage({
   });
   if (!character) redirect("/chat");
 
-  return (
-    <ChatPanel characters={[character]} initialCharacterId={character.id} />
-  );
+  return <ChatPanel characters={[character]} initialCharacterId={character.id} />;
 }

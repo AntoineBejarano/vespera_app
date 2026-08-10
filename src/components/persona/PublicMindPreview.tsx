@@ -19,7 +19,13 @@ const ObsidianMindGraph = dynamic(
   },
 );
 
-export function PublicMindPreview({ slug }: { slug: string }) {
+export function PublicMindPreview({
+  slug,
+  theme = "dark",
+}: {
+  slug: string;
+  theme?: "dark" | "light";
+}) {
   const [graph, setGraph] = useState<MindGraphData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
@@ -48,7 +54,11 @@ export function PublicMindPreview({ slug }: { slug: string }) {
 
   if (loadedFor !== slug) {
     return (
-      <div className="flex h-[480px] items-center justify-center rounded-2xl border border-[var(--line)] bg-[#0b0d10]">
+      <div
+        className={`flex h-[480px] items-center justify-center rounded-2xl border border-[var(--line)] ${
+          theme === "light" ? "bg-[#f3f7f5]" : "bg-[#0b0d10]"
+        }`}
+      >
         <p className="text-sm text-[var(--muted)]">Mapping their mind…</p>
       </div>
     );
@@ -67,6 +77,7 @@ export function PublicMindPreview({ slug }: { slug: string }) {
       data={graph ?? { nodes: [], links: [] }}
       height={520}
       emptyHint="This mind has no public layers yet."
+      theme={theme}
     />
   );
 }

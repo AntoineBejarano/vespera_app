@@ -22,6 +22,18 @@ export type NavGroup = {
 
 export const APP_NAV_GROUPS: NavGroup[] = [
   {
+    id: "experiences",
+    label: "Experiences",
+    items: [
+      {
+        id: "professionals",
+        label: "Professionals",
+        href: "/professionals/workspace",
+        match: (p) => p.startsWith("/professionals"),
+      },
+    ],
+  },
+  {
     id: "build",
     label: "Build",
     items: [

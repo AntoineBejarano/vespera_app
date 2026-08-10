@@ -50,6 +50,7 @@ export default async function PersonasPage() {
       photoCount: c._count.photos,
       coverUrl: resolveCoverUrl(c.photos),
       hasApiKey: Boolean(c.apiKey || c.apiKeyHash),
+      categories: c.categories,
       bots,
       peerCount: bots.reduce((n, b) => n + b.peerCount, 0),
     };
