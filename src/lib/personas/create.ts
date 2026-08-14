@@ -249,6 +249,8 @@ async function finalizePersona(params: {
       userId: params.user.id,
       characterId: character.id,
       title: `With ${character.name}`,
+      subjectId: subject.id,
+      channel: "web",
     },
   });
 

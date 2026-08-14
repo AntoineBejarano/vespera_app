@@ -264,6 +264,8 @@ export async function POST(req: Request) {
       userId: user.id,
       characterId: character.id,
       title: `With ${character.name}`,
+      subjectId: subject.id,
+      channel: "web",
     },
   });
 

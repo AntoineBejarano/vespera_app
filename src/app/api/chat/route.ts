@@ -1,4 +1,5 @@
 import {
+  createUIMessageStream,
   createUIMessageStreamResponse,
   toUIMessageStream,
   type UIMessage,
@@ -91,13 +92,30 @@ export async function POST(req: Request) {
       );
     }
 
+    const headers = {
+      "X-Daily-Remaining": String(limit.remaining),
+      "X-Model": streamed.prepared.modelId,
+      "X-Subject-Id": streamed.prepared.subjectId,
+    };
+
+    if (streamed.mode === "external") {
+      const stream = createUIMessageStream({
+        execute: ({ writer }) => {
+          writer.write({ type: "text-start", id: "ext" });
+          writer.write({
+            type: "text-delta",
+            id: "ext",
+            delta: streamed.text,
+          });
+          writer.write({ type: "text-end", id: "ext" });
+        },
+      });
+      return createUIMessageStreamResponse({ stream, headers });
+    }
+
     return createUIMessageStreamResponse({
       stream: toUIMessageStream({ stream: streamed.streamResult.stream }),
-      headers: {
-        "X-Daily-Remaining": String(limit.remaining),
-        "X-Model": streamed.prepared.modelId,
-        "X-Subject-Id": streamed.prepared.subjectId,
-      },
+      headers,
     });
   } catch (error) {
     console.error("[api/chat]", error);

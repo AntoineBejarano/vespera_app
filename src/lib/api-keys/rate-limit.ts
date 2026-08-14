@@ -54,4 +54,5 @@ export const V1_RATE_LIMITS = {
   import: 10,
   knowledge: 60,
   chat: 90,
+  runtime: 60,
 } as const;

@@ -1,6 +1,4 @@
-import { streamText } from "ai";
 import { prisma } from "@/lib/db";
-import { getOpenRouter } from "@/lib/ai/openrouter";
 import { resolveModel } from "@/lib/ai/models";
 import {
   evaluateContentSafety,
@@ -10,7 +8,7 @@ import {
 } from "@/lib/ai/safety";
 import { checkAndIncrementDailyLimit } from "@/lib/memory/limits";
 import { appendHistory, getRecentHistory } from "@/lib/memory/history";
-import { ensureConversation, getActiveCharacter } from "@/lib/users";
+import { getActiveCharacter } from "@/lib/users";
 import { assemblePersonaPrompt } from "@/lib/persona/assemble";
 import {
   scrubBubbles,
@@ -26,7 +24,6 @@ import {
 import { shouldStaySilent } from "@/lib/chat/closing";
 import { resolvePartnerName } from "@/lib/telegram/profile";
 import { loadMindContext, type MindActivityHit } from "@/lib/chat/mind-context";
-import { enqueuePostTurn } from "@/lib/chat/post-turn";
 import {
   assertCapability,
   isEndUserAgeAssured,
@@ -38,6 +35,17 @@ import {
 import { buildPaywall, type PaywallPayload } from "@/lib/billing/paywall";
 import { logProductEvent } from "@/lib/product-events";
 import { hasWorkspacePermission } from "@/lib/workspace/permissions";
+import { ensureConversation } from "@/lib/core/conversation";
+import { buildContextEnvelope } from "@/lib/core/continuity";
+import { recordInteraction } from "@/lib/core/interaction";
+import type { ContextEnvelope, ReasoningChannel } from "@/lib/core/types";
+import {
+  loadRuntimeBinding,
+  reasonExternal,
+  reasonNative,
+  resolveReasoningMode,
+  streamNative,
+} from "@/lib/reasoning";
 
 export type ChatPhotoPayload = {
   url: string;
@@ -62,7 +70,7 @@ export type ChatEngineResult =
   | { ok: false; error: string; status: number; paywall?: PaywallPayload };
 
 export type ChatPartnerOverride = {
-  channel: "telegram" | "web";
+  channel: ReasoningChannel;
   /** Telegram numeric user id — required for peer subjects (User.telegramId is only for linked accounts). */
   telegramUserId?: string | null;
   telegramFirstName?: string | null;
@@ -167,6 +175,7 @@ export type PreparedCharacterTurn = {
   activity: MindActivityHit[];
   userMessage: string;
   dailyRemaining: number;
+  envelope: ContextEnvelope;
 };
 
 export type PrepareTurnError = {
@@ -347,7 +356,11 @@ export async function prepareCharacterTurn(params: {
   const photoMiss =
     photoPick.status === "miss" ? photoPick.requested : null;
 
-  const channel = params.partner?.channel ?? "web";
+  const channel: ReasoningChannel = params.voiceMode
+    ? "voice"
+    : params.partner?.channel ??
+      (params.partner?.externalCustomerId ? "api" : "web");
+  const partnerChannel = channel === "telegram" ? "telegram" : "web";
   const tgFirst =
     params.partner?.telegramFirstName ?? user.telegramFirstName;
   const tgLast =
@@ -356,7 +369,7 @@ export async function prepareCharacterTurn(params: {
     params.partner?.telegramUsername ?? user.telegramUsername;
 
   const partnerName = resolvePartnerName({
-    channel,
+    channel: partnerChannel,
     telegramFirstName: tgFirst,
     telegramLastName: tgLast,
     howToAddress: user.settings?.howToAddress,
@@ -404,7 +417,7 @@ export async function prepareCharacterTurn(params: {
       howToAddress: partnerName.howToAddress,
       userId: user.id,
       subjectId: mind.subjectId,
-      channel,
+      channel: partnerChannel,
       telegramUsername: tgUser,
     },
     photoHint: params.voiceMode
@@ -417,6 +430,46 @@ export async function prepareCharacterTurn(params: {
   const system = params.systemAddon
     ? `${systemBase}\n\n${params.systemAddon}`
     : systemBase;
+
+  await ensureConversation(user.id, character.id, {
+    subjectId: mind.subjectId,
+    channel,
+  });
+
+  const modelMessages = [
+    ...recent.map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    })),
+    { role: "user" as const, content: text },
+  ];
+
+  const envelope = buildContextEnvelope({
+    character: {
+      id: character.id,
+      name: character.name,
+      soulMd: character.soulMd,
+      styleMd: character.styleMd,
+      rulesMd: character.rulesMd,
+      contextMd: character.contextMd,
+      intensity: character.intensity,
+      isAdult: character.isAdult,
+      channels: character.channels,
+      workspaceId: character.workspaceId,
+    },
+    subject: mind.subject,
+    affect: mind.affect,
+    intentions: mind.intentionBrief,
+    stage: mind.stage,
+    channel,
+    conversationId: conversation.id,
+    recent: modelMessages,
+    summary: mind.summary,
+    memoryBrief: mind.memoryBrief,
+    knowledgeBrief: mind.knowledgeBrief,
+    currentMessage: text,
+    modelId,
+  });
 
   await prisma.message.create({
     data: { conversationId: conversation.id, role: "user", content: text },
@@ -443,17 +496,12 @@ export async function prepareCharacterTurn(params: {
     subjectId: mind.subjectId,
     system,
     modelId,
-    modelMessages: [
-      ...recent.map((m) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      })),
-      { role: "user" as const, content: text },
-    ],
+    modelMessages,
     photo,
     activity: mind.activity,
     userMessage: text,
     dailyRemaining,
+    envelope,
   };
 }
 
@@ -485,16 +533,11 @@ export async function runCharacterReply(params: {
     return prepared;
   }
 
-  const openrouter = getOpenRouter();
-  const result = streamText({
-    model: openrouter(prepared.modelId),
-    system: prepared.system,
-    messages: prepared.modelMessages,
-  });
+  const reasoned = await reasonPreparedTurn(prepared);
+  if (!reasoned.ok) return reasoned;
 
-  const reply = await result.text;
-  const outputSafety = evaluateContentSafety(reply);
-  const safeReply = outputSafety.blocked ? SAFETY_BLOCK_MESSAGE : reply;
+  const outputSafety = evaluateContentSafety(reasoned.text);
+  const safeReply = outputSafety.blocked ? SAFETY_BLOCK_MESSAGE : reasoned.text;
   if (outputSafety.blocked) {
     logSafetyBlock("chat_output", outputSafety.rule, {
       userId: params.userId,
@@ -507,41 +550,20 @@ export async function runCharacterReply(params: {
   const persistContent =
     stored || (prepared.photo ? "(sent a photo)" : "");
 
-  let assistantMessageId: string | null = null;
   if (persistContent) {
-    const msg = await prisma.message.create({
-      data: {
-        conversationId: prepared.conversationId,
-        role: "assistant",
-        content: persistContent,
-      },
-    });
-    assistantMessageId = msg.id;
-    await appendHistory(prepared.user.id, prepared.character.id, {
-      role: "assistant",
-      content: persistContent,
-    });
-  }
-  await prisma.conversation.update({
-    where: { id: prepared.conversationId },
-    data: { updatedAt: new Date() },
-  });
-
-  if (
-    assistantMessageId &&
-    persistContent &&
-    persistContent !== "(sent a photo)" &&
-    !outputSafety.blocked
-  ) {
-    enqueuePostTurn({
+    await recordInteraction({
       conversationId: prepared.conversationId,
-      upToMessageId: assistantMessageId,
-      subjectId: prepared.subjectId,
       characterId: prepared.character.id,
+      subjectId: prepared.subjectId,
       userId: prepared.user.id,
       userMessage: prepared.userMessage,
       assistantMessage: persistContent,
       modelId: prepared.modelId,
+      proposed_relationship_update: outputSafety.blocked
+        ? null
+        : reasoned.proposed_relationship_update,
+      skipPostTurn:
+        persistContent === "(sent a photo)" || outputSafety.blocked,
     });
   }
 
@@ -557,6 +579,43 @@ export async function runCharacterReply(params: {
     modelId: prepared.modelId,
     subjectId: prepared.subjectId,
     activity: prepared.activity,
+  };
+}
+
+async function reasonPreparedTurn(prepared: PreparedCharacterTurn) {
+  const mode = resolveReasoningMode(prepared.character);
+  if (mode === "external") {
+    const loaded = await loadRuntimeBinding({
+      workspaceId: prepared.character.workspaceId,
+      bindingId: prepared.character.reasoningBindingId,
+    });
+    if (!loaded.ok) {
+      return { ok: false as const, error: loaded.error, status: loaded.status };
+    }
+    const result = await reasonExternal(prepared.envelope, loaded.binding);
+    if (result.status === "error") {
+      return {
+        ok: false as const,
+        error: result.error ?? "External runtime failed",
+        status: 502,
+      };
+    }
+    return {
+      ok: true as const,
+      text: result.text,
+      proposed_relationship_update: result.proposed_relationship_update,
+    };
+  }
+
+  const result = await reasonNative({
+    modelId: prepared.modelId,
+    system: prepared.system,
+    messages: prepared.modelMessages,
+  });
+  return {
+    ok: true as const,
+    text: result.text,
+    proposed_relationship_update: undefined,
   };
 }
 
@@ -577,40 +636,60 @@ export async function streamCharacterReply(params: {
   });
   if (!prepared.ok) return prepared;
 
-  const openrouter = getOpenRouter();
-  const result = streamText({
-    model: openrouter(prepared.modelId),
+  const mode = resolveReasoningMode(prepared.character);
+  if (mode === "external") {
+    const reasoned = await reasonPreparedTurn(prepared);
+    if (!reasoned.ok) return reasoned;
+    const outputSafety = evaluateContentSafety(reasoned.text);
+    const text = outputSafety.blocked ? SAFETY_BLOCK_MESSAGE : reasoned.text;
+    if (text) {
+      await recordInteraction({
+        conversationId: prepared.conversationId,
+        characterId: prepared.character.id,
+        subjectId: prepared.subjectId,
+        userId: prepared.user.id,
+        userMessage: prepared.userMessage,
+        assistantMessage: text,
+        modelId: prepared.modelId,
+        proposed_relationship_update: outputSafety.blocked
+          ? null
+          : reasoned.proposed_relationship_update,
+        skipPostTurn: outputSafety.blocked,
+      });
+    }
+    return {
+      ok: true as const,
+      mode: "external" as const,
+      text,
+      prepared,
+    };
+  }
+
+  const result = streamNative({
+    modelId: prepared.modelId,
     system: prepared.system,
     messages: prepared.modelMessages,
-    onFinish: async ({ text }) => {
+    onFinish: async (text) => {
       try {
         const { track } = await import("@/lib/metrics");
         track("chat_message", { model: prepared.modelId });
-        const msg = await prisma.message.create({
-          data: {
-            conversationId: prepared.conversationId,
-            role: "assistant",
-            content: text,
-          },
-        });
-        await appendHistory(prepared.user.id, prepared.character.id, {
-          role: "assistant",
-          content: text,
-        });
-        await prisma.conversation.update({
-          where: { id: prepared.conversationId },
-          data: { updatedAt: new Date() },
-        });
         if (text && !evaluateContentSafety(text).blocked) {
-          enqueuePostTurn({
+          await recordInteraction({
             conversationId: prepared.conversationId,
-            upToMessageId: msg.id,
-            subjectId: prepared.subjectId,
             characterId: prepared.character.id,
+            subjectId: prepared.subjectId,
             userId: prepared.user.id,
             userMessage: prepared.userMessage,
             assistantMessage: text,
             modelId: prepared.modelId,
+          });
+        } else if (text) {
+          await prisma.message.create({
+            data: {
+              conversationId: prepared.conversationId,
+              role: "assistant",
+              content: text,
+            },
           });
         }
       } catch (err) {
@@ -621,6 +700,7 @@ export async function streamCharacterReply(params: {
 
   return {
     ok: true as const,
+    mode: "native" as const,
     streamResult: result,
     prepared,
   };

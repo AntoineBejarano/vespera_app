@@ -169,6 +169,54 @@ async function maybeEnrichSubject(
 
   if (Object.keys(data).length === 0) return current;
 
+  // Never steal an identity already owned by another subject in this workspace.
+  if (data.webUserId) {
+    const taken = await prisma.relationshipSubject.findFirst({
+      where: {
+        workspaceId: current.workspaceId,
+        webUserId: data.webUserId,
+        id: { not: id },
+      },
+      select: { id: true },
+    });
+    if (taken) delete data.webUserId;
+  }
+  if (data.telegramUserId) {
+    const taken = await prisma.relationshipSubject.findFirst({
+      where: {
+        workspaceId: current.workspaceId,
+        telegramUserId: data.telegramUserId,
+        id: { not: id },
+      },
+      select: { id: true },
+    });
+    if (taken) delete data.telegramUserId;
+  }
+  if (data.externalCustomerId) {
+    const taken = await prisma.relationshipSubject.findFirst({
+      where: {
+        workspaceId: current.workspaceId,
+        externalCustomerId: data.externalCustomerId,
+        id: { not: id },
+      },
+      select: { id: true },
+    });
+    if (taken) delete data.externalCustomerId;
+  }
+  if (data.phoneNumberHash) {
+    const taken = await prisma.relationshipSubject.findFirst({
+      where: {
+        workspaceId: current.workspaceId,
+        phoneNumberHash: data.phoneNumberHash,
+        id: { not: id },
+      },
+      select: { id: true },
+    });
+    if (taken) delete data.phoneNumberHash;
+  }
+
+  if (Object.keys(data).length === 0) return current;
+
   try {
     return await prisma.relationshipSubject.update({
       where: { id },

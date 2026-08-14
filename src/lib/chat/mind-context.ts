@@ -20,8 +20,16 @@ export type MindActivityHit = {
 
 export type LoadedMindContext = {
   subjectId: string;
+  subject: {
+    id: string;
+    displayName: string | null;
+    webUserId: string | null;
+    telegramUserId: string | null;
+    externalCustomerId: string | null;
+  };
   persona: PersonaBundle;
   affect: AffectSnapshot;
+  stage: string;
   memoryBrief: string[];
   knowledgeBrief: string[];
   intentionBrief: string[];
@@ -154,6 +162,13 @@ export async function loadMindContext(params: {
 
   return {
     subjectId: subject.id,
+    subject: {
+      id: subject.id,
+      displayName: subject.displayName,
+      webUserId: subject.webUserId,
+      telegramUserId: subject.telegramUserId,
+      externalCustomerId: subject.externalCustomerId,
+    },
     persona: {
       name: params.character.name,
       intensity: params.character.intensity,
@@ -165,6 +180,7 @@ export async function loadMindContext(params: {
       limitsJson: params.character.limitsJson,
     },
     affect: normalizeAffect(affect),
+    stage: relationship.stage,
     memoryBrief: memories,
     knowledgeBrief,
     intentionBrief,

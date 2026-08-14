@@ -24,20 +24,6 @@ export async function getActiveCharacter(userId: string) {
   });
 }
 
-export async function ensureConversation(
-  userId: string,
-  characterId: string,
-) {
-  const existing = await prisma.conversation.findFirst({
-    where: { userId, characterId },
-    orderBy: { updatedAt: "desc" },
-  });
-  if (existing) return existing;
-  return prisma.conversation.create({
-    data: { userId, characterId, title: "Conversation" },
-  });
-}
-
 export async function countUserCharacters(userId: string) {
   return prisma.character.count({ where: { userId, archivedAt: null } });
 }
@@ -49,3 +35,4 @@ export async function countWorkspaceCharacters(workspaceId: string) {
 }
 
 export { getAppUser, requireAppUser };
+export { ensureConversation } from "@/lib/core/conversation";

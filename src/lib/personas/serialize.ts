@@ -24,7 +24,16 @@ type SerializablePersona = Pick<
   | "apiKey"
 > &
   Partial<
-    Pick<Character, "license" | "channels" | "versionMajor" | "versionMinor">
+    Pick<
+      Character,
+      | "license"
+      | "channels"
+      | "versionMajor"
+      | "versionMinor"
+      | "reasoningMode"
+      | "reasoningBindingId"
+      | "capabilitiesJson"
+    >
   >;
 
 /** Public management view — never includes chat apiKey. */
@@ -56,6 +65,8 @@ export function serializePersona(
         ("apiKeyHash" in c && c.apiKeyHash) ||
         ("apiKeyPrefix" in c && c.apiKeyPrefix),
     ),
+    reasoningMode: c.reasoningMode ?? "native",
+    reasoningBindingId: c.reasoningBindingId ?? null,
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,
   };
@@ -69,6 +80,7 @@ export function serializePersona(
     rules: c.rulesMd ?? "",
     context: c.contextMd ?? "",
     limits: c.limitsJson ?? null,
+    capabilities: c.capabilitiesJson ?? { items: [] },
   };
 }
 

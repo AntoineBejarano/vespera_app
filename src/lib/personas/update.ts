@@ -29,6 +29,7 @@ import {
 import { assertCapability } from "@/lib/content-policy/runtime";
 import { evaluatePersonaConfigSafety } from "@/lib/ai/safety";
 import { isSuperadminUser } from "@/lib/platform/superadmin";
+import { capabilitiesJsonSchema } from "@/lib/core/capabilities";
 
 export const personaPatchSchema = z.object({
   active: z.boolean().optional(),
@@ -60,6 +61,9 @@ export const personaPatchSchema = z.object({
   changelog: z.string().max(280).nullable().optional(),
   bumpMajor: z.boolean().optional(),
   platformOperatorAccepted: z.boolean().optional(),
+  reasoningMode: z.enum(["native", "external"]).optional(),
+  reasoningBindingId: z.string().nullable().optional(),
+  capabilities: capabilitiesJsonSchema.optional(),
 });
 
 export type PersonaPatchInput = z.infer<typeof personaPatchSchema>;
@@ -84,6 +88,8 @@ export type PersonaUpdateResult =
         channels: string[];
         versionMajor: number;
         versionMinor: number;
+        reasoningMode: string;
+        reasoningBindingId: string | null;
       };
     }
   | { ok: false; status: number; error: string; code?: string };
@@ -384,6 +390,47 @@ export async function updateOwnedPersona(params: {
       ? "public"
       : character.license);
 
+  const nextAdult = data.isAdult ?? character.isAdult;
+  let reasoningMode = data.reasoningMode ?? character.reasoningMode;
+  let reasoningBindingId =
+    data.reasoningBindingId !== undefined
+      ? data.reasoningBindingId
+      : character.reasoningBindingId;
+
+  if (nextAdult) {
+    reasoningMode = "native";
+    reasoningBindingId = null;
+  }
+
+  if (reasoningMode === "external") {
+    if (!reasoningBindingId) {
+      return {
+        ok: false,
+        status: 400,
+        error: "External reasoning requires a workspace runtime binding.",
+      };
+    }
+    const binding = await prisma.runtimeBinding.findFirst({
+      where: {
+        id: reasoningBindingId,
+        workspaceId: character.workspaceId,
+      },
+      select: { id: true },
+    });
+    if (!binding) {
+      return {
+        ok: false,
+        status: 400,
+        error: "Runtime binding not found in this workspace.",
+      };
+    }
+  }
+
+  const capabilitiesJson =
+    data.capabilities !== undefined
+      ? data.capabilities
+      : character.capabilitiesJson;
+
   const updated = await prisma.character.update({
     where: { id: params.characterId },
     data: {
@@ -406,11 +453,17 @@ export async function updateOwnedPersona(params: {
       openingLine: nextLayers.openingLine,
       categories: data.categories ?? character.categories,
       allowFork: data.allowFork ?? character.allowFork,
-      isAdult: data.isAdult ?? character.isAdult,
+      isAdult: nextAdult,
       license: nextLicense,
       channels: data.channels ?? character.channels,
       versionMajor,
       versionMinor,
+      reasoningMode,
+      reasoningBindingId,
+      capabilitiesJson:
+        capabilitiesJson === undefined
+          ? undefined
+          : (capabilitiesJson as Prisma.InputJsonValue),
     },
   });
 
@@ -433,6 +486,8 @@ export async function updateOwnedPersona(params: {
       channels: updated.channels,
       versionMajor: updated.versionMajor,
       versionMinor: updated.versionMinor,
+      reasoningMode: updated.reasoningMode,
+      reasoningBindingId: updated.reasoningBindingId,
     },
   };
 }

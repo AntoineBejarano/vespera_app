@@ -119,6 +119,7 @@ model Workspace {
   activeForUsers User[] @relation("UserActiveWorkspace")
   relationshipSubjects RelationshipSubject[]
   adultApprovals AdultWorkspaceApproval[]
+  runtimeBindings RuntimeBinding[]
 
   @@index([createdAt])
   @@index([adultEnabled])
@@ -475,6 +476,12 @@ model Character {
   license      String   @default("fork_allowed")
   /// Declared distribution targets (vesperer, telegram, web, chai, sillytavern, api…)
   channels     String[] @default([])
+  /// native | external — how this persona thinks. Default is Vesperer Native.
+  reasoningMode String  @default("native")
+  /// Workspace RuntimeBinding (infrastructure). Never a raw secret.
+  reasoningBindingId String?
+  /// Optional capability declarations (not tools, not required to be a persona)
+  capabilitiesJson Json?
   forkedFromId String?
   archivedAt   DateTime?
   archivedByUserId String?
@@ -494,6 +501,8 @@ model Character {
   photos          CharacterPhoto[]
   telegramBots    TelegramBot[]
   knowledgeLinks  CharacterKnowledgePack[]
+  reasoningBinding RuntimeBinding? @relation(fields: [reasoningBindingId], references: [id], onDelete: SetNull)
+  relationshipEvents RelationshipStateEvent[]
 
   @@index([workspaceId])
   @@index([workspaceId, active])
@@ -506,6 +515,7 @@ model Character {
   @@index([isPublic, isAdult])
   @@index([workspaceId, archivedAt])
   @@index([isPublic, license])
+  @@index([reasoningBindingId])
 }
 
 /// Cross-channel continuity identity for a real person talking to personas.
@@ -528,6 +538,9 @@ model RelationshipSubject {
   relationships  RelationshipState[]
   openIntentions OpenIntention[]
   memories       Memory[]
+  identityLinks  SubjectIdentityLink[]
+  conversations  Conversation[]
+  relationshipEvents RelationshipStateEvent[]
 
   @@index([workspaceId])
   @@index([webUserId])
@@ -602,6 +615,8 @@ model RelationshipState {
   summary     String?  @db.Text
   /// Extensible affect payload — validated with Zod before prompt inject
   affectJson  Json?
+  /// Lifecycle stage (in addition to affect): new_contact | active | trusted | distant
+  stage       String   @default("new_contact")
   /// Optimistic concurrency for async post-turn updates
   version     Int      @default(0)
   updatedAt   DateTime @updatedAt
@@ -609,11 +624,77 @@ model RelationshipState {
 
   subject   RelationshipSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   character Character           @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  events    RelationshipStateEvent[]
 
   @@unique([subjectId, characterId])
   @@index([subjectId])
   @@index([characterId])
   @@index([userId])
+}
+
+/// Audit log for relationship stage / affect changes.
+model RelationshipStateEvent {
+  id          String   @id @default(cuid())
+  relationshipStateId String
+  subjectId   String
+  characterId String
+  fromVersion Int
+  toVersion   Int
+  fromStage   String?
+  toStage     String?
+  deltas      Json?
+  /// post_turn | proposed_runtime | explicit | identity_link
+  source      String
+  accepted    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  relationship RelationshipState    @relation(fields: [relationshipStateId], references: [id], onDelete: Cascade)
+  subject      RelationshipSubject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  character    Character            @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([subjectId, characterId, createdAt])
+  @@index([relationshipStateId, createdAt])
+}
+
+/// Explicit, audited identity claim. Never merge two subjects by heuristic.
+model SubjectIdentityLink {
+  id                  String    @id @default(cuid())
+  workspaceId         String
+  subjectId           String
+  /// webUserId | telegramUserId | externalCustomerId | phoneNumberHash
+  kind                String
+  value               String
+  evidence            Json
+  verifiedAt          DateTime?
+  mergedFromSubjectId String?
+  createdAt           DateTime  @default(now())
+
+  subject RelationshipSubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, kind, value])
+  @@index([subjectId])
+  @@index([workspaceId])
+}
+
+/// Workspace-level reasoning infrastructure (not persona identity).
+/// Auth secret lives in Railway env; DB stores only the variable name.
+model RuntimeBinding {
+  id            String   @id @default(cuid())
+  workspaceId   String
+  name          String
+  /// http (more kinds later)
+  kind          String   @default("http")
+  baseUrl       String
+  /// Env var name, e.g. HERMES_RUNTIME_SECRET. Never the secret itself.
+  authSecretRef String?
+  timeoutMs     Int      @default(30000)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  workspace  Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  characters Character[]
+
+  @@index([workspaceId])
 }
 
 /// Open goals / commitments / questions the persona maintains toward a subject.
@@ -712,17 +793,24 @@ model Conversation {
   id          String   @id @default(cuid())
   userId      String
   characterId String
+  /// Cross-channel continuity key (nullable on legacy rows)
+  subjectId   String?
+  /// web | telegram | api | voice
+  channel     String   @default("web")
   title       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character Character            @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  subject   RelationshipSubject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   messages  Message[]
   summaries Summary[]
 
   @@index([userId])
   @@index([characterId])
+  @@index([subjectId, characterId])
+  @@index([characterId, channel])
 }
 
 model Message {
