@@ -43,7 +43,8 @@ export const metadata: Metadata = {
       ],
       "text/markdown": [
         { url: "/skill", title: "Vesperer agent skill" },
-        { url: "/skill/full", title: "Vesperer skill (full)" },
+        { url: "/skill/reference", title: "Vesperer API reference" },
+        { url: "/skill/runtime", title: "Vesperer runtime envelope" },
       ],
     },
   },

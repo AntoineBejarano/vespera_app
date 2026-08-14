@@ -1,8 +1,9 @@
-import { VESPERER_SKILL_MD } from "@/lib/skill/content";
-import { markdownSkillResponse } from "@/lib/skill/serve";
+import { NextResponse } from "next/server";
+import { SITE_URL } from "@/lib/site";
 
 export const dynamic = "force-static";
 
+/** Alias of /skill — consolidate ranking signals on the canonical path. */
 export async function GET() {
-  return markdownSkillResponse(VESPERER_SKILL_MD);
+  return NextResponse.redirect(`${SITE_URL}/skill`, 308);
 }

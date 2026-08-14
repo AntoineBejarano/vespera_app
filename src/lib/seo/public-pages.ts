@@ -48,7 +48,7 @@ export const APEX_STATIC_PAGES: PublicPageEntry[] = [
     path: "/developers",
     title: "Developer docs",
     description:
-      "Public CLI, API and installable agent skill for persistent AI personas",
+      "Vesperer API and CLI to create persistent AI personas — vsk_ keys, vesp_ chat, installable agent skill",
     changeFrequency: "weekly",
     priority: 0.96,
     llms: true,
@@ -57,9 +57,27 @@ export const APEX_STATIC_PAGES: PublicPageEntry[] = [
     path: "/skill",
     title: "Agent skill",
     description:
-      "Installable SKILL.md for coding agents — keys, Chat API, envelope, runtime",
+      "Canonical SKILL.md for coding agents — create personas, Chat API, Native vs external runtime",
     changeFrequency: "weekly",
     priority: 0.97,
+    llms: true,
+  },
+  {
+    path: "/skill/reference",
+    title: "API reference",
+    description:
+      "Vesperer HTTP API: personas, chat, knowledge packs, bots, runtime bindings, errors and rate limits",
+    changeFrequency: "weekly",
+    priority: 0.9,
+    llms: true,
+  },
+  {
+    path: "/skill/runtime",
+    title: "Runtime envelope",
+    description:
+      "ContextEnvelope v1 and ReasoningResult for attaching an external HTTP reasoning runtime",
+    changeFrequency: "weekly",
+    priority: 0.88,
     llms: true,
   },
   {

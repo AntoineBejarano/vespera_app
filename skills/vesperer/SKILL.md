@@ -21,7 +21,7 @@ Fetch these before inventing request shapes. Prefer the live copies over trainin
 | Resource | URL |
 |---|---|
 | This skill | https://vesperer.com/skill |
-| Alias | https://vesperer.com/skill.md |
+| Alias (308 → /skill) | https://vesperer.com/skill.md |
 | Full pack | https://vesperer.com/skill/full |
 | API reference | https://vesperer.com/skill/reference |
 | Runtime / envelope | https://vesperer.com/skill/runtime |

@@ -96,6 +96,21 @@ export const AGENCY_KEYWORDS = [
   "roster AI characters with memory",
 ];
 
+export const DEVELOPER_KEYWORDS = [
+  "Vesperer API",
+  "Vesperer CLI",
+  "create AI persona API",
+  "AI character API",
+  "persistent AI persona CLI",
+  "vsk_ API key",
+  "vesp_ chat key",
+  "Cursor agent skill Vesperer",
+  "Claude Code create AI character",
+  "ContextEnvelope",
+  "installable agent skill",
+  "AI persona chat API",
+];
+
 export const PLATFORM_KEYWORDS = [
   "AI identity API",
   "embed AI persona API",

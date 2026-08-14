@@ -8,7 +8,9 @@ import {
   VESPERER_SKILL_REFERENCE_MD,
   VESPERER_SKILL_RUNTIME_MD,
 } from "@/lib/skill/content";
+import { markdownSkillResponse } from "@/lib/skill/serve";
 import { buildApexLlmsTxt } from "@/lib/seo/build-llms";
+import { APEX_STATIC_PAGES } from "@/lib/seo/public-pages";
 
 function repoFile(relative: string) {
   return readFileSync(join(process.cwd(), relative), "utf8").replace(/\n$/, "");
@@ -52,5 +54,29 @@ describe("public Vesperer skill", () => {
       assert.ok(skillAt < studioAt);
     }
     assert.match(buildVespererSkillFullMd(), /# Vesperer API reference/);
+  });
+
+  it("indexes unique skill URLs and noindexes the concatenated pack", () => {
+    const indexed = new Set(APEX_STATIC_PAGES.map((p) => p.path));
+    assert.ok(indexed.has("/developers"));
+    assert.ok(indexed.has("/skill"));
+    assert.ok(indexed.has("/skill/reference"));
+    assert.ok(indexed.has("/skill/runtime"));
+    assert.equal(indexed.has("/skill.md"), false);
+    assert.equal(indexed.has("/skill/full"), false);
+
+    const skill = markdownSkillResponse("# skill", { canonicalPath: "/skill" });
+    assert.equal(skill.headers.get("X-Robots-Tag"), "all");
+    assert.match(skill.headers.get("Link") ?? "", /\/skill>; rel="canonical"/);
+    assert.match(
+      skill.headers.get("Link") ?? "",
+      /\/developers>; rel="alternate"; type="text\/html"/,
+    );
+
+    const pack = markdownSkillResponse("# full", {
+      canonicalPath: "/skill",
+      index: false,
+    });
+    assert.equal(pack.headers.get("X-Robots-Tag"), "noindex, follow");
   });
 });

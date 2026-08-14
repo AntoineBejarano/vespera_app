@@ -66,7 +66,7 @@ export function buildApexLlmsTxt(): string {
     link(
       "Full skill pack",
       `${SITE_URL}/skill/full`,
-      "Skill + API reference + ContextEnvelope runtime docs",
+      "Concatenated markdown for agents (noindex — use /skill, /skill/reference, /skill/runtime)",
     ),
     link(
       "Developer docs",
