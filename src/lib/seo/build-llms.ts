@@ -59,6 +59,21 @@ export function buildApexLlmsTxt(): string {
 
   const builders = [
     link(
+      "Agent skill",
+      `${SITE_URL}/skill`,
+      "Canonical SKILL.md — fetch before using CLI or /api/v1",
+    ),
+    link(
+      "Full skill pack",
+      `${SITE_URL}/skill/full`,
+      "Skill + API reference + ContextEnvelope runtime docs",
+    ),
+    link(
+      "Developer docs",
+      `${SITE_URL}/developers`,
+      "Human landing for keys, skill install, and Claude vibecode",
+    ),
+    link(
       "Sitemap",
       `${SITE_URL}/sitemap.xml`,
       "Full indexable URL set for search engines",
@@ -71,7 +86,7 @@ export function buildApexLlmsTxt(): string {
     link(
       "Studio sign-in",
       `${SITE_URL}/handler/sign-in`,
-      "API & CLI docs are available inside the signed-in studio at /docs",
+      "Create a vsk_ account API key after sign-in (studio /docs is a signed-in copy)",
     ),
   ];
 
@@ -98,6 +113,8 @@ export function buildApexLlmsTxt(): string {
     "Canonical taxonomy: `/explore`, `/meet/[slug]`, `/learn/[slug]`, `/hire/[slug]`, `/create/[slug]`. Aliases 308 to canons: `/characters/*`, `/historical-figures/*` → meet; `/use-cases/*` → hire/learn/create.",
     "",
     "Channels: web, Telegram, voice, Chat API (`POST /api/v1/chat`), CLI (`npm run vesperer`).",
+    "",
+    "For AI agents: fetch the installable skill at https://vesperer.com/skill (full pack: https://vesperer.com/skill/full) before calling the API.",
     "",
     section("Product", product),
     "",
@@ -126,6 +143,8 @@ export function buildApexLlmsFullTxt(): string {
     `> ${SITE_DESCRIPTION}`,
     "",
     `Canonical site: ${SITE_URL}`,
+    `Agent skill: ${SITE_URL}/skill`,
+    `Full skill pack: ${SITE_URL}/skill/full`,
     `Compact index: ${SITE_URL}/llms.txt`,
     `Sitemap: ${SITE_URL}/sitemap.xml`,
     "",
@@ -231,6 +250,11 @@ export function buildAfterDarkLlmsTxt(): string {
     ]),
     "",
     section("For builders & AI agents", [
+      link(
+        "Agent skill (apex)",
+        `${SITE_URL}/skill`,
+        "Installable SKILL.md — SFW builder docs live on vesperer.com",
+      ),
       link("Apex llms.txt", `${SITE_URL}/llms.txt`, "Full SFW product and Explore index"),
       link("Apex sitemap", `${SITE_URL}/sitemap.xml`, "SFW indexable URLs"),
       link(

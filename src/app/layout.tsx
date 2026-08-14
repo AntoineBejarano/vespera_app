@@ -41,6 +41,10 @@ export const metadata: Metadata = {
         { url: "/llms.txt", title: "llms.txt" },
         { url: "/llms-full.txt", title: "llms-full.txt" },
       ],
+      "text/markdown": [
+        { url: "/skill", title: "Vesperer agent skill" },
+        { url: "/skill/full", title: "Vesperer skill (full)" },
+      ],
     },
   },
   keywords: [

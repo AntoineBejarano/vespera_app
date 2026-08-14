@@ -45,6 +45,24 @@ export const APEX_STATIC_PAGES: PublicPageEntry[] = [
     llms: true,
   },
   {
+    path: "/developers",
+    title: "Developer docs",
+    description:
+      "Public CLI, API and installable agent skill for persistent AI personas",
+    changeFrequency: "weekly",
+    priority: 0.96,
+    llms: true,
+  },
+  {
+    path: "/skill",
+    title: "Agent skill",
+    description:
+      "Installable SKILL.md for coding agents — keys, Chat API, envelope, runtime",
+    changeFrequency: "weekly",
+    priority: 0.97,
+    llms: true,
+  },
+  {
     path: "/integrations/claude",
     title: "Claude integration",
     description: "Use Vesperer personas with Claude and agent workflows",

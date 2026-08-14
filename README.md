@@ -12,7 +12,9 @@
 | `/business/agencies` | Operación multi-talent |
 | `/business/platforms` | Integración API / multi-tenant |
 | `/after-dark` | After Dark 18+ (deseo, privacidad, continuidad) |
-| `/docs` | API & CLI |
+| `/developers` | Docs públicas CLI / API / skill para agentes |
+| `/skill` | SKILL.md instalable (`text/markdown`) |
+| `/docs` | Copia firmada en el studio |
 | `/technology` | Capas de identidad y memoria |
 
 Empresa: **Deevly Labs LTD** ([deevlylabs.com](https://deevlylabs.com)). Producto: Vesperer. Contacto legal del producto: `legal@mail.vesperer.com`.

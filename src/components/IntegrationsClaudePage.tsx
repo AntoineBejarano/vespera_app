@@ -161,15 +161,19 @@ export function IntegrationsClaudePage() {
               Get a free API key
             </ShimmerButton>
             <Link
-              href="/handler/sign-in"
+              href="/developers"
               className="rounded-xl border border-[var(--line)] px-5 py-3.5 text-sm hover:border-[var(--accent)]"
             >
-              Read the CLI docs
+              Public docs &amp; skill
             </Link>
           </div>
           <p className="mt-6 text-sm text-[var(--muted)]">
             Works with Claude Code, Cursor agents, and any tool that can run a
-            shell.
+            shell. Agents should fetch{" "}
+            <Link href="/skill" className="underline underline-offset-2">
+              /skill
+            </Link>{" "}
+            before calling the API.
           </p>
         </BlurFade>
 

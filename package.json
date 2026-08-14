@@ -14,7 +14,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:policy": "tsx --test src/lib/content-policy/__tests__/policy.test.ts",
-    "test:core": "tsx --test src/lib/core/__tests__/*.test.ts src/lib/reasoning/__tests__/*.test.ts",
+    "test:core": "tsx --test src/lib/core/__tests__/*.test.ts src/lib/reasoning/__tests__/*.test.ts src/lib/skill/__tests__/*.test.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",

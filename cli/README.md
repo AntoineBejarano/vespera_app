@@ -2,7 +2,7 @@
 
 Manage Vesperer personas and knowledge packs with an **account API key** (`vsk_…`). Designed so AI agents (Claude Code, Cursor, …) can provision characters without a browser — with production tenant isolation.
 
-Guide: [vesperer.com/integrations/claude](https://vesperer.com/integrations/claude)
+Guide: [vesperer.com/developers](https://vesperer.com/developers) · agent skill: [vesperer.com/skill](https://vesperer.com/skill)
 
 ## Setup
 

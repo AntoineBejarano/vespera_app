@@ -26,6 +26,22 @@ export default function DocsPage() {
         }
       />
 
+      <p className="text-sm text-muted-foreground">
+        Public agent skill (no login):{" "}
+        <Link href="/skill" className="text-foreground underline underline-offset-2">
+          /skill
+        </Link>
+        {" · "}
+        <Link href="/skill/full" className="text-foreground underline underline-offset-2">
+          /skill/full
+        </Link>
+        {" · "}
+        <Link href="/developers" className="text-foreground underline underline-offset-2">
+          /developers
+        </Link>
+        .
+      </p>
+
       <div className="overflow-hidden rounded-xl border border-border text-sm">
         <div className="grid grid-cols-[7rem_1fr] border-b border-border">
           <div className="border-r border-border px-3 py-2 font-medium">
@@ -125,6 +141,9 @@ npm run vesperer -- knowledge packs link <packId> --character <id>`}
             ["POST", "/api/v1/knowledge/packs/:id/links", "Link to your personas"],
             ["GET/POST", "/api/v1/bots", "List / bind Telegram bots"],
             ["POST", "/api/v1/chat", "Chat with vesp_ (not vsk_)"],
+            ["GET/POST", "/api/v1/runtime-bindings", "HTTP reasoning runtimes"],
+            ["POST", "/api/v1/runtime/envelope", "Pull ContextEnvelope (vesp_ or vsk_)"],
+            ["POST", "/api/v1/runtime/interactions", "Record a runtime turn"],
           ].map(([method, path, desc]) => (
             <div
               key={`${method}-${path}`}

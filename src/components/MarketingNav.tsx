@@ -28,6 +28,7 @@ const EXPLORE_LINKS = [
   { href: "/explore?filter=create", label: "Create" },
   { href: "/chai-character-creator", label: "Chai-ready creator" },
   { href: "/bring", label: "Bring a character" },
+  { href: "/developers", label: "Developers" },
   { href: "/integrations/claude", label: "Claude · vibecode" },
   { href: "/#cli", label: "CLI for agents" },
 ];

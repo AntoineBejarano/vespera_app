@@ -190,12 +190,12 @@ export default function BusinessPage() {
           <ul className="mt-6 space-y-3 text-sm text-[var(--muted)]">
             <li>
               <Link
-                href="/handler/sign-in"
+                href="/developers"
                 className="text-[var(--ink)] hover:underline"
               >
-                studio /docs
+                /developers
               </Link>
-              {" — "}Chat API, CLI and key model for agents and backends.
+              {" — "}Public CLI, API and installable agent skill.
             </li>
             <li>
               <Link

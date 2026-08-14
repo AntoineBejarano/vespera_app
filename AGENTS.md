@@ -28,3 +28,4 @@ Vesperer is a platform for creating persistent AI personas. It owns identity, re
 - Adult / After Dark personas stay Native. Runtime API is SFW-only (`POST /api/v1/runtime/envelope` + `interactions`).
 - `RuntimeBinding.authSecretRef` names a Railway env var; secrets do not live in Prisma.
 - Tools/capabilities are optional and separate from reasoning.
+- Public agent docs: `https://vesperer.com/skill` (full: `/skill/full`). Repo copy: `skills/vesperer/`.

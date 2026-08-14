@@ -120,15 +120,15 @@ export default function TechnologyPage() {
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
             Each character can expose a chat API key, connect to Telegram, and
-            keep peer-isolated memory. Full request shapes live in the signed-in
-            studio docs.
+            keep peer-isolated memory. Request shapes live in the public agent
+            skill.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              href="/handler/sign-in"
+              href="/developers"
               className="rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-medium text-[var(--accent-ink)]"
             >
-              Sign in for API docs
+              Developer docs
             </Link>
             <Link
               href="/#create"

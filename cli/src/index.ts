@@ -97,7 +97,8 @@ Telegram bots (account key vsk_…):
   bots delete --bot <botId>
 
 Env: VESPERER_API_KEY, VESPERER_API_URL
-Docs: https://vesperer.com/docs
+Skill: https://vesperer.com/skill
+Docs: https://vesperer.com/developers
 Claude guide: https://vesperer.com/integrations/claude
 `);
 }

@@ -800,16 +800,16 @@ export function LandingPage({
                   Vibecode with Claude
                 </a>
                 <a
-                  href="/handler/sign-in"
+                  href="/developers"
                   className="inline-flex rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
                 >
-                  CLI docs
+                  Developer docs
                 </a>
                 <a
-                  href="/handler/sign-in"
+                  href="/skill"
                   className="inline-flex rounded-xl border border-[var(--line)] px-6 py-3.5 text-sm"
                 >
-                  API documentation
+                  Agent skill
                 </a>
                 <a
                   href="/settings"

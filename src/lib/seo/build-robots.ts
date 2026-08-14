@@ -87,6 +87,8 @@ export function buildAfterDarkRobots(
       "/chai-character-creator",
       "/chai-character-backup",
       "/integrations/",
+      "/developers",
+      "/skill",
     ]),
     sitemap: `${AFTER_DARK_URL}/sitemap.xml`,
     host: surface.host,

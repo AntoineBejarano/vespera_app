@@ -36,7 +36,7 @@ const FAQ = [
   },
   {
     q: "Can an AI agent create personas for me?",
-    a: "Yes. Settings → create an account API key (vsk_…). Then use the CLI or /api/v1/*. Walkthrough: /integrations/claude.",
+    a: "Yes. Settings → create an account API key (vsk_…). Then use the CLI or /api/v1/*. Public skill: /skill. Walkthrough: /integrations/claude.",
   },
   {
     q: "How many characters can I create?",
@@ -73,6 +73,12 @@ export default function HelpPage() {
       />
 
       <div className="flex flex-wrap gap-2">
+        <Link
+          href="/developers"
+          className="rounded-lg border border-border px-3 py-1.5 text-sm"
+        >
+          Public docs
+        </Link>
         <Link
           href="/docs"
           className="rounded-lg border border-border px-3 py-1.5 text-sm"

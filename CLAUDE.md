@@ -63,6 +63,7 @@ src/hexclave/         # client + server Hexclave apps
 hexclave.config.ts    # config Hexclave (urls, RBAC mirror)
 prisma/               # schema + migraciones
 cli/                  # CLI con account API keys (vsk_…)
+skills/vesperer/      # skill instalable (publicado en /skill)
 telegram/             # bot Telegram
 docs/                 # planes (compliance, persona, telegram, workspaces…)
 ```
@@ -101,6 +102,8 @@ Vesperer **is the complete product**: identity, relationship, continuity **and**
 - Capabilities (`capabilitiesJson`) are optional and are not tools-as-requirement.
 
 Pipeline: `prepareTurn → ContextEnvelope → ReasoningRuntime → ReasoningResult → recordInteraction`.
+
+Docs públicas para agentes (no el studio `/docs`): `https://vesperer.com/skill` (pack completo `/skill/full`). Copia en repo: `skills/vesperer/`. Instalar: `npx skills add AntoineBejarano/vespera_app@vesperer`.
 
 ## Billing, email, Telegram
 
