@@ -7,6 +7,7 @@ import {
   normalizeHost,
 } from "@/lib/hosts";
 import { publicOrigin } from "@/lib/request-origin";
+import { SITE_DOMAIN, SITE_URL } from "@/lib/site";
 
 function isAgeExempt(pathname: string) {
   if (
@@ -32,6 +33,11 @@ function isAgeExempt(pathname: string) {
     pathname === "/technology" ||
     pathname === "/voice" ||
     pathname === "/explore" ||
+    pathname === "/ai-characters" ||
+    pathname === "/historical-ai" ||
+    pathname === "/ai-tutors" ||
+    pathname === "/ai-employees" ||
+    pathname === "/character-tools" ||
     pathname.startsWith("/meet/") ||
     pathname.startsWith("/learn/") ||
     pathname.startsWith("/hire/") ||
@@ -87,11 +93,19 @@ function publicNextUrl(request: NextRequest) {
   );
 }
 
+function redirectAwayFromWww(pathname: string, search: string) {
+  return NextResponse.redirect(`${SITE_URL}${pathname}${search}`, 301);
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const host = normalizeHost(
     request.headers.get("x-forwarded-host") || request.headers.get("host"),
   );
+
+  if (host === `www.${SITE_DOMAIN}`) {
+    return redirectAwayFromWww(pathname, search);
+  }
 
   // Soft ?auth= on homepage → handler (no client Hexclave on `/`)
   if (pathname === "/") {

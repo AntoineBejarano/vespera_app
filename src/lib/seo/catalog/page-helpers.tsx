@@ -51,6 +51,9 @@ export function SeoVerbPage({
   const page = getSeoPage(verb, slug);
   if (!page) notFound();
 
+  const canonical = `${SITE_URL}${seoPath(verb, slug)}`;
+  const isMeetPage = verb === "meet";
+  const isLearnPage = verb === "learn";
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -58,8 +61,37 @@ export function SeoVerbPage({
         "@type": "WebPage",
         name: page.h1,
         description: page.metaDescription,
-        url: `${SITE_URL}${seoPath(verb, slug)}`,
+        url: canonical,
+        ...(page.topics.length ? { about: page.topics } : {}),
       },
+      ...(isMeetPage
+        ? [
+            {
+              "@type": "Person",
+              name: page.name,
+              description: page.factualContext ?? page.summary,
+              url: canonical,
+              sameAs: page.sources?.map((source) => source.href) ?? [],
+              additionalType: "AI interpretation",
+            },
+          ]
+        : []),
+      ...(isLearnPage
+        ? [
+            {
+              "@type": "LearningResource",
+              name: page.h1,
+              description: page.metaDescription,
+              url: canonical,
+              teaches: page.topics,
+              provider: {
+                "@type": "Organization",
+                name: SITE_NAME,
+                url: SITE_URL,
+              },
+            },
+          ]
+        : []),
       breadcrumbJsonLd([
         { name: "Explore", path: "/explore" },
         { name: VERB_LABELS[verb], path: `/explore?filter=${verb}` },

@@ -93,6 +93,51 @@ export const APEX_STATIC_PAGES: PublicPageEntry[] = [
     llms: true,
   },
   {
+    path: "/ai-characters",
+    title: "AI characters",
+    description:
+      "Hub for AI character creation, historical personas, memory and portable character tools",
+    changeFrequency: "weekly",
+    priority: 0.94,
+    llms: true,
+  },
+  {
+    path: "/historical-ai",
+    title: "Historical AI",
+    description:
+      "Historical AI personas with transparent provenance, educational context and memory",
+    changeFrequency: "weekly",
+    priority: 0.9,
+    llms: true,
+  },
+  {
+    path: "/ai-tutors",
+    title: "AI tutors",
+    description:
+      "AI tutors that remember student progress across philosophy, history, math, programming and more",
+    changeFrequency: "weekly",
+    priority: 0.91,
+    llms: true,
+  },
+  {
+    path: "/ai-employees",
+    title: "AI employees",
+    description:
+      "AI employees for reception, support, sales, booking and customer workflows with relationship memory",
+    changeFrequency: "weekly",
+    priority: 0.89,
+    llms: true,
+  },
+  {
+    path: "/character-tools",
+    title: "Character tools",
+    description:
+      "Character Card, SillyTavern, Chai and import/export tools for portable AI characters",
+    changeFrequency: "weekly",
+    priority: 0.9,
+    llms: true,
+  },
+  {
     path: "/registry",
     title: "Persona Registry",
     description: "Public persona identities — export, fork, publish anywhere",

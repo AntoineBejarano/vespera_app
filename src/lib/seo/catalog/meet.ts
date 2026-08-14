@@ -3,7 +3,246 @@ import type { SeoPage } from "./types";
 const hist =
   "This is an AI interpretation based on available sources, not the real historical individual.";
 
-export const MEET_PAGES: SeoPage[] = [
+const MEET_DETAILS: Record<
+  string,
+  Pick<
+    SeoPage,
+    "intro" | "suggestedQuestions" | "factualContext" | "sources"
+  >
+> = {
+  plato: {
+    intro:
+      "Use this landing page when you want a guided conversation with a Plato-inspired AI, then move into the live chat once you have a question worth testing.",
+    factualContext:
+      "Plato was a classical Greek philosopher, student of Socrates and teacher of Aristotle. His dialogues explore justice, knowledge, virtue, education and political life, often through dramatic conversations rather than direct doctrine.",
+    suggestedQuestions: [
+      "What would make a city just, and does that differ from a just person?",
+      "Can you remember my definition of virtue and test it again?",
+      "How should I read The Republic without treating it as a simple blueprint?",
+    ],
+    sources: [
+      {
+        label: "Stanford Encyclopedia of Philosophy: Plato",
+        href: "https://plato.stanford.edu/entries/plato/",
+        note: "Biographical and philosophical context for Plato's works and themes.",
+      },
+      {
+        label: "Project Gutenberg: The Republic",
+        href: "https://www.gutenberg.org/ebooks/1497",
+        note: "Public-domain translation used as a reference point for dialogue themes.",
+      },
+    ],
+  },
+  socrates: {
+    intro:
+      "This page is the search landing for a Socrates-inspired AI. The live product route is the chat; this page explains what the persona is for and how memory changes the conversation.",
+    factualContext:
+      "Socrates left no writings of his own. He is primarily known through Plato, Xenophon and later ancient sources, especially for inquiry through questions, ethical examination and public philosophical dialogue in Athens.",
+    suggestedQuestions: [
+      "What do I really mean when I say I want to be successful?",
+      "Can you remember the definition I gave last time and find its weakness?",
+      "How would you question this belief without turning it into a debate performance?",
+    ],
+    sources: [
+      {
+        label: "Stanford Encyclopedia of Philosophy: Socrates",
+        href: "https://plato.stanford.edu/entries/socrates/",
+        note: "Source context for the historical Socrates and Socratic method.",
+      },
+      {
+        label: "Project Gutenberg: Apology",
+        href: "https://www.gutenberg.org/ebooks/1656",
+        note: "Public-domain text associated with Socrates' trial tradition.",
+      },
+    ],
+  },
+  "marcus-aurelius": {
+    intro:
+      "Use Marcus Aurelius AI for short, practical reflection. The persona is built around Stoic themes and works best when it can remember your recurring pressure points.",
+    factualContext:
+      "Marcus Aurelius was a Roman emperor and Stoic writer. The Meditations are private philosophical notes concerned with duty, judgment, mortality, discipline and attention.",
+    suggestedQuestions: [
+      "What judgment am I adding to this event?",
+      "Can you remember the pressure pattern I named last week?",
+      "Give me a morning practice based on what I can control today.",
+    ],
+    sources: [
+      {
+        label: "Stanford Encyclopedia of Philosophy: Marcus Aurelius",
+        href: "https://plato.stanford.edu/entries/marcus-aurelius/",
+        note: "Historical and philosophical context for Marcus Aurelius.",
+      },
+      {
+        label: "Project Gutenberg: Meditations",
+        href: "https://www.gutenberg.org/ebooks/2680",
+        note: "Public-domain translation used as a thematic reference.",
+      },
+    ],
+  },
+  aristotle: {
+    intro:
+      "This Aristotle AI page is for practical philosophy, logic and habits. It points to the live persona without competing with tutor pages for broad philosophy-learning intent.",
+    factualContext:
+      "Aristotle was a Greek philosopher whose surviving works shaped logic, ethics, politics, biology, rhetoric and metaphysics. He studied at Plato's Academy and later founded the Lyceum.",
+    suggestedQuestions: [
+      "What is the golden mean in this specific habit?",
+      "Can you help me classify this argument before judging it?",
+      "How would practical wisdom approach a tradeoff like this?",
+    ],
+    sources: [
+      {
+        label: "Stanford Encyclopedia of Philosophy: Aristotle",
+        href: "https://plato.stanford.edu/entries/aristotle/",
+        note: "Overview of Aristotle's life, corpus and philosophical system.",
+      },
+      {
+        label: "Project Gutenberg: Nicomachean Ethics",
+        href: "https://www.gutenberg.org/ebooks/8438",
+        note: "Public-domain translation for ethics-related themes.",
+      },
+    ],
+  },
+  "albert-einstein": {
+    intro:
+      "This Einstein AI landing targets conversation with a historically inspired persona, while the physics tutor page handles structured learning intent.",
+    factualContext:
+      "Albert Einstein was a theoretical physicist known for special and general relativity, work on the photoelectric effect, and public writing about science, curiosity and society.",
+    suggestedQuestions: [
+      "Can you explain relativity with a thought experiment instead of formulas first?",
+      "What puzzle should I keep thinking about after this session?",
+      "How did imagination and constraint work together in your scientific thinking?",
+    ],
+    sources: [
+      {
+        label: "Nobel Prize: Albert Einstein",
+        href: "https://www.nobelprize.org/prizes/physics/1921/einstein/biographical/",
+        note: "Biographical source for Einstein's scientific career.",
+      },
+      {
+        label: "Encyclopaedia Britannica: Albert Einstein",
+        href: "https://www.britannica.com/biography/Albert-Einstein",
+        note: "General reference for historical context.",
+      },
+    ],
+  },
+  "marie-curie": {
+    intro:
+      "Use Marie Curie AI for conversations about scientific persistence, method and discovery. For classroom structure, the history tutor and museum guide pages connect nearby intent.",
+    factualContext:
+      "Marie Curie was a physicist and chemist known for pioneering research on radioactivity. She received Nobel Prizes in Physics and Chemistry and helped define a new field of scientific inquiry.",
+    suggestedQuestions: [
+      "How do I keep going when the evidence is slow?",
+      "Can you help me ask a more testable research question?",
+      "What should a museum visitor understand about radioactivity without oversimplifying it?",
+    ],
+    sources: [
+      {
+        label: "Nobel Prize: Marie Curie",
+        href: "https://www.nobelprize.org/prizes/physics/1903/marie-curie/biographical/",
+        note: "Biographical context from Nobel Prize materials.",
+      },
+      {
+        label: "Nobel Prize: Chemistry 1911",
+        href: "https://www.nobelprize.org/prizes/chemistry/1911/marie-curie/facts/",
+        note: "Reference for Curie's later Nobel recognition.",
+      },
+    ],
+  },
+  "leonardo-da-vinci": {
+    intro:
+      "This Leonardo AI landing focuses on art, invention and observation. It is for exploratory conversation rather than image generation or a generic creator tool.",
+    factualContext:
+      "Leonardo da Vinci was an Italian Renaissance artist, engineer and observer whose notebooks connect painting, anatomy, mechanics, flight, optics and natural philosophy.",
+    suggestedQuestions: [
+      "How should I observe this problem before trying to invent a solution?",
+      "Can you turn my rough sketch idea into better questions?",
+      "What can art teach my engineering project?",
+    ],
+    sources: [
+      {
+        label: "Encyclopaedia Britannica: Leonardo da Vinci",
+        href: "https://www.britannica.com/biography/Leonardo-da-Vinci",
+        note: "Biographical and work context for Leonardo.",
+      },
+      {
+        label: "The Metropolitan Museum of Art: Leonardo da Vinci",
+        href: "https://www.metmuseum.org/toah/hd/leon/hd_leon.htm",
+        note: "Museum reference for Leonardo's artistic context.",
+      },
+    ],
+  },
+  "nikola-tesla": {
+    intro:
+      "Talk to Tesla AI when you want inventive, systems-level conversation about electricity and ambitious technical ideas without drifting into fringe claims.",
+    factualContext:
+      "Nikola Tesla was an inventor and electrical engineer associated with alternating-current systems, motors, wireless experiments and a public image of bold technical imagination.",
+    suggestedQuestions: [
+      "How should I think about energy transfer in this invention?",
+      "Can you help me separate a bold idea from an unsupported claim?",
+      "What constraint would change the whole system if I solved it?",
+    ],
+    sources: [
+      {
+        label: "Encyclopaedia Britannica: Nikola Tesla",
+        href: "https://www.britannica.com/biography/Nikola-Tesla",
+        note: "General historical reference for Tesla's life and work.",
+      },
+      {
+        label: "Smithsonian: Nikola Tesla",
+        href: "https://www.smithsonianmag.com/innovation/extraordinary-life-nikola-tesla-180967758/",
+        note: "Context on Tesla's legacy and public mythology.",
+      },
+    ],
+  },
+  "ada-lovelace": {
+    intro:
+      "This Ada Lovelace AI page is for conversations about computation, imagination and early computing history, with related paths for writing and programming tutors.",
+    factualContext:
+      "Ada Lovelace was a mathematician and writer associated with Charles Babbage's Analytical Engine. Her notes are often discussed in histories of algorithms and computing imagination.",
+    suggestedQuestions: [
+      "How can computation become more than calculation?",
+      "Can you connect this programming idea to a creative metaphor?",
+      "What should a beginner understand about algorithms first?",
+    ],
+    sources: [
+      {
+        label: "Computer History Museum: Ada Lovelace",
+        href: "https://www.computerhistory.org/babbage/adalovelace/",
+        note: "Computing-history context for Lovelace and Babbage.",
+      },
+      {
+        label: "Encyclopaedia Britannica: Ada Lovelace",
+        href: "https://www.britannica.com/biography/Ada-Lovelace",
+        note: "Biographical reference for Lovelace.",
+      },
+    ],
+  },
+  "isaac-newton": {
+    intro:
+      "This Newton AI landing supports conversation about method, motion and gravity. The physics tutor page is linked for users who want a structured learning path.",
+    factualContext:
+      "Isaac Newton was a mathematician and natural philosopher central to classical mechanics, gravitation, optics and calculus-era mathematical physics.",
+    suggestedQuestions: [
+      "Can you explain why the moon is always falling without crashing?",
+      "What observation should come before the equation here?",
+      "How do Newton and Einstein differ on this idea?",
+    ],
+    sources: [
+      {
+        label: "Encyclopaedia Britannica: Isaac Newton",
+        href: "https://www.britannica.com/biography/Isaac-Newton",
+        note: "Biographical and scientific context for Newton.",
+      },
+      {
+        label: "The Newton Project",
+        href: "https://www.newtonproject.ox.ac.uk/",
+        note: "Scholarly source collection for Newton's writings.",
+      },
+    ],
+  },
+};
+
+const MEET_PAGE_BASE: SeoPage[] = [
   {
     verb: "meet",
     slug: "plato",
@@ -502,3 +741,8 @@ export const MEET_PAGES: SeoPage[] = [
     disclaimer: hist,
   },
 ];
+
+export const MEET_PAGES: SeoPage[] = MEET_PAGE_BASE.map((page) => ({
+  ...page,
+  ...(MEET_DETAILS[page.slug] ?? {}),
+}));

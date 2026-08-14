@@ -4,7 +4,6 @@ import { DM_Sans, Syne } from "next/font/google";
 import {
   SITE_DESCRIPTION,
   SITE_NAME,
-  SITE_TAGLINE,
   SITE_URL,
 } from "@/lib/site";
 import "./globals.css";
@@ -31,7 +30,7 @@ const body = DM_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    default: `AI Character Creator with Long-Term Memory | ${SITE_NAME}`,
     template: `%s · ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -54,12 +53,12 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    title: `AI Character Creator with Long-Term Memory | ${SITE_NAME}`,
     description: SITE_DESCRIPTION,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    title: `AI Character Creator with Long-Term Memory | ${SITE_NAME}`,
     description: SITE_DESCRIPTION,
   },
   icons: {

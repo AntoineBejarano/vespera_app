@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     },
     robots: character.isAdult
       ? { index: false, follow: false }
-      : { index: true, follow: true },
+      : { index: false, follow: true },
   };
 }
 

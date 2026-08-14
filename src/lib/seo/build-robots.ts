@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
-import { AFTER_DARK_URL } from "@/lib/hosts";
 import type { RequestSurface } from "@/lib/seo/request-surface";
 import { SITE_URL } from "@/lib/site";
+import { AFTER_DARK_URL } from "@/lib/hosts";
 
 /** App / auth / private surfaces — never crawl. */
 const DISALLOW_ALL: string[] = [
@@ -58,8 +58,7 @@ function baseRules(extraDisallow: string[] = []): MetadataRoute.Robots["rules"] 
 export function buildApexRobots(surface: RequestSurface): MetadataRoute.Robots {
   return {
     rules: baseRules(),
-    // Secondary sitemap helps Discover the adult property when both are verified
-    sitemap: [`${SITE_URL}/sitemap.xml`, `${AFTER_DARK_URL}/sitemap.xml`],
+    sitemap: `${SITE_URL}/sitemap.xml`,
     host: surface.host,
   };
 }
@@ -75,6 +74,11 @@ export function buildAfterDarkRobots(
       "/learn/",
       "/hire/",
       "/create/",
+      "/ai-characters",
+      "/historical-ai",
+      "/ai-tutors",
+      "/ai-employees",
+      "/character-tools",
       "/characters/",
       "/historical-figures/",
       "/use-cases/",

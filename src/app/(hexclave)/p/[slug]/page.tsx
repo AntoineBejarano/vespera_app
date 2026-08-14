@@ -9,6 +9,17 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 type Params = { params: Promise<{ slug: string }> };
 
+function hasIndexableRegistryContent(
+  persona: Awaited<ReturnType<typeof getRegistryPersonaBySlug>>,
+) {
+  if (!persona || persona.isAdult) return false;
+  const hasVersionHistory = persona.versions.length > 1;
+  const hasProvenance = persona.knowledgePacks.length > 0 || persona.forkedFrom;
+  const hasSubstantialIdentity =
+    persona.soulPreview.length >= 120 || persona.layers.length >= 2;
+  return Boolean(hasVersionHistory || hasProvenance || hasSubstantialIdentity);
+}
+
 export async function generateStaticParams() {
   return [];
 }
@@ -28,6 +39,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const ogImages = persona.photoUrl
     ? [{ url: new URL(persona.photoUrl, SITE_URL).toString() }]
     : undefined;
+
+  const indexable = hasIndexableRegistryContent(persona);
 
   return {
     title,
@@ -54,7 +67,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     },
     robots: persona.isAdult
       ? { index: false, follow: false }
-      : { index: true, follow: true },
+      : indexable
+        ? { index: true, follow: true }
+        : { index: false, follow: true },
   };
 }
 

@@ -1,9 +1,6 @@
 export const SITE_NAME = "Vesperer";
 export const SITE_DOMAIN = "vesperer.com";
-export const SITE_URL =
-  process.env.APP_URL?.replace(/\/$/, "") ||
-  process.env.NEXTAUTH_URL?.replace(/\/$/, "") ||
-  "https://vesperer.com";
+export const SITE_URL = `https://${SITE_DOMAIN}`;
 
 export {
   AFTER_DARK_HOST,

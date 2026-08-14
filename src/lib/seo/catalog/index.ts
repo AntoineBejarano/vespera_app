@@ -27,6 +27,26 @@ const USE_CASE_ALIASES: Record<string, { verb: SeoVerb; slug: string }> = {
   "language-tutor": { verb: "learn", slug: "language-partner" },
   "rpg-character": { verb: "create", slug: "ai-character" },
   "virtual-creator": { verb: "create", slug: "virtual-influencer" },
+  "character-card-creator": { verb: "create", slug: "character-card" },
+  "character-card": { verb: "create", slug: "character-card" },
+  "sillytavern-character-creator": {
+    verb: "create",
+    slug: "sillytavern-character",
+  },
+  "sillytavern-import": { verb: "create", slug: "sillytavern-character" },
+  "import-ai-character": {
+    verb: "create",
+    slug: "import-export-ai-characters",
+  },
+  "export-ai-character": {
+    verb: "create",
+    slug: "import-export-ai-characters",
+  },
+  "character-ai-alternative": {
+    verb: "create",
+    slug: "character-ai-alternative",
+  },
+  "chai-alternative": { verb: "create", slug: "chai-alternative" },
   // Hire
   "ai-receptionist": { verb: "hire", slug: "ai-receptionist" },
   "ai-sales-agent": { verb: "hire", slug: "ai-sales-agent" },

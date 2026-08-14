@@ -9,7 +9,22 @@ import {
   type SeoPage,
 } from "@/lib/seo/catalog";
 
+const VERB_HUBS: Record<SeoPage["verb"], { href: string; label: string }[]> = {
+  meet: [
+    { href: "/historical-ai", label: "Historical AI hub" },
+    { href: "/ai-characters", label: "AI characters hub" },
+  ],
+  learn: [{ href: "/ai-tutors", label: "AI tutors hub" }],
+  hire: [{ href: "/ai-employees", label: "AI employees hub" }],
+  create: [
+    { href: "/ai-characters", label: "AI characters hub" },
+    { href: "/character-tools", label: "Character tools hub" },
+  ],
+};
+
 export function SeoPageLayout({ page }: { page: SeoPage }) {
+  const hubs = VERB_HUBS[page.verb];
+
   return (
     <div className="relative overflow-hidden">
       <MarketingNav variant="marketing" />
@@ -43,6 +58,11 @@ export function SeoPageLayout({ page }: { page: SeoPage }) {
           <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--muted)] sm:text-lg">
             {page.summary}
           </p>
+          {page.intro ? (
+            <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--muted)]">
+              {page.intro}
+            </p>
+          ) : null}
         </BlurFade>
 
         <BlurFade
@@ -67,6 +87,25 @@ export function SeoPageLayout({ page }: { page: SeoPage }) {
           <p className="mt-6 max-w-2xl text-xs leading-relaxed text-[var(--muted)]/80">
             {page.disclaimer}
           </p>
+        ) : null}
+
+        {hubs.length ? (
+          <BlurFade delay={0.12}>
+            <nav
+              aria-label="SEO cluster"
+              className="mt-8 flex flex-wrap gap-2"
+            >
+              {hubs.map((hub) => (
+                <Link
+                  key={hub.href}
+                  href={hub.href}
+                  className="rounded-xl border border-[var(--line)] px-3 py-2 text-xs text-[var(--muted)] hover:border-[var(--accent)]/50 hover:text-[var(--ink)]"
+                >
+                  {hub.label}
+                </Link>
+              ))}
+            </nav>
+          </BlurFade>
         ) : null}
 
         <section className="mt-14 grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
@@ -96,6 +135,24 @@ export function SeoPageLayout({ page }: { page: SeoPage }) {
                 ))}
               </div>
             ) : null}
+
+            {page.suggestedQuestions?.length ? (
+              <section className="mt-10">
+                <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
+                  Questions to start with
+                </h2>
+                <ul className="mt-4 space-y-3">
+                  {page.suggestedQuestions.map((q) => (
+                    <li
+                      key={q}
+                      className="rounded-xl border border-[var(--line)] px-4 py-3 text-sm leading-relaxed text-[var(--ink)]"
+                    >
+                      {q}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
           </div>
 
           <div className="rounded-2xl border border-[var(--line)] bg-[var(--bg-elevated)]/40 p-5">
@@ -118,6 +175,46 @@ export function SeoPageLayout({ page }: { page: SeoPage }) {
             </div>
           </div>
         </section>
+
+        {page.factualContext || page.sources?.length ? (
+          <section className="mt-14 grid gap-8 border-t border-[var(--line)] pt-10 lg:grid-cols-[0.9fr_1.1fr]">
+            {page.factualContext ? (
+              <div>
+                <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
+                  Context
+                </h2>
+                <p className="mt-4 text-sm leading-relaxed text-[var(--muted)]">
+                  {page.factualContext}
+                </p>
+              </div>
+            ) : null}
+
+            {page.sources?.length ? (
+              <div>
+                <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold">
+                  Sources and provenance
+                </h2>
+                <ul className="mt-4 space-y-3">
+                  {page.sources.map((source) => (
+                    <li key={source.href}>
+                      <a
+                        href={source.href}
+                        className="text-sm text-[var(--accent)] underline-offset-2 hover:underline"
+                      >
+                        {source.label}
+                      </a>
+                      {source.note ? (
+                        <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
+                          {source.note}
+                        </p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
 
         {page.roiHints ? (
           <section className="mt-14">

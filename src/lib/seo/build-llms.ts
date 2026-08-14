@@ -27,6 +27,7 @@ export function buildApexLlmsTxt(): string {
     hire: listAllSeoPages().filter((p) => p.verb === "hire"),
     create: listAllSeoPages().filter((p) => p.verb === "create"),
   };
+  const meetSlugs = new Set(seoByVerb.meet.map((p) => p.slug));
 
   const explore = [
     link("Explore hub", apexUrl("/explore"), "Meet / Learn / Hire / Create index"),
@@ -44,20 +45,17 @@ export function buildApexLlmsTxt(): string {
     ),
   ];
 
-  const demos = SHOWCASE_CHARACTERS.filter((c) => !c.isAdult)
+  const demos = SHOWCASE_CHARACTERS.filter(
+    (c) => !c.isAdult && meetSlugs.has(c.slug),
+  )
     .slice(0, 8)
-    .flatMap((c) => [
+    .map((c) =>
       link(
-        `${c.name} registry`,
-        apexUrl(`/p/${c.slug}`),
-        c.tagline || `Public persona identity for ${c.name}`,
+        `Talk to ${c.name}`,
+        apexUrl(`/meet/${c.slug}`),
+        c.tagline || `Public persona landing for ${c.name}`,
       ),
-      link(
-        `${c.name} live chat`,
-        apexUrl(`/c/${c.slug}`),
-        `Demo conversation with ${c.name}`,
-      ),
-    ]);
+    );
 
   const builders = [
     link(
@@ -105,7 +103,7 @@ export function buildApexLlmsTxt(): string {
     "",
     section("Explore", explore),
     "",
-    section("Registry & demos", demos),
+    section("Persona landings", demos),
     "",
     section("For builders & AI agents", builders),
     "",
@@ -119,6 +117,9 @@ export function buildApexLlmsTxt(): string {
 /** Expanded summaries for deep ingestion (llms-full.txt). */
 export function buildApexLlmsFullTxt(): string {
   const pages = listAllSeoPages();
+  const meetSlugs = new Set(
+    pages.filter((p) => p.verb === "meet").map((p) => p.slug),
+  );
   const blocks: string[] = [
     `# ${SITE_NAME} — full context`,
     "",
@@ -173,11 +174,13 @@ export function buildApexLlmsFullTxt(): string {
 
   blocks.push("## Showcase personas");
   blocks.push("");
-  for (const c of SHOWCASE_CHARACTERS.filter((x) => !x.isAdult)) {
+  for (const c of SHOWCASE_CHARACTERS.filter(
+    (x) => !x.isAdult && meetSlugs.has(x.slug),
+  )) {
     blocks.push(`### ${c.name}`);
     blocks.push("");
-    blocks.push(`Registry: ${apexUrl(`/p/${c.slug}`)}`);
-    blocks.push(`Chat: ${apexUrl(`/c/${c.slug}`)}`);
+    blocks.push(`SEO landing: ${apexUrl(`/meet/${c.slug}`)}`);
+    blocks.push(`Live chat: ${apexUrl(`/c/${c.slug}`)} (noindex,follow)`);
     blocks.push("");
     blocks.push(c.tagline);
     blocks.push("");

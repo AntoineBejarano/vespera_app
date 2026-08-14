@@ -21,6 +21,12 @@ export type SeoCta = {
   href: string;
 };
 
+export type SeoSource = {
+  label: string;
+  href: string;
+  note?: string;
+};
+
 export type SeoPage = {
   verb: SeoVerb;
   slug: string;
@@ -31,8 +37,12 @@ export type SeoPage = {
   metaDescription: string;
   h1: string;
   summary: string;
+  intro?: string;
   bullets: string[];
   topics: string[];
+  suggestedQuestions?: string[];
+  factualContext?: string;
+  sources?: SeoSource[];
   sampleDialogue: SeoDialogueLine[];
   faqs: SeoFaq[];
   related: SeoRelated[];

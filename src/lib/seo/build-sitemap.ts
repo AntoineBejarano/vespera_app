@@ -110,15 +110,6 @@ export async function buildApexSitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  const showcaseChat = SHOWCASE_CHARACTERS.filter((c) => !c.isAdult).map((c) =>
-    entry(apexUrl(`/c/${c.slug}`), {
-      lastModified: now,
-      changeFrequency: "weekly",
-      priority: 0.75,
-      images: [absoluteAsset(c.imageUrl)].filter(Boolean) as string[],
-    }),
-  );
-
   const dbOnly = publicChars.filter((c) => !showcaseSlugs.has(c.slug));
 
   const dbRegistry = dbOnly.map((c) =>
@@ -126,15 +117,6 @@ export async function buildApexSitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: c.updatedAt,
       changeFrequency: "weekly",
       priority: 0.8,
-      images: [absoluteAsset(c.photoUrl)].filter(Boolean) as string[],
-    }),
-  );
-
-  const dbChat = dbOnly.map((c) =>
-    entry(apexUrl(`/c/${c.slug}`), {
-      lastModified: c.updatedAt,
-      changeFrequency: "weekly",
-      priority: 0.7,
       images: [absoluteAsset(c.photoUrl)].filter(Boolean) as string[],
     }),
   );
@@ -152,8 +134,6 @@ export async function buildApexSitemap(): Promise<MetadataRoute.Sitemap> {
     ...seoEntries,
     ...generatedSeoEntries,
     ...dbRegistry,
-    ...showcaseChat,
-    ...dbChat,
     ...legalEntries,
   ];
 }
